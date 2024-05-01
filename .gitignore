@@ -1,5 +1,6 @@
 *~
 *.o
-data
-save
+./data
+./save
+./cmake-build-debug
 

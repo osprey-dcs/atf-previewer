@@ -22,6 +22,9 @@ ShortcutDialog::ShortcutDialog( QWidget *w, QWidget *parent ) {
       "Wheel up/down on horizontal border",
       "Wheel up/down on vertical border",
       "",
+      "Ctrl Left Click on graph area",
+      "",
+      "",
       "Right click on graph area"
     };
   
@@ -35,6 +38,9 @@ ShortcutDialog::ShortcutDialog( QWidget *w, QWidget *parent ) {
       "Zoom in/out X/Y",
       "Pan up/down",
       "Pan right/left",
+      "",
+      "Show mouse position",
+      "(and (x,y) at max peak for FFT)",
       "",
       "Open menu"
     };
