@@ -1,11 +1,12 @@
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.25)
 project(viewer)
+
+find_package(PkgConfig)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-
 
 find_package(Qt5 COMPONENTS
         Core
@@ -64,14 +65,12 @@ add_executable(viewer main.cpp
         FileUtil.cpp
 )
 
-include_directories(/usr/include/c++/10
-        /home/osprey/fftw/include)
+pkg_check_modules(FFTW REQUIRED IMPORTED_TARGET fftw3)
 
 target_link_libraries(viewer
         Qt5::Core
         Qt5::Gui
         Qt5::Widgets
         Qt5::Charts
-        /home/osprey/fftw/lib/libfftw3.so
+        PkgConfig::FFTW
 )
-
