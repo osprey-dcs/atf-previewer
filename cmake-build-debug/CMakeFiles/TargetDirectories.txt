@@ -1,5 +1,0 @@
-/home/osprey/viewer/cmake-build-debug/CMakeFiles/viewer.dir
-/home/osprey/viewer/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/osprey/viewer/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/osprey/viewer/cmake-build-debug/CMakeFiles/viewer_autogen_timestamp_deps.dir
-/home/osprey/viewer/cmake-build-debug/CMakeFiles/viewer_autogen.dir
