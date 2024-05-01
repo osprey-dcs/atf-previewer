@@ -84,7 +84,6 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
   this->haveHeader = false;
   this->readyForData = false;
   this->curMaxElements = 0;
-  this->curSliderValue = -1;
   setAll( this->prevSigIndex, Cnst::NumGraphs, -1 );
   this->sampleRate = 0.0;
   lastDataRequestGraphArea = nullptr;
@@ -352,25 +351,20 @@ void ViewerCtlr::process(void ) {
       this->mainWindow->setWorking( QString("Ready") );
 
     }
-    
+
     //while ( !(this->dataRequestList.empty()) ) {
     if ( !(this->dataRequestList.empty()) ) {
 
       this->mainWindow->setWorking( QString("Working...") );
 
-      auto dataReq = this->dataRequestList.front();
+      auto dataReq = this->dataRequestList.back();
       this->dataRequestList.clear();
 
-      int request = std::get<0>( dataReq );
-      ViewerGraphAreaBase *grArea = std::get<1>( dataReq );
+      int request = std::get<ViewerCtlr::Req>( dataReq );
+      ViewerGraphAreaBase *grArea = std::get<ViewerCtlr::Vga>( dataReq );
       int grAreaId = grArea->id;
-      int sigIndex = std::get<2>( dataReq );
-      QString reqFileName = std::get<3>( dataReq );
-
-      //std::cout << "req = " <<  std::get<0>( dataReq ) <<
-      //  ", vga id = " << std::get<1>( dataReq )->id <<
-      //  ", sig index = " << std::get<2>( dataReq ) <<
-      //  ", file name = " << std::get<3>( dataReq ).toStdString() << std::endl;
+      int sigIndex = std::get<ViewerCtlr::SigIndex>( dataReq );
+      QString reqFileName = std::get<ViewerCtlr::FileName>( dataReq );
 
       // for fft calc and display, input data is from the time series graph
       // and displayed on the graph positioned under the time series one ( companion vga ).
@@ -497,6 +491,7 @@ void ViewerCtlr::process(void ) {
 
         //  file name, sig index, x scale width in pixels, start time in sec,
         //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
+
         stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0WithLimits, x1WithLimits,
                                         dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
         if ( !stat ) {
@@ -574,7 +569,7 @@ void ViewerCtlr::process(void ) {
             //          << minx << ", " << maxx << ", " << miny << ", " << maxy << std::endl;
 
             grArea->setInitialState();
-          
+
             // Viewer graph object manages qls
             grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1, miny, maxy );
 
@@ -1265,25 +1260,32 @@ void ViewerCtlr::sigNameChange(int index ) {
 }
 
 void ViewerCtlr::sigNameChange1(int index, int sigIndex, QWidget *w ) {
+  
   ViewerGraphAreaBase *vga = dynamic_cast<ViewerGraphAreaBase *>( w );
+
   if ( ( sigIndex >= 0 ) && ( sigIndex <= Cnst::MaxSigIndex ) &&
    ( sigIndex != prevSigIndex[vga->id] ) ) {
+
     vga->setInitialState();
     prevSigIndex[vga->id] = sigIndex;
-    //haveDataRequest = true;
+    
     int request = ViewerCtlr::HaveDataRequest;
+    
     dataRequestList.push_back( std::make_tuple( request, vga, sigIndex, this->fileName ) );
+    
     auto nameList = this->dh->getNameList();
     auto nameMap = this->dh->getNameMap();
     int sigInfoSigIndex;
     QString sigInfoName, sigInfoEgu;
     double sigInfoSlope, sigInfoIntercept;
+
     int stat = this->dh->getSigInfoBySigIndex ( sigIndex, sigInfoName, sigInfoEgu, sigInfoSlope, sigInfoIntercept );
-    //std::cout << sigInfoName.toStdString() << "  " << sigInfoEgu.toStdString() << std::endl;
+
     std::stringstream sstitle;
     sstitle << sigInfoName.toStdString() << "  (" << sigInfoEgu.toStdString() << ")";
     std::string s = sstitle.str();
     vga->graph->setYTitle( s );
+
   }
 
 }
@@ -1293,17 +1295,6 @@ void ViewerCtlr::sigAreaChanged(const QRectF& plotArea ) {
   QtCharts::QChart *chart = qobject_cast<QtCharts::QChart *>(sender());
   ViewerGraph *vg = qobject_cast<ViewerGraph *>(chart->parent());
   ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>(vg->parent());
-
-  /*std::cout << "sigAreaChange, chart = " << chart << std::endl;
-  //std::cout << "sigAreaChange, vg = " << vg << std::endl;
-  //std::cout << "sigAreaChange, vga = " << vga << ", id = " << vga->id << std::endl;*/
-
-  if ( vga->id == 0 ) {
-    //std::cout << "L = " << plotArea.left() << std::endl;
-    //std::cout << "R = " << plotArea.right() << std::endl;
-    //std::cout << "T = " << plotArea.top() << std::endl;
-    //std::cout << "B = " << plotArea.bottom() << std::endl;
-  }
 
   if ( ( vga->id < 0 ) || ( vga->id > Cnst::NumGraphs) ) {
     std::cout << "Graph id out of bounds";
@@ -1324,7 +1315,6 @@ void ViewerCtlr::fileSelected1(const QString& file ) {
   
   QString::const_reverse_iterator it = file.rbegin();
   while ( it != file.rend() ) {
-    //qDebug() << *it;
     if ( *it == '.' ) {
       count--;
       break;
@@ -1574,8 +1564,8 @@ void ViewerCtlr::sliderValue( QWidget *w, int value ) {
   if ( !(vga->graph) ) return;
   if ( vga->graph->isEmpty ) return;
 
-  if ( value == this->curSliderValue ) return;
-  this->curSliderValue = value;
+  if ( value == vga->curSliderValue ) return;
+  vga->curSliderValue = value;
 
   vga->graph->getAxesLimits(  chartXMin, chartYMin, chartXMax, chartYMax );
 
@@ -1618,8 +1608,8 @@ void ViewerCtlr::setSlider( QWidget *w ) {
   double maxTime = (double) curMaxElements * dataTimeIncrementInSec;
   vga->graph->getAxesLimits( chartXMin, chartYMin, chartXMax, chartYMax );
 
-  this->curSliderValue = (int) ( chartXMin / maxTime * 100.0 );
+  vga->curSliderValue = (int) ( chartXMin / maxTime * 100.0 );
 
-  vga->slider->setValue( this->curSliderValue );
+  vga->slider->setValue( vga->curSliderValue );
 
 }

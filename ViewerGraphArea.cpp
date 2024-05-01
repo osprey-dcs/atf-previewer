@@ -45,6 +45,7 @@ ViewerGraphArea::ViewerGraphArea( int _id, QWidget *_parent ) : ViewerGraphAreaB
   curFileName = "";
   calcFft = QSharedPointer<ViewerCtlrPushButton>( new ViewerCtlrPushButton(this, "FFT" ) );
   enableFftButton( false );
+  curSliderValue = 0;
 
   sigName->addItem( QString( "                    " ), -1 );
 
@@ -66,6 +67,9 @@ ViewerGraphArea::ViewerGraphArea( int _id, QWidget *_parent ) : ViewerGraphAreaB
   vlayout->addWidget( graph.data() );
   this->setLayout( vlayout.data() );
 
+    curSliderValue = 0;
+    slider->setValue( 0 );
+    
 }
 
 ViewerGraphArea::~ViewerGraphArea( ) {
@@ -85,6 +89,7 @@ void ViewerGraphArea::getCurInfo( QString& _curFileName, int& _curSigIndex ) {
 
 void ViewerGraphArea::setInitialState( void ) {
 
+  curSliderValue = 0;
   slider->setValue( 0 );
 
 }

@@ -61,6 +61,13 @@ class ViewerCtlr : public QObject {
   Q_OBJECT
 
 public:
+
+  // for dataRequestList
+  static const int Req = 0;
+  static const int Vga = 1;
+  static const int SigIndex = 2;
+  static const int FileName = 3;
+  
   static const int HaveDataRequest = 1;
   static const int HaveHorizontalPanRequest = 2;
   static const int HaveScaleRequest = 3;
@@ -83,7 +90,6 @@ public:
   bool haveHeader;
   bool readyForData;
   unsigned long curMaxElements;
-  int curSliderValue;
   int prevSigIndex[Cnst::NumGraphs];
   double sampleRate;
   DataHeaderFac dhf;

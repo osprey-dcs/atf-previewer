@@ -54,7 +54,7 @@ ViewerGraph::ViewerGraph( int _id, ScaleType _scaleType, DataType _dataType, QWi
   
     axisY = QSharedPointer<QtCharts::QAbstractAxis>( new QtCharts::QValueAxis() );
     axisY->setTitleText( "Mag" );
-    dynamic_cast<QtCharts::QValueAxis *>(axisY.data())->setLabelFormat( "%.8g" );
+    dynamic_cast<QtCharts::QValueAxis *>(axisY.data())->setLabelFormat( "%.10g" );
     dynamic_cast<QtCharts::QValueAxis *>(axisY.data())->setTickCount( 2 );
     if ( dataType == ViewerGraph::DataType::TimeSeries ) {
       axisY->setRange( Cnst::InitialMinSig, Cnst::InitialMaxSig );
@@ -70,13 +70,13 @@ ViewerGraph::ViewerGraph( int _id, ScaleType _scaleType, DataType _dataType, QWi
     axisX = QSharedPointer<QtCharts::QAbstractAxis>( new QtCharts::QValueAxis() );
     if ( dataType == ViewerGraph::DataType::TimeSeries ) {
       axisX->setTitleText( "Time (sec)" );
-      dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setLabelFormat( "%.8g" );
+      dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setLabelFormat( "%.10g" );
       dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setTickCount( 2 );
       axisX->setRange( Cnst::InitialMinTime, Cnst::InitialMaxTime );
     }
     else if ( dataType == ViewerGraph::DataType::FFT ) {
       axisX->setTitleText( "Freq (Hz)" );
-      dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setLabelFormat( "%.8g" );
+      dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setLabelFormat( "%.10g" );
       dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setTickCount( 2 );
       axisX->setRange( Cnst::InitialMinFreq, Cnst::InitialMaxFreq );
     }
@@ -90,12 +90,12 @@ ViewerGraph::ViewerGraph( int _id, ScaleType _scaleType, DataType _dataType, QWi
     axisY = QSharedPointer<QtCharts::QAbstractAxis>( new QtCharts::QLogValueAxis() );
     if ( dataType == ViewerGraph::DataType::TimeSeries ) {
       axisY->setTitleText( "Mag" );
-      dynamic_cast<QtCharts::QLogValueAxis *>(axisY.data())->setLabelFormat( "%.8g" );
+      dynamic_cast<QtCharts::QLogValueAxis *>(axisY.data())->setLabelFormat( "%.10g" );
       axisY->setRange( Cnst::InitialMinSigLog, Cnst::InitialMaxSigLog );
     }
     else if ( dataType == ViewerGraph::DataType::FFT ) {
       axisY->setTitleText( "Mag)" );
-      dynamic_cast<QtCharts::QLogValueAxis *>(axisY.data())->setLabelFormat( "%.8g" );
+      dynamic_cast<QtCharts::QLogValueAxis *>(axisY.data())->setLabelFormat( "%.10g" );
       axisY->setRange( Cnst::InitialMinFftLog, Cnst::InitialMaxFftLog );
     }
     axisY->setGridLineColor( QRgb( Cnst::InitialGridRgb ) );
@@ -105,13 +105,13 @@ ViewerGraph::ViewerGraph( int _id, ScaleType _scaleType, DataType _dataType, QWi
     axisX = QSharedPointer<QtCharts::QAbstractAxis>( new QtCharts::QValueAxis() );
     if ( dataType == ViewerGraph::DataType::TimeSeries ) {
       axisX->setTitleText( "Time (sec)" );
-      dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setLabelFormat( "%.8g" );
+      dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setLabelFormat( "%.10g" );
       dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setTickCount( 2 );
       axisX->setRange( Cnst::InitialMinTime, Cnst::InitialMaxTime );
     }
     else if ( dataType == ViewerGraph::DataType::FFT ) {
       axisX->setTitleText( "Freq (Hz)" );
-      dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setLabelFormat( "%.8g" );
+      dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setLabelFormat( "%.10g" );
       dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setTickCount( 2 );
       axisX->setRange( Cnst::InitialMinFreq, Cnst::InitialMaxFreq );
     }

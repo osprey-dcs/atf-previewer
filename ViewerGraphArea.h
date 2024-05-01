@@ -81,6 +81,7 @@ class ViewerGraphArea : public ViewerGraphAreaBase {
     int curSigIndex;
     QString curFileName;
     QSharedPointer<ViewerCtlrPushButton> calcFft;
+    int curSliderValue;
 
 };
 
