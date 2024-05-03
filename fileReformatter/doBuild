@@ -1,0 +1,17 @@
+echo "~/clion-2023.3.4/bin/cmake/linux/x64/bin/cmake -Bcmake-build-debug -H."
+echo ""
+~/clion-2023.3.4/bin/cmake/linux/x64/bin/cmake -Bcmake-build-debug -H.
+
+echo ""
+echo ""
+
+echo "~/clion-2023.3.4/bin/cmake/linux/x64/bin/cmake --build cmake-build-debug --target all"
+echo ""
+~/clion-2023.3.4/bin/cmake/linux/x64/bin/cmake --build cmake-build-debug --target all
+
+echo ""
+echo ""
+
+echo "run as:"
+echo "  `pwd`/cmake-build-debug/fileReformatter {raw file} {header file}"
+echo ""
