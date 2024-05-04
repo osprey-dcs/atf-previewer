@@ -445,11 +445,13 @@ int PsnFileConverter::createAndOpenOutputFiles(const DataHeader *dh, const QStri
   QString fname;
   unsigned long sizeInBytes = 0;
 
-  // create directory
+  // create directory -  ignore errno EEXIST (dir alreay exists)
   int stat = mkdir( binDataFileDir.toStdString().c_str(), 0777 );
   if ( stat == -1 ) {
-    perror( "mkdir" );
-    return -1;
+    if ( errno != EEXIST ) {
+      perror( "mkdir" );
+      return -1;
+    }
   }
 
   // open all files
