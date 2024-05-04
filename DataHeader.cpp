@@ -69,21 +69,37 @@ int DataHeader::setDouble(const QString &s, const double& d ) {
 
 }
 
-  int DataHeader::getString(const QString &s, QString& qs ) {
+QString DataHeader::getString(const QString &s ) {
+
+  QString qs;
+  QJsonValue jv = jo[s];
+
+  if ( jv.isString() ) {
+    qs = jv.toString();
+  }
+  else {
+    qs = "";
+  }
+
+  return qs;
+
+}
+
+int DataHeader::getString(const QString &s, QString& qs ) {
 
   QJsonValue jv = jo[s];
 
-    if ( jv.isString() ) {
-      qs = jv.toString();
-    }
-    else {
-      qs = "";
-      return -1;
-    }
-
-    return 0;
-
+  if ( jv.isString() ) {
+    qs = jv.toString();
   }
+  else {
+    qs = "";
+    return -1;
+  }
+
+  return 0;
+
+}
 
   int DataHeader::getString(const QString &s, std::string& ss ) {
 

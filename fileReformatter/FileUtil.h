@@ -7,6 +7,7 @@
 
 #include <QString>
 #include "Cnst.h"
+#include "DataHeader.h"
 
 class FileUtil {
 
@@ -20,6 +21,7 @@ public:
   static QString getBinDir(
      const QString& binRoot,
      const QString& subDir );
+  static QString makeBinFileName( DataHeader *dh, const QString& hdrName, int sigIndex );
 
 };
 

@@ -59,6 +59,7 @@ class DataHeader {
 
     int getDouble(const QString &s, double& d );
     int setDouble(const QString &s, const double& d );
+    QString getString(const QString &s );
     int getString(const QString &s, QString& ss );
     int getString(const QString &s, std::string& ss );
     int setString(const QString &s, const QString& ss );

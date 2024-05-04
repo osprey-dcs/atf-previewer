@@ -117,16 +117,9 @@ QString FileUtil::getBinDir( const QString& binRoot, const QString& subDir ) {
 
 QString FileUtil::makeBinFileName( DataHeader *dh, const QString& hdrName, int sigIndex ) {
 
-  QString binName = FileUtil::extractFileName( hdrName );
-  QString timeString;
-  int stat = dh->getString( "AcquisitionStartDate2", timeString );
-  if ( stat ) timeString = "-ERROR-";
-  QString binDir = FileUtil::getBinDir( Cnst::BinRoot.c_str(), timeString );
-  QString binFile = binDir;
-  binFile += binName;
-  binFile += "-Sig";
-  binFile += QString::number( sigIndex );
-  binFile += ".dat";
+  QString binDir = FileUtil::getBinDir( Cnst::BinRoot.c_str(), dh->getString( "AcquisitionStartDate2" ) );
+  QString binFile = binDir + FileUtil::extractFileName( hdrName ) + "-Sig" +
+    QString::number( sigIndex ) + ".dat";
 
   return binFile;
 
