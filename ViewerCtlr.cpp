@@ -1505,7 +1505,8 @@ void ViewerCtlr::mousePosition ( int vgaId, double x, double y ) {
     double loFreq = freq - onePixel * Cnst::peakPixelRange;
     if ( loFreq < 0.0 ) loFreq = 0.0;
     double hiFreq = freq + onePixel * Cnst::peakPixelRange;
-    if ( hiFreq > sr / 2.0 ) hiFreq = sr / 2.0;
+    //if ( hiFreq > sr / 2.0 ) hiFreq = sr / 2.0;
+    if ( hiFreq > sr ) hiFreq = sr;
 
     //std::cout << "loFreq = " << loFreq << std::endl;
     //std::cout << "hiFreq = " << hiFreq << std::endl;
