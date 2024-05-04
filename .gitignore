@@ -2,6 +2,6 @@
 *.o
 ./data
 ./save
-./cmake-build-debug
-./.idea
+cmake-build-debug
+.idea
 

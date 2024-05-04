@@ -30,8 +30,11 @@ class Cnst {
   static const int NumRows {2};
   static const int NumCols {1};
 
-  inline static const std::string defaultDir {"/home/osprey/viewerData/"};
-  inline static const std::string defaultFileFilter {"*.hdr"};
+  //inline static const std::string defaultDir {"/home/osprey/viewerData/"};
+  inline static const std::string BinRoot {"/home/osprey/dataBin/"};
+  inline static const std::string HdrRoot {"/home/osprey/dataHdr/"};
+  inline static const std::string DefaultHdrExtension {"hdr"};
+  inline static const std::string DefaultFilter {"*.hdr"};
 
   static const int MaxSigIndex {1023};
 

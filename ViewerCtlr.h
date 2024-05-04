@@ -87,6 +87,7 @@ public:
   QRectF plotAreaDimensions[Cnst::NumGraphs];
   bool haveFile;
   QString fileName;
+  QString simpleFileName;
   bool haveHeader;
   bool readyForData;
   unsigned long curMaxElements;

@@ -27,6 +27,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <QtCharts/QLineSeries>
 
 #include "ViewerCtlr.h"
+#include "FileUtil.h"
 
 static void setAll( int *ary, int n, int v ) {
   for ( int i=0; i<n; i++ ) {
@@ -459,9 +460,9 @@ void ViewerCtlr::process(void ) {
 
         // save reqFileName before appending extension
         grArea->setCurInfo( reqFileName, sigIndex );
-        
-        QString binFile = reqFileName + ".bin";
-        
+
+        QString binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
+
         // Viewer graph object, setSeries function,  manages qls
         QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
         double miny, maxy;
@@ -606,8 +607,8 @@ void ViewerCtlr::process(void ) {
           // save reqFileName before appending extension
           grArea->setCurInfo( reqFileName, sigIndex );
         
-          QString binFile = reqFileName + ".bin";
-        
+          QString binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
+
           // Viewer graph object, setSeries function,  manages qls
           QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
           double miny, maxy;
@@ -729,7 +730,7 @@ void ViewerCtlr::process(void ) {
           // save reqFileName before appending extension
           grArea->setCurInfo( reqFileName, sigIndex );
         
-          QString binFile = reqFileName + ".bin";
+          QString binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
         
           // Viewer graph object, setSeries function,  manages qls
           QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
@@ -850,7 +851,7 @@ void ViewerCtlr::process(void ) {
           // save reqFileName before appending extension
           grArea->setCurInfo( reqFileName, sigIndex );
         
-          QString binFile = reqFileName + ".bin";
+          QString binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
         
           // Viewer graph object, setSeries function,  manages qls
           QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
@@ -993,7 +994,7 @@ void ViewerCtlr::process(void ) {
           // save reqFileName before appending extension
           grArea->setCurInfo( reqFileName, sigIndex );
 
-          QString binFile = reqFileName + ".bin";
+          QString binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
 
           // Viewer graph object, setSeries function,  manages qls
           QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
@@ -1129,7 +1130,7 @@ void ViewerCtlr::process(void ) {
           // save reqFileName before appending extension
           grArea->setCurInfo( reqFileName, sigIndex );
 
-          QString binFile = reqFileName + ".bin";
+          QString binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
 
           // Viewer graph object, setSeries function,  manages qls
           QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
@@ -1324,12 +1325,14 @@ void ViewerCtlr::fileSelected1(const QString& file ) {
   }
 
   if ( count > 1 ) {
+    
     this->fileName = file;
     this->fileName.replace( count, l-count+1, "" );
     this->haveFile = true;
     for ( ViewerGraphAreaBase *w : this->mainWindow->getVgaList() ) {
       w->clear();
     }
+
   }
   
 }

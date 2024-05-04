@@ -60,8 +60,8 @@ ViewerMainWin::ViewerMainWin ( QApplication *_app, double _x, double _y, double 
   this->move( _x, _y );
   this->app = _app;
 
-  fileSelect = new QFileDialog( nullptr, "Open File", QString(Cnst::defaultDir.c_str()),
-                                QString(Cnst::defaultFileFilter.c_str()) );
+  fileSelect = new QFileDialog( nullptr, "Open File", QString(Cnst::HdrRoot.c_str()),
+                                QString(Cnst::DefaultFilter.c_str()) );
 
   // config layouts and child widgets
 

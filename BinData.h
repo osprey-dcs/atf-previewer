@@ -51,18 +51,18 @@ class BinData {
   std::shared_ptr<LineSeriesBuilderBase> fulsb;
   //TwoDIntPtr buf;
 
-  BinData();
-  virtual ~BinData();
-  BinData( const BinData& ) = delete;
-  BinData( BinData& ) = delete;
-  BinData( BinData&& ) = delete;
-  BinData& operator=( const BinData& ) = delete;
-  BinData& operator=( BinData& ) = delete;
-  BinData& operator=( BinData&& ) = delete;
+  BinData ();
+  virtual ~BinData ();
+  BinData ( const BinData& ) = delete;
+  BinData ( BinData& ) = delete;
+  BinData ( BinData&& ) = delete;
+  BinData& operator= ( const BinData& ) = delete;
+  BinData& operator= ( BinData& ) = delete;
+  BinData& operator= ( BinData&& ) = delete;
 
-  int getMaxElements( QString filename, int sigIndex, unsigned long& max );
+  int getMaxElements ( QString filename, int sigIndex, unsigned long& max );
 
-  int genLineSeries( QString filename,
+  int genLineSeries ( QString filename,
                      int sigIndex,
                      double slope,
                      double intercept,
@@ -79,6 +79,26 @@ class BinData {
                      fftw_complex *array  );
 
   int readTraceData( std::filebuf& fb, int *buf, int readSizeInbytes );
+
+  int getMaxElements2 ( QString filename, int sigIndex, unsigned long& max );
+
+  int genLineSeries2 ( QString filename,
+                     int sigIndex,
+                     double slope,
+                     double intercept,
+                     int plotAreaWidthPixels,
+                     double startTimeInSec,
+                     double endTimeInSec,
+                     double dataTimeIncrementInSec,
+                     unsigned long& numPts,
+                     QtCharts::QLineSeries& qls,
+                     double& miny,
+                     double& maxy,
+                     unsigned long maxFft,
+                     unsigned long& numFft,
+                     fftw_complex *array  );
+
+  int readTraceData2 ( std::filebuf& fb, int *buf, int readSizeInbytes );
 
   void updateLineSeries (
     int readOpCount,

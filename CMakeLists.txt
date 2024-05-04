@@ -61,6 +61,7 @@ add_executable(viewer main.cpp
         HelpAboutDialog.h
         ShortcutDialog.cpp
         ShortcutDialog.h
+        FileUtil.cpp
 )
 
 include_directories(/usr/include/c++/10
