@@ -13,7 +13,7 @@ int BinFileType::getRawBinFileType( const QString& rawBinFileName, QString& rawB
   std::filebuf fb;
 
   auto result1 = fb.open( rawBinFileName.toStdString(), std::ios::in | std::ios::binary );
-  if ( result1 < 0 ) {
+  if ( !result1 ) {
     return -1;
   }
 
