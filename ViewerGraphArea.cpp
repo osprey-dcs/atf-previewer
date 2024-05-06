@@ -35,7 +35,7 @@ ViewerGraphArea::ViewerGraphArea( int _id, QWidget *_parent ) : ViewerGraphAreaB
   hlayout2 = QSharedPointer<QHBoxLayout> ( new QHBoxLayout() );
   slider = QSharedPointer<ViewerSlider>( new ViewerSlider( this ) );
   graph = QSharedPointer<ViewerGraph>( new ViewerGraph( id, ViewerGraph::ScaleType::Linear,
-                                                        ViewerGraph::DataType::FFT, this ) );
+                                                        ViewerGraph::DataType::TimeSeries, this ) );
   mousePos = QSharedPointer<QLabel>( new QLabel( "          " ) );
   sigLabel = QSharedPointer<QLabel>( new QLabel( "Signal" ) );
   sigName = QSharedPointer<Combo>( new Combo( this ) );
