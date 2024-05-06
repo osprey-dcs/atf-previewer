@@ -18,7 +18,7 @@ public:
   int getUnixError ( void );
   void setMaxSize( unsigned long _maxSize );
   int setFile ( std::string fileName );
-  int readN ( std::filebuf *fb, unsigned long start, unsigned long end, char *buf );
+  int readN ( std::filebuf *fb, unsigned long start, unsigned long end, char *buf, bool showParams = false );
 
   static const unsigned int NumErrs = 5;
   static const unsigned int E_Success = 0;

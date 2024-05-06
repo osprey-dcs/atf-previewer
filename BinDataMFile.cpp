@@ -55,6 +55,7 @@ void BinDataMFile::initMaxBufSize( unsigned long max ) {
   vdisk.setMaxSize( max );
 }
 
+// old test data format
 int BinDataMFile::getMaxElements2 ( QString filename, int sigIndex, unsigned long& max ) {
 
   std::filebuf fb;
@@ -95,7 +96,8 @@ int BinDataMFile::getMaxElements2 ( QString filename, int sigIndex, unsigned lon
   return -1;
 
 }
-    
+
+// old test data format
 int BinDataMFile::genLineSeries2 ( QString filename,
                             int sigIndex,
                             double slope,
@@ -298,6 +300,7 @@ int BinDataMFile::genLineSeries2 ( QString filename,
 
 }
 
+// old test data format
 int BinDataMFile::readTraceData2 (
  std::filebuf& fb,
  int *buf,
@@ -329,7 +332,7 @@ int BinDataMFile::getMaxElements ( QString filename, int sigIndex, unsigned long
   unsigned long value;
   vdisk.readN( &fb, (unsigned long) sizeof( version ), sizeof(value), (char *) &value );
   //fb.sgetn((char *) &value, sizeof(value));
- 
+
   fb.close();
 
   max = value / sizeof(int);
@@ -400,7 +403,8 @@ int BinDataMFile::genLineSeries ( QString filename,
   if ( totalpoints > numSigbytes/sizeof(int) ) totalpoints = numSigbytes/sizeof(int);
 
   unsigned long startingOffset = startingpoint * sizeof(int);
-  //std::cout << "startingOffset: " <<  startingOffset<< std::endl;
+  //std::cout << std::endl << std::endl;
+  //std::cout << "startingOffset: " <<  startingOffset << std::endl;
   //std::cout << "offset 2: " << offset << std::endl;
 
   offset += startingOffset;
@@ -424,13 +428,16 @@ int BinDataMFile::genLineSeries ( QString filename,
     // read data in maximum chunks of 4000 bytes (1000 ints)
     int numBytesRead, buf[1000];
     unsigned long numReadOps = (totalpoints * sizeof(int)) / 4000;
+    //std::cout << "Initial read: totalpoints = " << totalpoints << std::endl;
+    //std::cout << "Initial read: numReadOps = " << numReadOps << std::endl;
     unsigned long finalReadSize = (totalpoints * sizeof(int)) % 4000;
     //std::cout << "finalReadSize 1: " << finalReadSize << std::endl;
     unsigned long iread;
     QPointF pts[4];
     double timeStep = startTimeInSec;
     numPts = 0;
-    for (iread = 0; iread < numReadOps; iread++) {
+
+    for ( iread = 0; iread < numReadOps; iread++ ) {
       numBytesRead = vdisk.readN( &fb, offset, 4000, (char *) buf );
       //fb.pubseekoff(offset, std::ios::beg, std::ios::in);
       //numBytesRead = readTraceData(fb, buf, 4000);
@@ -445,12 +452,16 @@ int BinDataMFile::genLineSeries ( QString filename,
       numPts += numBytesRead / sizeof(int);
       //std::cout << "numBytesRead: " << numBytesRead << std::endl;
     }
+
     if (finalReadSize) {
       //std::cout << "finalReadSize 2: " << finalReadSize << std::endl;
-      numBytesRead = vdisk.readN( &fb, offset, finalReadSize, (char *) buf );
+      //std::cout << "final offset: " << offset << std::endl;
+      numBytesRead = vdisk.readN( &fb, offset, finalReadSize, (char *) buf, true );
       //fb.pubseekoff(offset, std::ios::beg, std::ios::in);
       //numBytesRead = readTraceData(fb, buf, finalReadSize);
+      //std::cout << "final numBytesRead: " << numBytesRead << std::endl;
       int n = numBytesRead / sizeof( int );
+      
       updateLineSeries(iread, pts, slope, intercept, timeStep, plotAreaWidthPixels, startTimeInSec, endTimeInSec,
                        dataTimeIncrementInSec, numBytesRead, buf, slsb.get(), miny, maxy);
       for ( i=0; ( i<n && ifft<(maxFft-1) ); i++, ifft++ ) {
@@ -482,7 +493,7 @@ int BinDataMFile::genLineSeries ( QString filename,
     QPointF pts[4];
     double timeStep = startTimeInSec;
     numPts += 0;
-    for (iread = 0; iread < numReadOps; iread++) {
+    for ( iread = 0; iread < numReadOps; iread++ ) {
       numBytesRead = vdisk.readN( &fb, offset, 4000, (char *) buf );
       //fb.pubseekoff(offset, std::ios::beg, std::ios::in);
       //numBytesRead = readTraceData(fb, buf, 4000);
