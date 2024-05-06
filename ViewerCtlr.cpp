@@ -22,6 +22,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <sstream>
 #include <iostream>
 #include <iomanip>
+#include <string>
 
 #include <QtCharts/QChart>
 #include <QtCharts/QLineSeries>
@@ -98,7 +99,8 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
   this->dh = this->dhf.createDataHeader();
   //this->dh = std::shared_ptr<DataHeader>( new DataHeader() );
 
-  this->bd = this->bdf.createBinData();
+  this->bd = this->bdf.createBinData( Cnst::BinDataName );
+  this->bd->initMaxBufSize( Cnst::MaxMFileBufSize);
   //this->bd = std::shared_ptr<BinData>( new BinData() );
 
   this->fftIn = new fftw_complex[Cnst::MaxFftSize+1];
@@ -940,6 +942,9 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Scaling..." );
           
+          //stat = this->bd->genFftFillUnderLineSeriesFromBufferByFreq
+          //  ( numFft, fftOut, sampleRate, size.width(),
+          //    x0, x1, *qls, minx, maxx, miny, maxy );
           stat = this->bd->genFftFillUnderLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy );
@@ -1027,8 +1032,7 @@ void ViewerCtlr::process(void ) {
             mainWindow->setNumPoints( numPts );
           
             // Viewer graph object manages qls
-            //grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1, y0, y1 );
-            grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1, miny, maxy );
+            grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1, y0, y1 );
 
             if ( numFft ) {
               haveDataForFft = true;
@@ -1271,6 +1275,12 @@ void ViewerCtlr::sigNameChange1(int index, int sigIndex, QWidget *w ) {
     prevSigIndex[vga->id] = sigIndex;
     
     int request = ViewerCtlr::HaveDataRequest;
+
+    QString binFile = FileUtil::makeBinFileName( dh.get(), this->fileName, sigIndex );
+    int st = bd->newFile( binFile );
+    if ( st ) {
+      std::cout << "Error " << st << " from newFile" << std::endl;
+    }
     
     dataRequestList.push_back( std::make_tuple( request, vga, sigIndex, this->fileName ) );
     

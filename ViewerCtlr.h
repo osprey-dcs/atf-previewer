@@ -96,7 +96,7 @@ public:
   DataHeaderFac dhf;
   std::shared_ptr<DataHeader> dh;
   BinDataFac bdf;
-  std::shared_ptr<BinData> bd;
+  std::shared_ptr<BinDataBase> bd;
   fftw_complex *fftIn;
   fftw_complex *fftOut;
   unsigned long numPts;

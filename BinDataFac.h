@@ -21,21 +21,19 @@ If not, see <https://www.gnu.org/licenses/>.
 #define VIEWER_BinDataFAC_H
 
 #include <memory>
+#include <string>
 
 #include "BinData.h"
 
-static std::shared_ptr<BinData> bd = nullptr;
+static std::shared_ptr<BinDataBase> bd = nullptr;
+//static BinDataBase *bd = nullptr;
 
-//namespace osp {
-
-  class BinDataFac {
+class BinDataFac {
 
   public:
     BinDataFac();
-    std::shared_ptr<BinData> createBinData();
+    std::shared_ptr<BinDataBase> createBinData( std::string name );
 
   };
-
-//}
 
 #endif //VIEWER_BinDataFAC_H

@@ -17,8 +17,8 @@ If not, see <https://www.gnu.org/licenses/>.
 // Created by jws3 on 4/5/24.
 //
 
-#ifndef VIEWER_BINDATA_H
-#define VIEWER_BINDATA_H
+#ifndef VIEWER_BINDATABASE_H
+#define VIEWER_BINDATABASE_H
 
 #include <utility>
 #include <memory>
@@ -32,14 +32,13 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "LineSeriesBuilderSimpleFillUnder.h"
 #include "LineSeriesBuilderMinMaxFillUnder.h"
 #include "Cnst.h"
-#include "BinDataBase.h"
 
 extern "C" {
 #include <math.h>
 #include <fftw3.h>
 };
 
-class BinData : public BinDataBase {
+class BinDataBase {
 
   public:
   
@@ -50,20 +49,23 @@ class BinData : public BinDataBase {
   std::shared_ptr<LineSeriesBuilderBase> lsb;
   std::shared_ptr<LineSeriesBuilderBase> sfulsb;
   std::shared_ptr<LineSeriesBuilderBase> fulsb;
-  //TwoDIntPtr buf;
 
-  BinData ();
-  virtual ~BinData ();
-  BinData ( const BinData& ) = delete;
-  BinData ( BinData& ) = delete;
-  BinData ( BinData&& ) = delete;
-  BinData& operator= ( const BinData& ) = delete;
-  BinData& operator= ( BinData& ) = delete;
-  BinData& operator= ( BinData&& ) = delete;
+  BinDataBase ();
+  virtual ~BinDataBase ();
+  BinDataBase ( const BinDataBase& ) = delete;
+  BinDataBase ( BinDataBase& ) = delete;
+  BinDataBase ( BinDataBase&& ) = delete;
+  virtual BinDataBase& operator= ( const BinDataBase& ) = delete;
+  virtual BinDataBase& operator= ( BinDataBase& ) = delete;
+  virtual BinDataBase& operator= ( BinDataBase&& ) = delete;
 
-  int getMaxElements ( QString filename, int sigIndex, unsigned long& max );
+  virtual int newFile( QString filename );
 
-  int genLineSeries ( QString filename,
+  virtual void initMaxBufSize( unsigned long max );
+
+  virtual int getMaxElements ( QString filename, int sigIndex, unsigned long& max );
+
+  virtual int genLineSeries ( QString filename,
                      int sigIndex,
                      double slope,
                      double intercept,
@@ -79,11 +81,11 @@ class BinData : public BinDataBase {
                      unsigned long& numFft,
                      fftw_complex *array  );
 
-  int readTraceData( std::filebuf& fb, int *buf, int readSizeInbytes );
+  virtual int readTraceData( std::filebuf& fb, int *buf, int readSizeInbytes );
 
-  int getMaxElements2 ( QString filename, int sigIndex, unsigned long& max );
+  virtual int getMaxElements2 ( QString filename, int sigIndex, unsigned long& max );
 
-  int genLineSeries2 ( QString filename,
+  virtual int genLineSeries2 ( QString filename,
                      int sigIndex,
                      double slope,
                      double intercept,
@@ -99,9 +101,9 @@ class BinData : public BinDataBase {
                      unsigned long& numFft,
                      fftw_complex *array  );
 
-  int readTraceData2 ( std::filebuf& fb, int *buf, int readSizeInbytes );
+  virtual int readTraceData2 ( std::filebuf& fb, int *buf, int readSizeInbytes );
 
-  void updateLineSeries (
+  virtual void updateLineSeries (
     int readOpCount,
     QPointF *pts,
     double slope,
@@ -117,7 +119,7 @@ class BinData : public BinDataBase {
     double& miny,
     double &maxy );
 
-  int genFftFillUnderLineSeriesFromBuffer (
+  virtual int genFftFillUnderLineSeriesFromBuffer (
     int num,
     fftw_complex *buf,
     double sampleRate,
@@ -128,7 +130,7 @@ class BinData : public BinDataBase {
     double& miny,
     double& maxy );
 
-  int genFftFillUnderLineSeriesFromBufferByFreq (
+  virtual int genFftFillUnderLineSeriesFromBufferByFreq (
     int num,
     fftw_complex *buf,
     double sampleRate,
@@ -141,9 +143,6 @@ class BinData : public BinDataBase {
     double& miny,
     double& maxy );
 
-  double sampleFreq = 1.0;
-  //double slope = 1.0, intercept = 0.0;
-
 };
 
-#endif //VIEWER_BINDATA_H
+#endif //VIEWER_BINDATABASE_H

@@ -18,18 +18,35 @@ If not, see <https://www.gnu.org/licenses/>.
 //
 
 #include "BinData.h"
+#include "BinDataMFile.h"
 #include "BinDataFac.h"
-
-//namespace osp {
 
 BinDataFac::BinDataFac ( ) { }
 
-std::shared_ptr<BinData> BinDataFac::createBinData () {
+std::shared_ptr<BinDataBase> BinDataFac::createBinData ( std::string name ) {
+  
+  if ( name == "File" ) {
+    
+    if ( !bd ) {
+      bd = std::shared_ptr<BinDataBase>( new BinData() );
+    }
 
-  if ( !bd ) {
-    bd = std::shared_ptr<BinData>( new BinData() );
   }
+  else if ( name == "MFile" ) {
+    
+    if ( !bd ) {
+      bd = std::shared_ptr<BinDataBase>( new BinDataMFile() );
+    }
 
+  }
+  else {
+    
+    if ( !bd ) {
+      bd = std::shared_ptr<BinDataBase>( new BinData() );
+    }
+
+  }
+  
   return bd;
 
 }

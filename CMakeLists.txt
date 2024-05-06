@@ -62,6 +62,11 @@ add_executable(viewer main.cpp
         ShortcutDialog.cpp
         ShortcutDialog.h
         FileUtil.cpp
+        BinDataBase.cpp
+        BinDataBase.h
+        BinDataMFile.cpp
+        BinDataMFile.h
+        VDisk.cpp
 )
 
 include_directories(/usr/include/c++/10

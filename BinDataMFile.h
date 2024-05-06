@@ -17,8 +17,8 @@ If not, see <https://www.gnu.org/licenses/>.
 // Created by jws3 on 4/5/24.
 //
 
-#ifndef VIEWER_BINDATA_H
-#define VIEWER_BINDATA_H
+#ifndef VIEWER_BINDATAMFILE_H
+#define VIEWER_BINDATAMFILE_H
 
 #include <utility>
 #include <memory>
@@ -32,6 +32,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "LineSeriesBuilderSimpleFillUnder.h"
 #include "LineSeriesBuilderMinMaxFillUnder.h"
 #include "Cnst.h"
+#include "VDisk.h"
 #include "BinDataBase.h"
 
 extern "C" {
@@ -39,7 +40,7 @@ extern "C" {
 #include <fftw3.h>
 };
 
-class BinData : public BinDataBase {
+class BinDataMFile : public BinDataBase {
 
   public:
   
@@ -52,14 +53,18 @@ class BinData : public BinDataBase {
   std::shared_ptr<LineSeriesBuilderBase> fulsb;
   //TwoDIntPtr buf;
 
-  BinData ();
-  virtual ~BinData ();
-  BinData ( const BinData& ) = delete;
-  BinData ( BinData& ) = delete;
-  BinData ( BinData&& ) = delete;
-  BinData& operator= ( const BinData& ) = delete;
-  BinData& operator= ( BinData& ) = delete;
-  BinData& operator= ( BinData&& ) = delete;
+  BinDataMFile ();
+  virtual ~BinDataMFile ();
+  BinDataMFile ( const BinDataMFile& ) = delete;
+  BinDataMFile ( BinDataMFile& ) = delete;
+  BinDataMFile ( BinDataMFile&& ) = delete;
+  BinDataMFile& operator= ( const BinDataMFile& ) = delete;
+  BinDataMFile& operator= ( BinDataMFile& ) = delete;
+  BinDataMFile& operator= ( BinDataMFile&& ) = delete;
+
+  int newFile ( QString fileName );
+
+  void initMaxBufSize( unsigned long max );
 
   int getMaxElements ( QString filename, int sigIndex, unsigned long& max );
 
@@ -141,9 +146,8 @@ class BinData : public BinDataBase {
     double& miny,
     double& maxy );
 
-  double sampleFreq = 1.0;
-  //double slope = 1.0, intercept = 0.0;
+  VDisk vdisk;
 
 };
 
-#endif //VIEWER_BINDATA_H
+#endif //VIEWER_BINDATAMFILE_H

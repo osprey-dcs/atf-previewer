@@ -29,27 +29,33 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <QLineSeries>
 #include <QDebug>
 
-#include "BinData.h"
+#include "BinDataMFile.h"
 
 static int qlsInit = 1;
 
-BinData::BinData() {
-
-  std::cout << "BinData\n";
+BinDataMFile::BinDataMFile() {
 
   xlsb = std::shared_ptr<LineSeriesBuilderSimple>( new LineSeriesBuilderSimple );
   this->slsb = std::shared_ptr<LineSeriesBuilderSimple>( new LineSeriesBuilderSimple() );
   this->lsb = std::shared_ptr<LineSeriesBuilderMinMax>( new LineSeriesBuilderMinMax() );
   this->sfulsb = std::shared_ptr<LineSeriesBuilderSimpleFillUnder>( new LineSeriesBuilderSimpleFillUnder() );
   this->fulsb = std::shared_ptr<LineSeriesBuilderMinMaxFillUnder>( new LineSeriesBuilderMinMaxFillUnder() );
+  
+}
+
+BinDataMFile::~BinDataMFile() {
 
 }
 
-BinData::~BinData() {
-
+int BinDataMFile::newFile( QString fileName ) {
+  return vdisk.setFile ( fileName.toStdString() );
 }
 
-int BinData::getMaxElements2 ( QString filename, int sigIndex, unsigned long& max ) {
+void BinDataMFile::initMaxBufSize( unsigned long max ) {
+  vdisk.setMaxSize( max );
+}
+
+int BinDataMFile::getMaxElements2 ( QString filename, int sigIndex, unsigned long& max ) {
 
   std::filebuf fb;
   const unsigned int version[] { 1, 0, 0 };
@@ -90,7 +96,7 @@ int BinData::getMaxElements2 ( QString filename, int sigIndex, unsigned long& ma
 
 }
     
-int BinData::genLineSeries2 ( QString filename,
+int BinDataMFile::genLineSeries2 ( QString filename,
                             int sigIndex,
                             double slope,
                             double intercept,
@@ -106,7 +112,7 @@ int BinData::genLineSeries2 ( QString filename,
                             unsigned long& numFft,
                             fftw_complex *fftArray ) {
     
-  //std::cout << "BinData::genLineSeries" << std::endl;
+  //std::cout << "BinDataMFile::genLineSeries" << std::endl;
   //std::cout << "maxFft = " <<  maxFft << std::endl;
   //std::cout << "sigIndex = " <<  sigIndex << std::endl;
   //std::cout << "plotAreaWidthPixels = " <<  plotAreaWidthPixels << std::endl;
@@ -292,7 +298,7 @@ int BinData::genLineSeries2 ( QString filename,
 
 }
 
-int BinData::readTraceData2 (
+int BinDataMFile::readTraceData2 (
  std::filebuf& fb,
  int *buf,
  int readSizeInbytes ) {
@@ -304,7 +310,7 @@ int BinData::readTraceData2 (
 
 }
 
-int BinData::getMaxElements ( QString filename, int sigIndex, unsigned long& max ) {
+int BinDataMFile::getMaxElements ( QString filename, int sigIndex, unsigned long& max ) {
 
   std::filebuf fb;
   const unsigned int version[] { 1, 0, 0 };
@@ -315,22 +321,24 @@ int BinData::getMaxElements ( QString filename, int sigIndex, unsigned long& max
   }
 
   // read version
-  fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
-  fb.sgetn( (char *) version, sizeof(version) );
+  vdisk.readN( &fb, 0ul, sizeof(version), (char *) version );
+  //fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
+  //fb.sgetn( (char *) version, sizeof(version) );
 
   // get num of elements
   unsigned long value;
-  fb.sgetn((char *) &value, sizeof(value));
+  vdisk.readN( &fb, (unsigned long) sizeof( version ), sizeof(value), (char *) &value );
+  //fb.sgetn((char *) &value, sizeof(value));
  
   fb.close();
 
   max = value / sizeof(int);
-  
+
   return 0;
 
 }
     
-int BinData::genLineSeries ( QString filename,
+int BinDataMFile::genLineSeries ( QString filename,
                             int sigIndex,
                             double slope,
                             double intercept,
@@ -346,7 +354,7 @@ int BinData::genLineSeries ( QString filename,
                             unsigned long& numFft,
                             fftw_complex *fftArray ) {
     
-  //std::cout << "BinData::genLineSeries" << std::endl;
+  //std::cout << "BinDataMFile::genLineSeries" << std::endl;
   //std::cout << "maxFft = " <<  maxFft << std::endl;
   //std::cout << "sigIndex = " <<  sigIndex << std::endl;
   //std::cout << "plotAreaWidthPixels = " <<  plotAreaWidthPixels << std::endl;
@@ -364,13 +372,15 @@ int BinData::genLineSeries ( QString filename,
   }
 
   // read version
-  fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
-  fb.sgetn( (char *) version, sizeof(version) );
+  vdisk.readN( &fb, 0ul, sizeof(version), (char *) version );
+  //fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
+  //fb.sgetn( (char *) version, sizeof(version) );
 
   // read numSigbytes
   unsigned long numSigbytes;
-  fb.pubseekoff( (unsigned long) sizeof( version ), std::ios::beg, std::ios::in );
-  fb.sgetn((char *) &numSigbytes, sizeof(numSigbytes));
+  vdisk.readN( &fb, (unsigned long) sizeof( version ), sizeof(numSigbytes), (char *) &numSigbytes );
+  //fb.pubseekoff( (unsigned long) sizeof( version ), std::ios::beg, std::ios::in );
+  //fb.sgetn((char *) &numSigbytes, sizeof(numSigbytes));
 
   unsigned int headerSize = sizeof(numSigbytes) + sizeof(version);
   unsigned long offset = headerSize;
@@ -421,8 +431,9 @@ int BinData::genLineSeries ( QString filename,
     double timeStep = startTimeInSec;
     numPts = 0;
     for (iread = 0; iread < numReadOps; iread++) {
-      fb.pubseekoff(offset, std::ios::beg, std::ios::in);
-      numBytesRead = readTraceData(fb, buf, 4000);
+      numBytesRead = vdisk.readN( &fb, offset, 4000, (char *) buf );
+      //fb.pubseekoff(offset, std::ios::beg, std::ios::in);
+      //numBytesRead = readTraceData(fb, buf, 4000);
       updateLineSeries(iread, pts, slope, intercept, timeStep, plotAreaWidthPixels, startTimeInSec, endTimeInSec,
                        dataTimeIncrementInSec, numBytesRead, buf, slsb.get(), miny, maxy);
       for ( i=0; ( i<1000 && ifft<(maxFft-1) ); i++, ifft++ ) {
@@ -436,8 +447,9 @@ int BinData::genLineSeries ( QString filename,
     }
     if (finalReadSize) {
       //std::cout << "finalReadSize 2: " << finalReadSize << std::endl;
-      fb.pubseekoff(offset, std::ios::beg, std::ios::in);
-      numBytesRead = readTraceData(fb, buf, finalReadSize);
+      numBytesRead = vdisk.readN( &fb, offset, finalReadSize, (char *) buf );
+      //fb.pubseekoff(offset, std::ios::beg, std::ios::in);
+      //numBytesRead = readTraceData(fb, buf, finalReadSize);
       int n = numBytesRead / sizeof( int );
       updateLineSeries(iread, pts, slope, intercept, timeStep, plotAreaWidthPixels, startTimeInSec, endTimeInSec,
                        dataTimeIncrementInSec, numBytesRead, buf, slsb.get(), miny, maxy);
@@ -471,8 +483,9 @@ int BinData::genLineSeries ( QString filename,
     double timeStep = startTimeInSec;
     numPts += 0;
     for (iread = 0; iread < numReadOps; iread++) {
-      fb.pubseekoff(offset, std::ios::beg, std::ios::in);
-      numBytesRead = readTraceData(fb, buf, 4000);
+      numBytesRead = vdisk.readN( &fb, offset, 4000, (char *) buf );
+      //fb.pubseekoff(offset, std::ios::beg, std::ios::in);
+      //numBytesRead = readTraceData(fb, buf, 4000);
       updateLineSeries(iread, pts, slope, intercept, timeStep, plotAreaWidthPixels, startTimeInSec, endTimeInSec,
                        dataTimeIncrementInSec, numBytesRead, buf, lsb.get(), miny, maxy);
       for ( i=0; ( i<1000 && ifft<(maxFft-1) ); i++, ifft++ ) {
@@ -486,8 +499,9 @@ int BinData::genLineSeries ( QString filename,
     }
     if (finalReadSize) {
       //std::cout << "finalReadSize 2: " << finalReadSize << std::endl;
-      fb.pubseekoff(offset, std::ios::beg, std::ios::in);
-      numBytesRead = readTraceData(fb, buf, finalReadSize);
+      numBytesRead = vdisk.readN( &fb, offset, finalReadSize, (char *) buf );
+      //fb.pubseekoff(offset, std::ios::beg, std::ios::in);
+      //numBytesRead = readTraceData(fb, buf, finalReadSize);
       int n = numBytesRead / sizeof( int );
       updateLineSeries(iread, pts, slope, intercept, timeStep, plotAreaWidthPixels, startTimeInSec, endTimeInSec,
                        dataTimeIncrementInSec, numBytesRead, buf, lsb.get(), miny, maxy);
@@ -516,7 +530,7 @@ int BinData::genLineSeries ( QString filename,
 
 }
 
-int BinData::readTraceData (
+int BinDataMFile::readTraceData (
  std::filebuf& fb,
  int *buf,
  int readSizeInbytes ) {
@@ -533,7 +547,7 @@ static const int lastp = 1;
 static const int minp = 2;
 static const int maxp = 3;
 
-void BinData::updateLineSeries(
+void BinDataMFile::updateLineSeries(
   int readOpCount,
   QPointF *pts,
   double slope,
@@ -600,7 +614,7 @@ void BinData::updateLineSeries(
 }
 
 // generate line series using entire buffer
-int BinData::genFftFillUnderLineSeriesFromBuffer (
+int BinDataMFile::genFftFillUnderLineSeriesFromBuffer (
  int num,
  fftw_complex *buf,
  double sampleRate,
@@ -680,7 +694,7 @@ int BinData::genFftFillUnderLineSeriesFromBuffer (
 }
 
 // generate line series from freq min to freq max
-int BinData::genFftFillUnderLineSeriesFromBufferByFreq (
+int BinDataMFile::genFftFillUnderLineSeriesFromBufferByFreq (
  int num,
  fftw_complex *buf,
  double sampleRate,
@@ -693,7 +707,7 @@ int BinData::genFftFillUnderLineSeriesFromBufferByFreq (
  double& miny,
  double& maxy ) {
 
-  //std::cout << "BinData::genFftFillUnderLineSeriesFromBufferByFreq" << std::endl;
+  //std::cout << "BinDataMFile::genFftFillUnderLineSeriesFromBufferByFreq" << std::endl;
   //std::cout << "freqMin = " << freqMin << ", freqMax = " << freqMax << std::endl;
 
   bool firstSample = true;

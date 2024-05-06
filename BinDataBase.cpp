@@ -29,13 +29,11 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <QLineSeries>
 #include <QDebug>
 
-#include "BinData.h"
+#include "BinDataBase.h"
 
 static int qlsInit = 1;
 
-BinData::BinData() {
-
-  std::cout << "BinData\n";
+BinDataBase::BinDataBase() {
 
   xlsb = std::shared_ptr<LineSeriesBuilderSimple>( new LineSeriesBuilderSimple );
   this->slsb = std::shared_ptr<LineSeriesBuilderSimple>( new LineSeriesBuilderSimple() );
@@ -45,11 +43,18 @@ BinData::BinData() {
 
 }
 
-BinData::~BinData() {
+BinDataBase::~BinDataBase() {
 
 }
 
-int BinData::getMaxElements2 ( QString filename, int sigIndex, unsigned long& max ) {
+int BinDataBase::newFile( QString filename ) {
+  return 0;
+}
+
+void BinDataBase::initMaxBufSize( unsigned long max ) {
+}
+
+int BinDataBase::getMaxElements2 ( QString filename, int sigIndex, unsigned long& max ) {
 
   std::filebuf fb;
   const unsigned int version[] { 1, 0, 0 };
@@ -90,7 +95,7 @@ int BinData::getMaxElements2 ( QString filename, int sigIndex, unsigned long& ma
 
 }
     
-int BinData::genLineSeries2 ( QString filename,
+int BinDataBase::genLineSeries2 ( QString filename,
                             int sigIndex,
                             double slope,
                             double intercept,
@@ -106,7 +111,7 @@ int BinData::genLineSeries2 ( QString filename,
                             unsigned long& numFft,
                             fftw_complex *fftArray ) {
     
-  //std::cout << "BinData::genLineSeries" << std::endl;
+  //std::cout << "BinDataBase::genLineSeries" << std::endl;
   //std::cout << "maxFft = " <<  maxFft << std::endl;
   //std::cout << "sigIndex = " <<  sigIndex << std::endl;
   //std::cout << "plotAreaWidthPixels = " <<  plotAreaWidthPixels << std::endl;
@@ -292,7 +297,7 @@ int BinData::genLineSeries2 ( QString filename,
 
 }
 
-int BinData::readTraceData2 (
+int BinDataBase::readTraceData2 (
  std::filebuf& fb,
  int *buf,
  int readSizeInbytes ) {
@@ -304,7 +309,7 @@ int BinData::readTraceData2 (
 
 }
 
-int BinData::getMaxElements ( QString filename, int sigIndex, unsigned long& max ) {
+int BinDataBase::getMaxElements ( QString filename, int sigIndex, unsigned long& max ) {
 
   std::filebuf fb;
   const unsigned int version[] { 1, 0, 0 };
@@ -330,7 +335,7 @@ int BinData::getMaxElements ( QString filename, int sigIndex, unsigned long& max
 
 }
     
-int BinData::genLineSeries ( QString filename,
+int BinDataBase::genLineSeries ( QString filename,
                             int sigIndex,
                             double slope,
                             double intercept,
@@ -346,7 +351,7 @@ int BinData::genLineSeries ( QString filename,
                             unsigned long& numFft,
                             fftw_complex *fftArray ) {
     
-  //std::cout << "BinData::genLineSeries" << std::endl;
+  //std::cout << "BinDataBase::genLineSeries" << std::endl;
   //std::cout << "maxFft = " <<  maxFft << std::endl;
   //std::cout << "sigIndex = " <<  sigIndex << std::endl;
   //std::cout << "plotAreaWidthPixels = " <<  plotAreaWidthPixels << std::endl;
@@ -516,7 +521,7 @@ int BinData::genLineSeries ( QString filename,
 
 }
 
-int BinData::readTraceData (
+int BinDataBase::readTraceData (
  std::filebuf& fb,
  int *buf,
  int readSizeInbytes ) {
@@ -533,7 +538,7 @@ static const int lastp = 1;
 static const int minp = 2;
 static const int maxp = 3;
 
-void BinData::updateLineSeries(
+void BinDataBase::updateLineSeries(
   int readOpCount,
   QPointF *pts,
   double slope,
@@ -600,7 +605,7 @@ void BinData::updateLineSeries(
 }
 
 // generate line series using entire buffer
-int BinData::genFftFillUnderLineSeriesFromBuffer (
+int BinDataBase::genFftFillUnderLineSeriesFromBuffer (
  int num,
  fftw_complex *buf,
  double sampleRate,
@@ -680,7 +685,7 @@ int BinData::genFftFillUnderLineSeriesFromBuffer (
 }
 
 // generate line series from freq min to freq max
-int BinData::genFftFillUnderLineSeriesFromBufferByFreq (
+int BinDataBase::genFftFillUnderLineSeriesFromBufferByFreq (
  int num,
  fftw_complex *buf,
  double sampleRate,
@@ -693,7 +698,7 @@ int BinData::genFftFillUnderLineSeriesFromBufferByFreq (
  double& miny,
  double& maxy ) {
 
-  //std::cout << "BinData::genFftFillUnderLineSeriesFromBufferByFreq" << std::endl;
+  //std::cout << "BinDataBase::genFftFillUnderLineSeriesFromBufferByFreq" << std::endl;
   //std::cout << "freqMin = " << freqMin << ", freqMax = " << freqMax << std::endl;
 
   bool firstSample = true;

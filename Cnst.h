@@ -35,6 +35,9 @@ class Cnst {
   inline static const std::string HdrRoot {"/home/osprey/dataHdr/"};
   inline static const std::string DefaultHdrExtension {"hdr"};
   inline static const std::string DefaultFilter {"*.hdr"};
+  inline static const std::string BinDataName {"File"};
+
+  static const unsigned long MaxMFileBufSize {0};
 
   static const int MaxSigIndex {1023};
 
