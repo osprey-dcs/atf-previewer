@@ -514,6 +514,7 @@ void ViewerCtlr::process(void ) {
           // clear associated fft graph
           ViewerGraphAreaBase *companVga = this->companionVga( grArea );
           if ( companVga ) {
+            companVga->setInitialState();
             companVga->clear();
           }
 

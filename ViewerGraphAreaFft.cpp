@@ -54,7 +54,7 @@ ViewerGraphAreaFft::~ViewerGraphAreaFft( ) {
 }
 
 void ViewerGraphAreaFft::clear ( void ) {
-  graph->clear();
+  if ( graph ) graph->clear();
 }
 
 void ViewerGraphAreaFft::updateMousePosition( double x, double y ) {
