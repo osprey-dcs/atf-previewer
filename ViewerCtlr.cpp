@@ -416,6 +416,7 @@ void ViewerCtlr::process(void ) {
             stat = this->bd->genFftFillUnderLineSeriesFromBuffer( numFft, fftOut, sampleRate, size.width(),
                                                               *qls, minx, maxx, miny, maxy );
             if ( !stat ) {
+              companVga->setInitialState();
               companVga->graph->setSeries( qls, sigIndex, reqFileName, minx, maxx, miny, maxy );
               mainWindow->setNumFftPoints( numFft );
             }
