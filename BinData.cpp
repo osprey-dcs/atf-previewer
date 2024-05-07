@@ -35,8 +35,6 @@ static int qlsInit = 1;
 
 BinData::BinData() {
 
-  std::cout << "BinData\n";
-
   xlsb = std::shared_ptr<LineSeriesBuilderSimple>( new LineSeriesBuilderSimple );
   this->slsb = std::shared_ptr<LineSeriesBuilderSimple>( new LineSeriesBuilderSimple() );
   this->lsb = std::shared_ptr<LineSeriesBuilderMinMax>( new LineSeriesBuilderMinMax() );

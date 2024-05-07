@@ -89,6 +89,10 @@ void ViewerGraphArea::getCurInfo( QString& _curFileName, int& _curSigIndex ) {
 
 void ViewerGraphArea::setInitialState( void ) {
 
+  if ( graph ) {
+    graph->views.clear();
+    graph->prevViewAction->setEnabled( false );
+  }
   curSliderValue = 0;
   slider->setValue( 0 );
 
@@ -98,7 +102,7 @@ void ViewerGraphArea::clear ( void ) {
 
   curSigIndex = 0;
   curFileName = "";
-  graph->clear();
+  if ( graph ) graph->clear();
 
 }
 
