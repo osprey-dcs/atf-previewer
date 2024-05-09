@@ -22,7 +22,7 @@
 #include <errno.h>
 #include <string.h>
 
-static const char* version = "0.0.1";
+static const char* version = "0.0.2";
 
 int main( int argc, char **argv ) {
 
