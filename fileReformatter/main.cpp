@@ -22,7 +22,7 @@
 #include <errno.h>
 #include <string.h>
 
-static const char* version = "0.0.2";
+static const char* version = "0.0.3";
 
 int main( int argc, char **argv ) {
 
@@ -69,7 +69,7 @@ int main( int argc, char **argv ) {
   int startingChanIndex = 1;
   for ( int i=1; i<=Cnst::MaxChassis; i++ ) {
 
-    QString rawDataFileName = binFileDir + runName + "-Chassis";
+    QString rawDataFileName = runName + "-Chassis";
 
     std::stringstream strm;
     strm << rawDataFileName.toStdString() << std::setw(2) << std::setfill( '0' ) << i << "." << Cnst::RawFileExtension;
