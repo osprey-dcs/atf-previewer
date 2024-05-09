@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <sstream>
 #include <iomanip>
 #include <byteswap.h>
 
@@ -13,8 +14,9 @@
 
 PsnFileConverter::PsnFileConverter ( ) {}
 
-int PsnFileConverter::convert (const DataHeader *dh, const QString &rawDataFile,
-                               const QString& binDataFileDir, const QString& simpleName ) {
+int PsnFileConverter::convert ( int chassisIndex, int startingSigIndex, const DataHeader *dh,
+                                const QString &rawDataFile, const QString& binDataFileDir,
+                                const QString& simpleName, bool verbose ) {
 
   // first cut will be single threaded
 
@@ -54,14 +56,14 @@ int PsnFileConverter::convert (const DataHeader *dh, const QString &rawDataFile,
     return -1;
   }
 
-  stat = createAndOpenOutputFiles( dh, simpleName, binDataFileDir );
+  stat = createAndOpenOutputFiles( startingSigIndex, dh, simpleName, binDataFileDir, verbose );
   if ( stat ) {
     fb.close();
     std::cout << "Output files open failure " << std::endl;
     return -1;
   }
 
-  stat = createAndOpenStatusOutputFile( dh, simpleName, binDataFileDir );
+  stat = createAndOpenStatusOutputFile( chassisIndex, dh, simpleName, binDataFileDir, verbose );
   if ( stat ) {
     fb.close();
     std::cout << "Status file open failure " << std::endl;
@@ -439,32 +441,28 @@ int PsnFileConverter::readBinData(std::filebuf& fb, unsigned long loc, unsigned 
 
 }
 
-int PsnFileConverter::createAndOpenOutputFiles(const DataHeader *dh, const QString& simpleName,
-                                               const QString& binDataFileDir ) {
+int PsnFileConverter::createAndOpenOutputFiles( int startingSigIndex, const DataHeader *dh,
+                                                const QString& simpleName, const QString& binDataFileDir,
+                                                bool verbose ) {
 
   QString fname;
   unsigned long sizeInBytes = 0;
-
-  // create directory -  ignore errno EEXIST (dir alreay exists)
-  int stat = mkdir( binDataFileDir.toStdString().c_str(), 0777 );
-  if ( stat == -1 ) {
-    if ( errno != EEXIST ) {
-      perror( "mkdir" );
-      return -1;
-    }
-  }
 
   // open all files
   for ( int i=0; i<Cnst::MaxSignals; i++ ) {
 
     fileLoc[i] = 0;
+
+    std::stringstream strm;
+    strm << binDataFileDir.toStdString() << simpleName.toStdString() << "-Chan" <<
+      std::setw(4) << std::setfill( '0' ) << i+startingSigIndex <<
+      "." << Cnst::BinExtension;
     
-    fname = binDataFileDir + simpleName;
-    fname += "-Sig";
-    fname += QString::number( i );
-    fname += ".dat";
-    
-    //std::cout << "file is " << fname.toStdString() << std::endl;
+    fname = strm.str().c_str();
+
+    if ( verbose ) {
+      std::cout << "  Writing output file: " << fname.toStdString() << std::endl;
+    }
     
     auto result = fb[i].open( fname.toStdString(), std::ios::out | std::ios::binary );
     if ( !result ) {
@@ -510,8 +508,6 @@ void PsnFileConverter::closeOutputFiles (void ) {
   // write number of data bytes (i.e. don't include the 20 header bytes) to the
   // 64bit unsigned quantity at location 12 and then close file
 
-  //std::cout << "sizeOfOneFile = " << sizeOfOneFile+20 << std::endl;
-
   for ( int i=0; i<Cnst::MaxSignals; i++ ) {
     
     fileLoc[i] -= 20;
@@ -532,18 +528,8 @@ void PsnFileConverter::closeOutputFiles (void ) {
 
 }
 
-
-
-
-
-
-
-
-
-
-
-int PsnFileConverter::createAndOpenStatusOutputFile ( const DataHeader *dh, const QString& simpleName,
-                                                      const QString& binDataFileDir ) {
+int PsnFileConverter::createAndOpenStatusOutputFile ( int chassisIndex, const DataHeader *dh, const QString& simpleName,
+                                                      const QString& binDataFileDir, bool verbose ) {
 
   QString fname;
   unsigned long sizeInBytes = 0;
@@ -553,11 +539,17 @@ int PsnFileConverter::createAndOpenStatusOutputFile ( const DataHeader *dh, cons
   // open file
 
   statusFileLoc = 0;
-    
-  fname = binDataFileDir + simpleName;
-  fname += "-Status";
-  fname += ".dat";
-    
+
+  std::stringstream strm;
+  strm << binDataFileDir.toStdString() << simpleName.toStdString() << "-Chassis" <<
+    std::setw(2) << std::setfill( '0' ) << chassisIndex << "-Status" << "." << Cnst::StatusExtension;
+
+  fname = strm.str().c_str();
+
+  if ( verbose ) {
+    std::cout << "  Writing output status file: " << fname.toStdString() << std::endl;
+  }
+
   auto result = statusFb.open( fname.toStdString(), std::ios::out | std::ios::binary );
   if ( !result ) {
     return -1;

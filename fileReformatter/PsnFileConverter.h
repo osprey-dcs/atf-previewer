@@ -42,8 +42,9 @@ public:
   static const int HIHI        = 9;
 
   PsnFileConverter();
-  int convert( const DataHeader *dh, const QString& rawDataFile,
-               const QString& binDataFileDir, const QString& simpleName );
+  int convert(  int chassisIndex, int startingSigIndex, const DataHeader *dh, const QString& rawDataFile,
+               const QString& binDataFileDir, const QString& simpleName, bool verbose=false );
+  
   void show( void );
 
   std::filebuf rawDataFileBuf, binDataFileBuf[Cnst::MaxRecs], statusFileBuf;
@@ -55,11 +56,14 @@ private:
   int readHeaderType( std::filebuf& fb, unsigned long loc, QString& headerType, bool& eof );
   int readBinData ( std::filebuf& fb, unsigned long loc, unsigned int dataLen,
                    unsigned int *buf, unsigned int& numBytesRead, bool& complete );
-  int createAndOpenOutputFiles ( const DataHeader *dh, const QString& simpleName, const QString& binDataFileDir );
+  int createAndOpenOutputFiles ( int startingSigIndex, const DataHeader *dh,
+                                 const QString& simpleName, const QString& binDataFileDir,
+                                 bool verbose=false );
   int writeOutputFiles ( int numValues, unsigned int array[Cnst::MaxSignals][Cnst::Max4PerWord] );
   void closeOutputFiles ( void );
 
-  int createAndOpenStatusOutputFile ( const DataHeader *dh, const QString& simpleName, const QString& binDataFileDir );
+  int createAndOpenStatusOutputFile ( int chassisIndex, const DataHeader *dh, const QString& simpleName,
+                                      const QString& binDataFileDir, bool verbose=false );
   int writeStatusOutputFile ( int numValues, unsigned int array[Cnst::MaxStatus][NumStatusFields] );
   void closeStatusOutputFile ( void );
 

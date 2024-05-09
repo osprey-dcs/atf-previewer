@@ -18,6 +18,7 @@ public:
     const QString& rootDir,
     const QString& name );
   static QString extractFileName( QString str );
+  static QString extractDir( QString str );
   static QString getBinDir(
      const QString& binRoot,
      const QString& subDir );

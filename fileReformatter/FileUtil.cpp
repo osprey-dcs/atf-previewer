@@ -45,11 +45,11 @@ QString FileUtil::getHeaderFileName (
   if ( !hasExtension( name1 ) ) {
 
     if ( name1.endsWith( "." ) ) {
-      name1 += Cnst::DefaultHdrExtension.c_str();
+      name1 += Cnst::HdrExtension.c_str();
     }
     else {
       name1 += ".";
-      name1 += Cnst::DefaultHdrExtension.c_str();
+      name1 += Cnst::HdrExtension.c_str();
     }
 
   }
@@ -102,6 +102,22 @@ QString FileUtil::extractFileName( QString str ) {
 
 }
 
+QString FileUtil::extractDir( QString str ) {
+
+  QString tmp = str;
+
+  int dirEnd = -1;
+  for ( int i=tmp.length()-1; i>=0; i-- ) {
+    if ( tmp.at(i).toLatin1() == '/' ) {
+      dirEnd = i;
+      break;
+    }
+  }
+
+  return tmp.left( dirEnd+1 );
+
+}
+
 QString FileUtil::getBinDir( const QString& binRoot, const QString& subDir ) {
 
   QString binRoot1 = binRoot.trimmed();
@@ -117,10 +133,11 @@ QString FileUtil::getBinDir( const QString& binRoot, const QString& subDir ) {
 
 QString FileUtil::makeBinFileName( DataHeader *dh, const QString& hdrName, int sigIndex ) {
 
-  QString binDir = FileUtil::getBinDir( Cnst::BinRoot.c_str(), dh->getString( "AcquisitionStartDate2" ) );
-  QString binFile = binDir + FileUtil::extractFileName( hdrName ) + "-Sig" +
-    QString::number( sigIndex ) + ".dat";
+  //QString binDir = FileUtil::getBinDir( Cnst::BinRoot.c_str(), dh->getString( "AcquisitionStartDate2" ) );
+  //QString binFile = binDir + FileUtil::extractFileName( hdrName ) + "-Sig" +
+  //  QString::number( sigIndex ) + ".dat";
 
-  return binFile;
+  //return binFile;
+  return "";
 
 }

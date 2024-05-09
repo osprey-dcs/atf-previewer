@@ -18,9 +18,6 @@
 
 DataHeader::DataHeader() {
 
-  //int ok = readContents();
-  //std::cout << "after readContents, ok = " << ok << std::endl;
-
 }
 
 DataHeader::~DataHeader() {

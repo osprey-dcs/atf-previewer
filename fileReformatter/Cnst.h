@@ -8,12 +8,14 @@
 class Cnst {
 
   public:
-  
-  inline static const std::string BinRoot {"/home/osprey/dataBin/"};
-  inline static const std::string HdrRoot {"/home/osprey/dataHdr/"};
-  inline static const std::string DefaultHdrExtension {"hdr"};
-  inline static const std::string DefaultFilter {"*.hdr"};
 
+  inline static const std::string RawFileExtension {"dat"};
+  inline static const std::string HdrExtension {"hdr"};
+  inline static const std::string Filter {"*.hdr"};
+  inline static const std::string BinExtension {"j"};
+  inline static const std::string StatusExtension {"j"};
+
+  static const unsigned int MaxChassis {32};
   static const unsigned int MaxSignals {32};
   static const int MaxSigIndex {1023};
   static const int MaxBufferElements {100};

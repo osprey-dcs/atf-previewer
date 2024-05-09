@@ -15,8 +15,8 @@ FileConverter::FileConverter ( ) {
 
 }
 
-int FileConverter::convert ( const DataHeader *dh, const QString &rawDataFile, const QString& binDataFileDir,
-                             const QString& simpleName ) {
+int FileConverter::convert ( int chassisIndex, int startingSigIndex, const DataHeader *dh, const QString &rawDataFile,
+                             const QString& binDataFileDir, const QString& simpleName, bool verbose ) {
 
   // first cut will be single threaded
 

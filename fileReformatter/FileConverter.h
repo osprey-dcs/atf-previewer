@@ -24,8 +24,9 @@ public:
   static const int E_WRITE_FAILURE = 4;
 
   FileConverter();
-  virtual int convert( const DataHeader *dh, const QString& rawDataFile, const QString& binDataFileDir,
-                       const QString& simpleName  );
+  virtual int convert( int chassisIndex, int startingSigIndex, const DataHeader *dh, const QString& rawDataFile,
+                       const QString& binDataFileDir, const QString& simpleName, bool verbose=false );
+  
   virtual void show( void );
 
   std::filebuf fb[Cnst::MaxSignals];
