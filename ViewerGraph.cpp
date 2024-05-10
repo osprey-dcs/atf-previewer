@@ -34,6 +34,8 @@ ViewerGraph::ViewerGraph( int _id, ScaleType _scaleType, DataType _dataType, QWi
   shiftState = false;
   ctrlState = false;
 
+  rubberBandWidth = 0;
+
   scaleType = _scaleType;
   dataType = _dataType;
 
@@ -203,9 +205,42 @@ void ViewerGraph::setYTitle( std::string& s ) {
 
 bool ViewerGraph::eventFilter( QObject *watched, QEvent *event ) {
 
+  double chartXMin=0, chartXMax=0, chartYMin=0, chartYMax=0,
+    panDistX=0, panDistY=0, zoomDistX=0, zoomDistY=0,
+    newXMin=0, newXMax=0, newYMin=0, newYMax=0,
+    plotW=0, plotH=0, chartXRange=1, chartYRange=1, xFact, yFact,
+    x0, x1, y0, y1, mouseX, mouseY, boxX, boxY, boxW, boxH;
+  int plotX, plotY;
+ 
   if ( watched == this->qrb ) {
+    std::cout << __FILE__ << ", line = " << __LINE__ << std::endl;
+    std::cout << "rb event, event = " << (int) event->type() << std::endl;
+    if ( event->type() == QEvent::Resize ) {
+      plotX = this->qrb->pos().x() - chart->plotArea().x();
+      plotY = this->qrb->pos().y() - chart->plotArea().y();
+      std::cout << "rb resize event, x = " << plotX << std::endl;
+      std::cout << "rb resize event, y = " << plotY << std::endl;
+      std::cout << "rb resize event, w = " << this->qrb->size().width() << std::endl;
+      std::cout << "rb resize event, h = " << this->qrb->size().height() << std::endl;
+      this->getPlotSize( plotW, plotH );
+      this->getAxesLimits(  chartXMin, chartYMin, chartXMax, chartYMax );
+      if ( ( chartXMax - chartXMin ) != 0 ) chartXRange = chartXMax - chartXMin;
+      if ( ( chartYMax - chartYMin ) != 0 ) chartYRange = chartYMax - chartYMin;
+      xFact = chartXRange / plotW;
+      yFact = chartYRange / plotH;
+      std::cout << "xFact = " << xFact << std::endl;
+      boxX = plotX * xFact + chartXMin;
+      boxY = chartYRange - plotY * yFact + chartYMin;
+      boxW = this->qrb->size().width() * xFact;
+      boxH = this->qrb->size().height() * yFact;
+      std::cout << "box x, y, w, h = " << boxX << ", " << boxY << ", " << boxW << ", " << boxH << std::endl;
+      rubberBandWidth = this->qrb->size().width();
+    }
     if ( event->type() ==  QEvent::HideToParent ) {
       if ( !ctrlState ) {
+        std::cout << "rubberBandWidth = " << rubberBandWidth << std::endl;
+        rubberBandWidth = 0;
+        std::cout << "emit rubberBandScale\n";
         emit rubberBandScale( this->id, this->curSigIndex, this->curFileName );
       }
     }
@@ -214,7 +249,7 @@ bool ViewerGraph::eventFilter( QObject *watched, QEvent *event ) {
   if ( watched == this ) {
   }
 
- return false;
+  return false;
 
 }
 

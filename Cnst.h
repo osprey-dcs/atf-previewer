@@ -33,9 +33,10 @@ class Cnst {
   //inline static const std::string defaultDir {"/home/osprey/viewerData/"};
   inline static const std::string BinRoot {"/home/osprey/dataBin/"};
   inline static const std::string HdrRoot {"/home/osprey/dataHdr/"};
-  inline static const std::string DefaultHdrExtension {"hdr"};
-  inline static const std::string DefaultFilter {"*.hdr"};
-
+  inline static const std::string HdrExtension {"hdr"};
+  inline static const std::string Filter {"*.hdr"};
+  inline static const std::string BinExtension {"j"};
+  
   // normal file reads
   inline static const std::string BinDataName {"File"};
   static const unsigned long MaxMFileBufSize {0};

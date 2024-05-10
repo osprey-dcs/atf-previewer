@@ -41,6 +41,8 @@ ViewerGraphAreaBase::ViewerGraphAreaBase( int _id, QWidget *_parent ) {
   curSigIndex = 0;
   curFileName = "";
 
+  //this->setMouseTracking( true );
+
 }
 
 ViewerGraphAreaBase::~ViewerGraphAreaBase() {

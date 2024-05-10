@@ -39,6 +39,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "ViewerGraphAreaFft.h"
 #include "HelpAboutDialog.h"
 #include "ShortcutDialog.h"
+#include "ExportDialog.h"
 
     class ViewerMainWin : public QMainWindow {
 
@@ -106,9 +107,11 @@ If not, see <https://www.gnu.org/licenses/>.
       QFileDialog *fileSelect;
       double x, y, w, h;
       QAction *openAction;
+      QAction *exportAction;
       QAction *exitAction;
       QAction *helpAction;
       QAction *shortcutAction;
+      ExportDialog *exportDialog;
       HelpAboutDialog *helpDialog;
       ShortcutDialog *shortcutDialog;
 

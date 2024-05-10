@@ -166,11 +166,19 @@ int DataHeader::getString(const QString &s, QString& qs ) {
       for ( QJsonValue jv1 : jva ) {
 
         if ( jv1.isObject() ) {
+          
           auto tp = std::make_tuple(
              jv1["Egu"].toString(),
              jv1["Slope"].toDouble(),
              jv1["Intercept"].toDouble(),
-             jv1["SigNum"].toDouble() );
+             jv1["SigNum"].toDouble(),
+             jv1["Type"].toDouble(),
+             jv1["YAxisLabel"].toString(),
+             jv1["Desc"].toString(),
+             jv1["ResponseNode"].toString(),
+             jv1["ResponseDirection"].toDouble(),
+             jv1["ReferenceNode"].toString(),
+             jv1["ReferenceDirection"].toDouble() );
 
              sigs[jv1["Name"].toString()] = tp;
 
@@ -240,6 +248,6 @@ const std::list<QString>& DataHeader::getNameList() {
   return sigNameList;
 }
 
-const std::map<QString,std::tuple<QString, double, double, double>>& DataHeader::getNameMap() {
+const std::map<QString,std::tuple<QString, double, double, double, double, QString, QString, QString, double, QString, double>>& DataHeader::getNameMap() {
   return sigs;
 };

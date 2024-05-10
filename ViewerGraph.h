@@ -99,6 +99,7 @@ public:
   void getBetterAxesParams ( double, double, int, double&, double&, int&, bool adjScales = true  );
 
   int id, x, y, w, h;
+  int rubberBandWidth;
   ScaleType scaleType;
   DataType dataType;
   bool shiftState, ctrlState;

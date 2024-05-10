@@ -38,12 +38,19 @@ class DataHeader {
     static const int SLOPE {1};
     static const int INTERCEPT {2};
     static const int SIGINDEX {3};
+    static const int TYPE {4};
+    static const int YAXISLABEL {5};
+    static const int DESC {6};
+    static const int RESPONSENODE {7};
+    static const int RESPONSEDIRECTION {8};
+    static const int REFERENCENODE {9};
+    static const int REFERENCEDIRECTION {10};
   
     QJsonDocument jd;
     QJsonObject jo;
     //                          0        1       2          3
-    //                          egu      slope   intercept  sig num
-    std::map<QString,std::tuple<QString, double, double,    double>> sigs;
+    //                          egu      slope   intercept  sig num  type    Y label  desc     rsp node  rsp dir  ref node  ref dir
+    std::map<QString,std::tuple<QString, double, double,    double,  double, QString, QString, QString,  double,  QString,  double>> sigs;
     std::list<QString> sigNameList;
 
     DataHeader();
@@ -67,7 +74,7 @@ class DataHeader {
     int readContents ( QString filename );
     int getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu, double& slope, double& intercept );
 
-    const std::map<QString,std::tuple<QString, double, double, double>>& getNameMap();
+    const std::map<QString,std::tuple<QString, double, double, double, double, QString, QString, QString, double, QString, double>>& getNameMap();
     const std::list<QString>& getNameList();
 
   };

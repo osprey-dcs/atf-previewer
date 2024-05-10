@@ -67,6 +67,8 @@ add_executable(viewer main.cpp
         BinDataMFile.cpp
         BinDataMFile.h
         VDisk.cpp
+        ExportDialog.cpp
+        ExportDialog.h
 )
 
 include_directories(/usr/include/c++/10

@@ -61,7 +61,7 @@ ViewerMainWin::ViewerMainWin ( QApplication *_app, double _x, double _y, double 
   this->app = _app;
 
   fileSelect = new QFileDialog( nullptr, "Open File", QString(Cnst::HdrRoot.c_str()),
-                                QString(Cnst::DefaultFilter.c_str()) );
+                                QString(Cnst::Filter.c_str()) );
 
   // config layouts and child widgets
 
@@ -168,6 +168,12 @@ ViewerMainWin::ViewerMainWin ( QApplication *_app, double _x, double _y, double 
   openAction = new QAction( "Open" );
   openAction->setData( "open" );
   fileMenu->addAction( openAction );
+
+  exportAction = new QAction( "Export" );
+  exportAction->setData( "export" );
+  fileMenu->addAction( exportAction );
+
+  exportDialog = new ExportDialog( this, Qt::Window );
 
   exitAction = new QAction( "Exit" );
   exitAction->setData( "exit" );
@@ -305,6 +311,9 @@ void ViewerMainWin::performAction ( QAction *action ) {
     fileSelect->move( 100, 50 );
     fileSelect->show();
     return;
+  }
+  else if ( action->data().toString() == "export" ) {
+    exportDialog->open();
   }
   else if ( action->data().toString() == "help-about" ) {
     helpDialog->open();
