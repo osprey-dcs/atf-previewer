@@ -69,6 +69,12 @@ add_executable(viewer main.cpp
         VDisk.cpp
         ExportDialog.cpp
         ExportDialog.h
+        ChanSelector.cpp
+        ChanSelector.h
+        Uff58bExport.cpp
+        Uff58bExport.h
+        CsvExport.cpp
+        CsvExport.h
 )
 
 include_directories(/usr/include/c++/10

@@ -30,8 +30,21 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "UserPrefs.h"
 #include "UserPrefsFac.h"
 #include "ViewerCtlr.h"
+#include "ChanSelector.h"
 
 int main(int argc, char *argv[]) {
+
+/*  ChanSelector chan;
+  int st = chan.setText( "1, 2, 55, 4-10" );
+  if ( st ) std::cout << "error " << st << " from chan.setText" << std::endl;
+  std::list<int> l = chan.getList();
+  chan.report();
+  std::cout << "list: " << std::endl;
+  for ( int item : l ) {
+    std::cout << item << " ";
+  }
+  std::cout << std::endl;
+  return 0;*/
 
   QApplication app(argc, argv);
 

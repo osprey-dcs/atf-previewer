@@ -68,6 +68,7 @@ class ViewerGraphAreaBase : public QWidget {
     virtual void enableFftButton( bool );
     virtual void updateMousePosition( double x, double y );
     virtual void updatePeakInfo( double x, double y );
+    virtual void updateSelectionRange( double xStart, double xEnd );
     virtual void setInitialState( void );
 
     int id, w, h;

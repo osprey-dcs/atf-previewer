@@ -63,6 +63,13 @@ class BinDataBase {
 
   virtual void initMaxBufSize( unsigned long max );
 
+  virtual int getRecordRangeForTime( QString filename, double sampleRate, double minTime, double maxTime,
+                                     unsigned long& min, unsigned long& max );
+  
+  virtual void inputSeekToStartOfData( std::filebuf &fb, unsigned long firstDataByte );
+
+  virtual void outputSeekToStartOfData( std::filebuf &fb, unsigned long firstDataByte );
+
   virtual int getMaxElements ( QString filename, int sigIndex, unsigned long& max );
 
   virtual int genLineSeries ( QString filename,

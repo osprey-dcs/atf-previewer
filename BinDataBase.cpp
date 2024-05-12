@@ -54,6 +54,28 @@ int BinDataBase::newFile( QString filename ) {
 void BinDataBase::initMaxBufSize( unsigned long max ) {
 }
 
+int BinDataBase::getRecordRangeForTime( QString fileName, double sampleRate, double minTime, double maxTime,
+                                        unsigned long& min, unsigned long& max ) {
+
+  unsigned long maxElements;
+
+  if ( sampleRate == 0.0 ) return -1;
+
+  int st = this->getMaxElements( fileName, 0, maxElements );
+  if ( st ) return st;
+
+  unsigned long maxBytes = maxElements * sizeof(int) - 1;
+
+  min = sampleRate * minTime * sizeof(int);
+  if ( min % 4 ) min -= min % 4;
+  max = sampleRate * maxTime * sizeof(int);
+  if ( max % 4 ) max = max - ( max % 4 ) + 4;
+  if ( max > maxBytes ) max = maxBytes;
+
+  return 0;
+
+}
+
 int BinDataBase::getMaxElements2 ( QString filename, int sigIndex, unsigned long& max ) {
 
   std::filebuf fb;
@@ -306,6 +328,22 @@ int BinDataBase::readTraceData2 (
 
   int n = fb.sgetn( reinterpret_cast<char *>( buf ), readSizeInbytes );
   return n;
+
+}
+
+void BinDataBase::inputSeekToStartOfData( std::filebuf &fb, unsigned long firstDataByte ) {
+
+  //unsigned long headerSize = sizeof(numSigbytes) + sizeof(version);
+  unsigned long loc = sizeof(unsigned long) + sizeof(unsigned int) * 3 + firstDataByte;
+  fb.pubseekoff( loc, std::ios::beg, std::ios::in );
+
+}
+
+void BinDataBase::outputSeekToStartOfData( std::filebuf &fb, unsigned long firstDataByte ) {
+
+  //unsigned long headerSize = sizeof(numSigbytes) + sizeof(version);
+  unsigned long loc = sizeof(unsigned long) + sizeof(unsigned int) * 3 + firstDataByte;
+  fb.pubseekoff( loc, std::ios::beg, std::ios::out );
 
 }
 

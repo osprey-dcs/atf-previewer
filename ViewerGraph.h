@@ -138,6 +138,7 @@ signals:
               double minX, double maxX, double minY, double maxY );
   void reset( int id, int curSigIndex, QString& curFileName );
   void rubberBandScale( int id, int curSigIndex, QString& curFileName );
+  void rubberBandRange( int id, double xmin, double xmax );
   void prevView( int id, int curSigIndex, QString& curFileName );
   void mousePos( int id, double mouseX, double mouseY );
 

@@ -39,16 +39,19 @@ If not, see <https://www.gnu.org/licenses/>.
 
     UserPrefs();
 
-    UserPrefs( UserPrefs&& ) = delete;
-    UserPrefs( UserPrefs& ) = delete;
-    UserPrefs( const UserPrefs& ) = delete;
+    UserPrefs ( UserPrefs&& ) = delete;
+    UserPrefs ( UserPrefs& ) = delete;
+    UserPrefs ( const UserPrefs& ) = delete;
 
-    UserPrefs& operator=( UserPrefs&& ) = delete;
-    UserPrefs& operator=( UserPrefs& ) = delete;
-    UserPrefs& operator=( const UserPrefs& ) = delete;
+    UserPrefs& operator= ( UserPrefs&& ) = delete;
+    UserPrefs& operator= ( UserPrefs& ) = delete;
+    UserPrefs& operator= ( const UserPrefs& ) = delete;
 
-    int getDouble(const QString &s, double& d );
-    int setDouble(const QString &s, double d );
+    int getDouble (const QString &s, double& d );
+    int setDouble ( const QString &s, double d );
+
+    int getString ( const QString &s, QString &qs );
+    int setString ( const QString &s, QString qs );
 
     int update();
     int readContents ();

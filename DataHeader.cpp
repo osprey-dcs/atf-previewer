@@ -41,6 +41,7 @@ DataHeader::DataHeader() {
 DataHeader::~DataHeader() {
 
   sigs.clear();
+  sigsByIndex.clear();
   sigNameList.clear();
   
 }
@@ -154,6 +155,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
 
     sigNameList.clear();
     sigs.clear();
+    sigsByIndex.clear();
 
     jd = QJsonDocument::fromJson(contents.toUtf8());
     jo = jd.object();
@@ -181,8 +183,22 @@ int DataHeader::getString(const QString &s, QString& qs ) {
              jv1["ReferenceDirection"].toDouble() );
 
              sigs[jv1["Name"].toString()] = tp;
-
              sigNameList.push_back( jv1["Name"].toString() );
+
+          auto tp1 = std::make_tuple(
+             jv1["Egu"].toString(),
+             jv1["Slope"].toDouble(),
+             jv1["Intercept"].toDouble(),
+             jv1["Name"].toString(),
+             jv1["Type"].toDouble(),
+             jv1["YAxisLabel"].toString(),
+             jv1["Desc"].toString(),
+             jv1["ResponseNode"].toString(),
+             jv1["ResponseDirection"].toDouble(),
+             jv1["ReferenceNode"].toString(),
+             jv1["ReferenceDirection"].toDouble() );
+                                     
+             sigsByIndex[jv1["SigNum"].toDouble()] = tp1;
 
         }
 
@@ -244,10 +260,22 @@ int DataHeader::getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu
 
 }
 
-const std::list<QString>& DataHeader::getNameList() {
+//const std::list<QString>& DataHeader::getNameList() {
+//  return sigNameList;
+//}
+
+//const std::map<QString,std::tuple<QString, double, double, double, double, QString, QString, QString, double, QString, double>>& DataHeader::getNameMap() {
+//  return sigs;
+//};
+
+const DataHeader::DataHeaderListType& DataHeader::getNameList() {
   return sigNameList;
 }
 
-const std::map<QString,std::tuple<QString, double, double, double, double, QString, QString, QString, double, QString, double>>& DataHeader::getNameMap() {
+const DataHeader::DataHeaderMapType& DataHeader::getNameMap() {
   return sigs;
+};
+
+const DataHeader::DataHeaderIndexMapType& DataHeader::getIndexMap() {
+  return sigsByIndex;
 };

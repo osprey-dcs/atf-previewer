@@ -5,8 +5,12 @@
 #include <QSharedPointer>
 
 #include "ExportDialog.h"
+#include "UserPrefsFac.h"
 
 ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialog(parent, f ) {
+
+  UserPrefsFac upfac;
+  up = upfac.createUserPrefs();
 
   this->setMinimumWidth( 900 );
   this->refWidget = parent;
@@ -55,7 +59,7 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   startTimeLabel = new QLabel( "Start Time (sec)" );
   hl1->addWidget( startTimeLabel, 0 );
   startTimeLineEdit = new QLineEdit( this );
-  hl2->addWidget( startTimeLineEdit,  1 );
+  hl2->addWidget( startTimeLineEdit, 1 );
 
   hl2->addStretch( 7 );
 
@@ -67,10 +71,10 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   gl->addLayout( hl1, 4, 1, Qt::AlignLeft );
   gl->addLayout( hl2, 4, 2, Qt::AlignLeft );
 
-  startTimeLabel = new QLabel( "End Time (sec)" );
-  hl1->addWidget( startTimeLabel, 0 );
-  startTimeLineEdit = new QLineEdit( this );
-  hl2->addWidget( startTimeLineEdit,  1 );
+  endTimeLabel = new QLabel( "End Time (sec)" );
+  hl1->addWidget( endTimeLabel, 0 );
+  endTimeLineEdit = new QLineEdit( this );
+  hl2->addWidget( endTimeLineEdit,  1 );
 
   hl2->addStretch( 7 );
 
@@ -86,8 +90,8 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   exportFormatMenu = new QMenu( menuButton );
   uff58bAction = new QAction( "&UFF58b");
   exportFormatMenu->addAction( uff58bAction );
-  csfAction = new QAction( "&CSF");
-  exportFormatMenu->addAction( csfAction );
+  csvAction = new QAction( "&CSV");
+  exportFormatMenu->addAction( csvAction );
   menuButton->setMenu( exportFormatMenu );
   exportFormatLabel = new QLabel( "..." );
 
@@ -125,9 +129,59 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   hl2->addWidget( cancel, 0 );
   hl2->addStretch( 9 );
 
+  // init fields from user prefs
+  
+  // if item doesn't exist, give it a default value
+  if ( up->getString( "ExportFileName", exportFileName ) ) exportFileName = "";
+  fileNameLineEdit->setText( exportFileName );
+
+  if ( up->getString( "Description", description ) ) description = "";
+  descLineEdit->setText( description );
+
+  if ( up->getString( "StartTime", startTime ) ) startTime = "";
+  startTimeLineEdit->setText( startTime );
+  startTimeValInSec = startTime.toDouble();
+
+  if ( up->getString( "EndTime", endTime ) ) endTime = "";
+  endTimeLineEdit->setText( endTime );
+  endTimeValInSec = endTime.toDouble();
+
+  if ( up->getString( "ExportFormat", exportFormat ) ) exportFormat = "";
+  exportFormatLabel->setText( exportFormat );
+
+  if ( up->getString( "chanSelect", chanSelect ) ) chanSelect = "";
+  chanSelectTextEdit->setPlainText( chanSelect );
+
+  // connect to signals  
+
+  connect( fileNameLineEdit, SIGNAL( textChanged( const QString & ) ),
+           this, SLOT( textUpdated( const QString & ) ) );
+
+  connect( descLineEdit, SIGNAL( textChanged( const QString & ) ),
+           this, SLOT( textUpdated( const QString & ) ) );
+
+  connect( startTimeLineEdit, SIGNAL( textChanged( const QString & ) ),
+           this, SLOT( textUpdated( const QString & ) ) );
+
+  connect( endTimeLineEdit, SIGNAL( textChanged( const QString & ) ),
+           this, SLOT( textUpdated( const QString & ) ) );
+
+  connect( csvAction, SIGNAL( triggered( bool ) ),
+           this, SLOT( performAction( bool ) ) );
+
+  connect( uff58bAction, SIGNAL( triggered( bool ) ),
+           this, SLOT( performAction( bool ) ) );
+
+  connect( chanSelectTextEdit, SIGNAL( textChanged( void ) ),
+           this, SLOT( textUpdated( void ) ) );
+
+  connect( ok, SIGNAL( clicked( bool ) ),
+           this, SLOT( okButtonClicked( bool ) ) );
+
+  connect( cancel, SIGNAL( clicked( bool ) ),
+           this, SLOT( cancelButtonClicked( bool ) ) );
+
 }
-
-
 
 ExportDialog::~ExportDialog() {
 
@@ -148,3 +202,76 @@ void ExportDialog::close ( void ) {
   this->hide();
 
 }
+
+void ExportDialog::performAction( bool checked ) {
+
+  QAction *action = qobject_cast<QAction *>( sender() );
+  if ( action == csvAction ) {
+    exportFormatLabel->setText( "CSV" );
+    up->setString( "ExportFormat", "CSV" );
+    up->update();
+  }
+  else if ( action == uff58bAction ) {
+    exportFormatLabel->setText( "UFF58b" );
+    up->setString( "ExportFormat", "UFF58b" );
+    up->update();
+  }
+
+}
+ 
+void ExportDialog::okButtonClicked( bool ) {
+
+  if ( exportFormatLabel->text() == "CSV" ) {
+    emit csvExport();
+  }
+  else if ( exportFormatLabel->text() == "UFF58b" ) {
+    emit uff58bExport();
+  }
+  close();
+
+}
+ 
+void ExportDialog::cancelButtonClicked( bool ) {
+
+  close();
+
+}
+ 
+void ExportDialog::textUpdated( const QString &s ) {
+
+  if ( sender() == fileNameLineEdit ) {
+    exportFileName = s;
+    up->setString( "ExportFileName", exportFileName );
+    up->update();
+  }
+  else if ( sender() == descLineEdit ) {
+    description = s;
+    up->setString( "Description", description );
+    up->update();
+  }
+  else if ( sender() == startTimeLineEdit ) {
+    startTime = s;
+    startTimeValInSec = startTime.toDouble();
+    up->setString( "StartTime", startTime );
+    up->update();
+  }
+  else if ( sender() == endTimeLineEdit ) {
+    endTime = s;
+    endTimeValInSec = endTime.toDouble();
+    up->setString( "EndTime", endTime );
+    up->update();
+  }
+
+}
+
+void ExportDialog::textUpdated( void ) {
+
+  if ( sender() == chanSelectTextEdit ) {
+    QTextEdit *te = qobject_cast<QTextEdit *>( sender() );
+    chanSelect = te->toPlainText();
+    up->setString( "chanSelect", chanSelect );
+    up->update();
+  }
+
+}
+ 

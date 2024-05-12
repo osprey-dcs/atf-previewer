@@ -323,7 +323,7 @@ int BinData::getMaxElements ( QString filename, int sigIndex, unsigned long& max
   fb.close();
 
   max = value / sizeof(int);
-  
+
   return 0;
 
 }

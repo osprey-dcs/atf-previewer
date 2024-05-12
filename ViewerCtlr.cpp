@@ -19,6 +19,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include <unistd.h>
 
+#include <fstream>
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -29,6 +30,9 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include "ViewerCtlr.h"
 #include "FileUtil.h"
+#include "ChanSelector.h"
+#include "Uff58bExport.h"
+#include "CsvExport.h"
 
 static void setAll( int *ary, int n, int v ) {
   for ( int i=0; i<n; i++ ) {
@@ -82,6 +86,8 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
 
   this->mainWindow = mainw;
   this->haveFile = false;
+  this->haveUff58bExportRequest = false;
+  this->haveCsvExportRequest = false;
   this->fileName = "";
   this->haveHeader = false;
   this->readyForData = false;
@@ -118,6 +124,12 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
   this->connect( mainw->fileSelect, SIGNAL( fileSelected( const QString& ) ),
                  this, SLOT( fileSelected1( const QString& ) ) );
 
+  this->connect( mainw->exportDialog, SIGNAL( csvExport( void ) ),
+                 this, SLOT( doCsvExport( void ) ) );
+
+  this->connect( mainw->exportDialog, SIGNAL( uff58bExport( void ) ),
+                 this, SLOT( doUff58bExport( void ) ) );
+
   // Signal name change or plot area change requires replotting that signal
   // (I might not need this)
   for ( ViewerGraphAreaBase *w : mainw->getVgaList() ) {
@@ -145,6 +157,9 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
 
     this->connect( w->graph.data(), SIGNAL( mousePos( int, double, double ) ),
                    this, SLOT( mousePosition( int, double, double ) ) );
+
+    this->connect( w->graph.data(), SIGNAL( rubberBandRange( int, double, double ) ),
+                   this, SLOT( selectionRange( int, double, double ) ) );
 
     if ( isTimeSeries( w ) ) {
       ViewerGraphArea *vga = qobject_cast<ViewerGraphArea *>( w );
@@ -264,6 +279,7 @@ int ViewerCtlr::processHeaderFile (void ) {
   stat = this->dh->getDouble( "SampleRate", sampleRate );
   if ( !stat ) {
     //std::cout << "sr = " << sampleRate << std::endl;
+    if ( sampleRate == 0.0 ) sampleRate = 1.0;
     this->mainWindow->setSampleRate( sampleRate );
   }
   else {
@@ -1219,6 +1235,14 @@ void ViewerCtlr::process(void ) {
       
     }
 
+    if ( haveUff58bExportRequest ) {
+      haveUff58bExportRequest = false;
+      stat = doUff58bExport();
+      if ( !stat ) {
+        std::cout << "Error " << stat << " from doUff58bExport" << std::endl;
+      }
+    }
+    
   }
 
 }
@@ -1349,6 +1373,404 @@ void ViewerCtlr::fileSelected1(const QString& file ) {
   
 }
 
+static void closeAll ( std::filebuf *fb, int n ) {
+  for ( int i=0; i<n; i++ ) {
+    fb[i].close();
+  }
+}
+
+
+static void zero( int *val, int n ) {
+  for ( int i=0; i<n; i++ ) val[i] = n;
+}
+
+int ViewerCtlr::doCsvExport ( void ) {
+
+  //std::cout << "ViewerCtlr::doCsvExport" << std::endl;
+
+  if ( !haveHeader ) {
+    std::cout << "No header file is open\n";
+    return -1;
+  }
+
+  int st, i, ii, numSignals;
+  QString str;
+  std::filebuf fbInput[1024];
+  std::ofstream fbExport;
+  int signalIndices[1024];
+
+  QString simpleName = FileUtil::extractFileName( this->fileName ) + "," + Cnst::HdrExtension.c_str();
+  
+  // add extension to get header file name
+  QString hdrFile = this->fileName + "." + Cnst::HdrExtension.c_str();
+
+  // create csv object
+  CsvExport *csv = new CsvExport( hdrFile );
+
+  // get map of channel/signal properties by signal index
+  DataHeader::DataHeaderIndexMapType indexMap = dh->getIndexMap();
+
+  // get list of channels/signals to export
+  ChanSelector *chans = new ChanSelector();
+  chans->setText( mainWindow->exportDialog->chanSelect );
+  std::list<int> sigNumList = chans->getList();
+
+  // open export file
+  QString exportFileName = mainWindow->exportDialog->exportFileName;
+  fbExport.open( exportFileName.toStdString() );
+  //if ( !result ) {
+  //  return -1;
+  //}
+
+  //std::cout << "export file " << exportFileName.toStdString() << " is open\n";
+
+  QString binFile;
+
+  // get min time
+  double minTime = mainWindow->exportDialog->startTimeValInSec;
+  double maxTime = mainWindow->exportDialog->endTimeValInSec;
+  double timeInc = 1.0 / sampleRate;
+  
+  numSignals = 0;
+  bool once = true;
+  unsigned long recRange;
+  unsigned long minByte, maxByte;
+  
+  // write header and data to the csv file for each signal in list
+  for ( int sigIndex : sigNumList ) {
+
+    // get binary file name from fileName and signal + extension
+    binFile = FileUtil::makeBinFileName( dh.get(), fileName, sigIndex );
+
+    signalIndices[numSignals] = sigIndex;
+
+    if ( once ) {
+      once = false;
+      // get min and max rec number corresponding to min and max time
+      st = bd->getRecordRangeForTime( binFile, sampleRate, minTime, maxTime,
+                                      minByte, maxByte );
+      recRange = maxByte - minByte;
+
+      minTime = minByte / sizeof(int) / sampleRate;
+
+      std::cout << "minTime = " << minTime << std::endl;
+      std::cout << "maxTime = " <<  maxTime << std::endl;
+      std::cout << "minByte = " <<  minByte << std::endl;
+      std::cout << "maxByte = " <<  maxByte << std::endl;
+      std::cout << "recRange (ele) = " << recRange/sizeof(int) << std::endl;
+      std::cout << "numSignals = " << numSignals << std::endl;
+
+    }
+    
+    //std::fbin = open input bin files
+    auto result = fbInput[numSignals].open( binFile.toStdString(), std::ios::in | std::ios::binary );
+    if ( !result ) {
+      fbExport.close();
+      closeAll( fbInput, numSignals-1 );
+      return -1;
+    }
+    //std::cout << "input file " << binFile.toStdString() << " is open\n";
+
+    numSignals++;
+    
+  }
+
+  //std::cout << "numSignals = " << numSignals << std::endl;
+
+  QString id = "?";
+  QString desc = "?";
+  QString startTime = "?";
+  QString endTime = "?";
+  QString inputCsvFileName = "?";
+  st = csv->writeHeader( fbExport, id, desc, startTime, endTime, inputCsvFileName, simpleName );
+  if ( st ) {
+    fbExport.close();
+    closeAll( fbInput, numSignals );
+    return -1;
+  }
+
+  //std::cout << "export header is written\n";
+
+  int (*intBuf)[100];
+  intBuf = new int[numSignals][100];
+  double outBuf[100];
+  int numFullOps = recRange / 100;
+  int numRemaining = recRange % 100;
+  int *nr, nw;
+  nr = new int[numSignals];
+  QString *names = new QString[numSignals];
+
+  for ( int i=0; i<numSignals; i++ ) {
+    int ii = signalIndices[i];
+    names[i] = std::get<DataHeader::SIGNAME>( indexMap[ii] );
+  }
+
+  st = csv->writeSignalNames( fbExport, names, numSignals );
+
+  // seek to start of binary data for input files
+  for ( int i=0; i<numSignals; i++ ) {
+    this->bd->inputSeekToStartOfData( fbInput[i], minByte );
+  }
+
+  //std::cout << "numFullOps = " << numFullOps << std::endl;
+  //std::cout << "numRemaining = " << numRemaining << std::endl;
+
+  zero( nr, numSignals );
+  nw = 0;
+
+  double *slope = new double[numSignals];
+  double *intercept = new double[numSignals];
+  for ( int i=0; i<numSignals; i++ ) {
+    int ii = signalIndices[i];
+    slope[i] = std::get<DataHeader::SLOPE>( indexMap[ii] );
+    intercept[i] = std::get<DataHeader::INTERCEPT>( indexMap[ii] );
+    //std::cout << i << ": slope = " << slope[i] << ", intercept = " <<  intercept[i] << std::endl;
+  }
+
+  unsigned long rec = 0;
+  double time = minTime;
+  std::cout << "numFullOps = " << numFullOps << ", numRemaining = " << numRemaining << std::endl;
+  //read and write binary files in chunks
+  for ( i=0; i<numFullOps; i++ ) {
+
+    for ( int ii=0; ii<numSignals; ii++ ) {
+      nr[ii] += this->bd->readTraceData( fbInput[ii], intBuf[ii], 100 );
+    }
+
+    for ( int iii=0; iii<100/sizeof(int); iii++ ) {
+      for ( int ii=0; ii<numSignals; ii++ ) {
+        outBuf[ii] = (double) intBuf[ii][iii] * slope[ii] + intercept[ii];
+      }
+      nw += csv->writeData( fbExport, rec, time, outBuf, numSignals );
+      rec++;
+      time += timeInc;
+    }
+    
+  }
+
+  // perform final op
+  if ( numRemaining ) {
+
+    for ( int ii=0; ii<numSignals; ii++ ) {
+      nr[ii] += this->bd->readTraceData( fbInput[ii], intBuf[ii], numRemaining );
+    }
+
+    for ( int iii=0; iii<numRemaining/sizeof(int); iii++ ) {
+      for ( int ii=0; ii<numSignals; ii++ ) {
+        outBuf[ii] = (double) intBuf[ii][iii] * slope[ii] + intercept[ii];
+      }
+      //std::cout << "intBuf[ii][iii] = " << intBuf[ii][iii] << std::endl;
+      //std::cout << "iii = " << iii << ", ii = " << ii << std::endl;
+      nw += csv->writeData( fbExport, rec, time, outBuf, numSignals );
+      rec++;
+      time += timeInc;
+    }
+
+  }
+
+  //std::cout << "nr = " << nr << ", nw = " << nw  << std::endl;
+    
+  //close input file
+  closeAll( fbInput, numSignals );
+
+  // close export file
+  fbExport.close();
+  
+  std::cout << "CSV export complete." << std::endl;
+  
+  return 0;
+
+}
+
+int ViewerCtlr::doUff58bExport ( void ) {
+
+  if ( !haveHeader ) {
+    std::cout << "No header file is open\n";
+    return -1;
+  }
+
+  int st, i, ii;
+  QString str;
+  std::filebuf fbInput, fbExport;
+
+  // add extension to get header file name
+  QString hdrFile = this->fileName + "." + Cnst::HdrExtension.c_str();
+
+  // create uff58b object
+  Uff58bExport *uff58b = new Uff58bExport( hdrFile );
+
+  // get map of channel/signal properties by signal index
+  DataHeader::DataHeaderIndexMapType indexMap = dh->getIndexMap();
+
+  // get list of channels/signals to export
+  ChanSelector *chans = new ChanSelector();
+  chans->setText( mainWindow->exportDialog->chanSelect );
+  std::list<int> sigNumList = chans->getList();
+
+  // open export bin file
+  QString exportFileName = mainWindow->exportDialog->exportFileName;
+  auto result = fbExport.open( exportFileName.toStdString(), std::ios::out | std::ios::binary );
+  if ( !result ) {
+    return -1;
+  }
+
+  //std::cout << "export file " << exportFileName.toStdString() << " is open\n";
+
+  // write header and data to the uff58b file for each signal in list
+  for ( int sigIndex : sigNumList ) {
+
+    // get binary file name from fileName and signal + extension
+    QString binFile = FileUtil::makeBinFileName( dh.get(), fileName, sigIndex );
+
+    // build a string containing just the binary file name without the directory
+    QString simpleName = FileUtil::extractFileName( binFile );
+    simpleName = simpleName + "." + Cnst::BinExtension.c_str();
+  
+    // get min time
+    double minTime = mainWindow->exportDialog->startTimeValInSec;
+    double maxTime = mainWindow->exportDialog->endTimeValInSec;
+    double timeInc = 1.0 / sampleRate;
+
+    // get min and max rec number corresponding to min and max time
+    unsigned long minByte, maxByte;
+    st = bd->getRecordRangeForTime( binFile, sampleRate, minTime, maxTime,
+                                    minByte, maxByte );
+    unsigned long recRange = maxByte - minByte;
+    minTime = minByte / sizeof(int) / sampleRate;
+
+    // build the uff58b header lines
+    st = uff58b->set58bHeader( recRange );
+
+    st = uff58b->set80CharRec( 1, "Acceleration, Low Freq, LH Keel inboard at NLG Accumulator Y-axis - RAW" );
+    st = uff58b->set80CharRec( 2, std::get<DataHeader::SIGNAME>( indexMap[0] ) );
+    st = dh->getString( "AcquisitionStartDate", str );
+    st = uff58b->set80CharRec( 3, str );
+    st = uff58b->set80CharRec( 4, "input csv file" );
+    st = uff58b->set80CharRec( 5, simpleName );
+
+    int funcType = 1; // time spectrum (0 to 27 possible values)
+    int funcIdNum = sigIndex+1; // signal number? + 1 because internal is zero-based, external is one-based
+                                //                this even confuses me and it may need to be changed
+    int versionOrSeq = 0;
+    int loadCaseIdNum = 0;
+    QString rspEntityName = "NONE";
+    int rspNode = 90200101;
+    int rspDir = 2; // +Y direction
+    QString refEntityName = "NONE";
+    int refNode = 90200101;
+    int refDir = 2; // +Y direction
+    st = uff58b->setDofIdentification( funcType, funcIdNum, versionOrSeq, loadCaseIdNum,
+                                       rspEntityName, rspNode, rspDir, refEntityName, refNode, refDir );
+
+    int ordinateDataType = 2; int eleSize = sizeof(float); // single prec float
+    //int ordinateDataType = 4; int eleSize = sizeof(double); // double prec float
+    //int ordinateDataType = 5; int eleSize = sizeof(float) * 2; // single prec complex
+    //int ordinateDataType = 6; int eleSize = sizeof(double) * 2; // double prec complex
+    //int abscissaSpacing = 0; // uneven
+    int abscissaSpacing = 1; // even
+    st = uff58b->setDataForm( ordinateDataType, recRange/eleSize, abscissaSpacing, minTime, timeInc, 0.0 );
+
+    int lenUnitsExponent, forceUnitsExponent, tempUnitsExponent;
+
+    // abscissa data characteristics
+    // first field is rec number (8-11)
+    int dataType = 17; // time (21 possible values)
+    uff58b->getExponents( dataType, rspDir, lenUnitsExponent, forceUnitsExponent, tempUnitsExponent );
+    st = uff58b->setDataCharacteristics( 8, dataType, lenUnitsExponent, forceUnitsExponent,
+                                         tempUnitsExponent, "Time", "NONE" );
+    
+    // ordinate (or ordinate numerator) data characteristics
+    dataType = 12; // acceleration (21 possible values)
+    // exponents depend on dataType
+    uff58b->getExponents( dataType, refDir, lenUnitsExponent, forceUnitsExponent, tempUnitsExponent );
+    st = uff58b->setDataCharacteristics( 9,  dataType, lenUnitsExponent, forceUnitsExponent,
+                                         tempUnitsExponent, "Acceleration", "NONE" );
+    
+    // ordinate denominator data characteristics
+    st = uff58b->setDataCharacteristics( 10, 0, 0, 0, 0, "NONE", "NONE" ); // unused
+    
+    // Z-axis data characteristics
+    st = uff58b->setDataCharacteristics( 11, 0, 0, 0, 0, "NONE", "NONE" ); // unused
+
+    //std::fbin = open input bin file
+    result = fbInput.open( binFile.toStdString(), std::ios::in | std::ios::binary );
+    if ( !result ) {
+      fbExport.close();
+      return -1;
+    }
+
+    std::cout << "processing input file: " << binFile.toStdString() << " ...";
+
+    st = uff58b->writeHeader( fbExport );
+    if ( st ) {
+      fbInput.close();
+      fbExport.close();
+      return -1;
+    }
+
+    //std::cout << "export header is written\n";
+    
+    // get slope and intercept for conversion
+    double slope = std::get<DataHeader::SLOPE>( indexMap[sigIndex] );
+    double intercept = std::get<DataHeader::INTERCEPT>( indexMap[sigIndex] );
+
+    int intBuf[1000];
+    float outBuf[1000];
+    int numFullOps = recRange / 1000;
+    int numRemaining = recRange % 1000;
+    int nr, nw;
+
+    // seek to start of binary data for input file
+    this->bd->inputSeekToStartOfData( fbInput, minByte );
+
+    //std::cout << "numFullOps = " << numFullOps << std::endl;
+    //std::cout << "numRemaining = " << numRemaining << std::endl;
+
+    nr = nw = 0;
+    
+    //read and write binary files in chunks
+    for ( i=0; i<numFullOps; i++ ) {
+
+      nr += this->bd->readTraceData( fbInput, intBuf, 1000 );
+
+      for ( ii=0; ii<1000; ii++ ) {
+        outBuf[ii] = (float) intBuf[ii] * slope + intercept;
+      }
+
+      nw += uff58b->writeBinary( fbExport, outBuf, 1000 );
+
+    }
+
+    // perform final op
+    if ( numRemaining ) {
+
+      nr += this->bd->readTraceData( fbInput, intBuf, numRemaining );
+
+      for ( ii=0; ii<numRemaining; ii++ ) {
+        outBuf[ii] = (float) intBuf[ii] * slope + intercept;
+      }
+
+      nw += uff58b->writeBinary( fbExport, outBuf, numRemaining );
+      
+    }
+
+    //std::cout << "nr = " << nr << ", nw = " << nw  << std::endl;
+    
+    //close input file
+    std::cout << " complete." << std::endl;
+    fbInput.close();
+
+  }
+
+  // close export file
+  fbExport.close();
+
+  std::cout << "UFF58b export complete." << std::endl;
+  
+  return 0;
+  
+}
+
 void ViewerCtlr::haveHorizontalPan (int id, int curSigIndex, QString& curFileName,
                                     double x0, double x1, double y0, double y1 ) {
 
@@ -1459,6 +1881,37 @@ void ViewerCtlr::haveDoCalcFft (QWidget *w ) {
     //std::cout << "push fft request" << std::endl;
     dataRequestList.push_back( std::make_tuple( request, vga, vga->curSigIndex, vga->curFileName ) );
   }
+  
+}
+
+void ViewerCtlr::selectionRange ( int vgaId, double xMin, double xMax ) {
+
+  std::stringstream strm1, strm2;
+  
+  //std::cout << "selectionRange - id = " << vgaId << ", xMin = " << xMin << ", xMax = " << xMax << std::endl;
+  
+  ViewerGraph *vg = qobject_cast<ViewerGraph *>(sender());
+  ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>( vg->parent1 );
+
+  if( isFFT( vga ) ) return;
+  
+  vga->updateSelectionRange( xMin, xMax );
+
+  mainWindow->exportDialog->endTimeValInSec = xMax;
+  strm1.clear();
+  strm1 << std::left << std::setprecision(8) << xMax;
+  QString text1 = strm1.str().c_str();
+  text1 = text1.simplified();
+  mainWindow->exportDialog->endTimeLineEdit->setText( text1 );
+  //std::cout << "text1 = " << text1.toStdString() << std::endl;
+  
+  mainWindow->exportDialog->startTimeValInSec = xMin;
+  strm2.clear();
+  strm2 << std::left << std::setprecision(8) << xMin;
+  QString text2 = strm2.str().c_str();
+  text2 = text2.simplified();
+  mainWindow->exportDialog->startTimeLineEdit->setText( text2 );
+  //std::cout << "text2 = " << text2.toStdString() << std::endl;
   
 }
 

@@ -86,6 +86,8 @@ public:
   double x, y, w, h;
   QRectF plotAreaDimensions[Cnst::NumGraphs];
   bool haveFile;
+  bool haveUff58bExportRequest;
+  bool haveCsvExportRequest;
   QString fileName;
   QString simpleFileName;
   bool haveHeader;
@@ -105,6 +107,7 @@ public:
   bool haveDataForFft;
   ViewerGraphAreaBase *lastDataRequestGraphArea;
   ViewerGraphAreaBase *fftVga;
+  //Uff58bExport *uff58bExport;
 
   ViewerCtlr ( QSharedPointer<ViewerMainWin> mainWin );
   virtual ~ViewerCtlr ();
@@ -129,6 +132,8 @@ public slots:
   void sigNameChange1 ( int index, int id, QWidget *w );
   void sigAreaChanged ( const QRectF& plotArea );
   void fileSelected1 ( const QString& file );
+  int doCsvExport( void );
+  int doUff58bExport( void );
   void haveHorizontalPan ( int, int, QString&, double, double, double, double );
   void haveScale ( int, int, QString&, double, double, double, double );
   void haveReset ( int, int, QString& );
@@ -136,6 +141,7 @@ public slots:
   void havePrevViewRequest( int, int, QString& );
   void haveDoCalcFft ( QWidget * );
   void mousePosition ( int, double, double );
+  void selectionRange ( int, double, double );
   void sliderValue( QWidget *, int );
   void setSlider( QWidget *vga );
 

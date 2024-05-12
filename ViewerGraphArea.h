@@ -66,6 +66,7 @@ class ViewerGraphArea : public ViewerGraphAreaBase {
     virtual void clear();
     virtual void enableFftButton( bool );
     virtual void updateMousePosition( double x, double y );
+    virtual void updateSelectionRange( double xStart, double xEnd );
     virtual void setInitialState( void );
 
     // int id, w, h;
@@ -78,6 +79,11 @@ class ViewerGraphArea : public ViewerGraphAreaBase {
     QSharedPointer<QLabel> sigLabel;
     QSharedPointer<Combo> sigName;
     QSharedPointer<QLabel> mousePos;
+    QSharedPointer<QLabel> exportSelection;
+    QSharedPointer<QLabel> selectionXMin;
+    double selectionXMinValue;
+    QSharedPointer<QLabel> selectionXMax;
+    double selectionXMaxValue;
     int curSigIndex;
     QString curFileName;
     QSharedPointer<ViewerCtlrPushButton> calcFft;

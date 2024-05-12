@@ -62,6 +62,30 @@ If not, see <https://www.gnu.org/licenses/>.
 
   }
 
+  int UserPrefs::getString(const QString &s, QString &qs ) {
+
+    QJsonValue jv = jo[s];
+
+    if ( jv.isString() ) {
+      qs = jv.toString();
+    }
+    else {
+      qs = "";
+      return -1;
+    }
+
+    return 0;
+
+  }
+
+  int UserPrefs::setString(const QString &s, QString qs ) {
+
+    jo[s] = qs;
+
+    return 0;
+
+  }
+
   int UserPrefs::update() {
 
     jd.setObject(jo);

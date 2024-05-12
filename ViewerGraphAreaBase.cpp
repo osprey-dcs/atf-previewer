@@ -72,3 +72,6 @@ void ViewerGraphAreaBase::updateMousePosition( double x, double y ) {
 
 void ViewerGraphAreaBase::updatePeakInfo( double x, double y ) {
 }
+
+void ViewerGraphAreaBase::updateSelectionRange( double xStart, double xEnd ) {
+}

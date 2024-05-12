@@ -67,6 +67,9 @@ class ViewerGraphAreaFft : public ViewerGraphAreaBase {
     virtual void updateMousePosition( double x, double y );
     virtual void updatePeakInfo( double x, double y );
 
+    // use no-op from base class
+    //virtual void updateSelectionRange( double xStart, double xEnd );
+
     // int id, w, h;
     // QVBoxLayout *vlayout;
     // QHBoxLayout *hlayout;

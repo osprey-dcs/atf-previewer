@@ -34,10 +34,19 @@ class DataHeader {
 
   public:
 
+    typedef std::map<QString,std::tuple<QString, double, double, double,
+             double, QString, QString, QString, double, QString, double>> DataHeaderMapType;
+
+    typedef std::map<double,std::tuple<QString, double, double, QString,
+             double, QString, QString, QString, double, QString, double>> DataHeaderIndexMapType;
+  
+    typedef std::list<QString> DataHeaderListType;
+
     static const int EGU {0};
     static const int SLOPE {1};
     static const int INTERCEPT {2};
     static const int SIGINDEX {3};
+    static const int SIGNAME {3};
     static const int TYPE {4};
     static const int YAXISLABEL {5};
     static const int DESC {6};
@@ -50,8 +59,12 @@ class DataHeader {
     QJsonObject jo;
     //                          0        1       2          3
     //                          egu      slope   intercept  sig num  type    Y label  desc     rsp node  rsp dir  ref node  ref dir
-    std::map<QString,std::tuple<QString, double, double,    double,  double, QString, QString, QString,  double,  QString,  double>> sigs;
-    std::list<QString> sigNameList;
+    //std::map<QString,std::tuple<QString, double, double,    double,  double, QString, QString, QString,  double,  QString,  double>> sigs;
+    //std::list<QString> sigNameList;
+
+    DataHeaderMapType sigs;
+    DataHeaderIndexMapType sigsByIndex;
+    DataHeaderListType sigNameList;
 
     DataHeader();
     ~DataHeader();
@@ -74,9 +87,15 @@ class DataHeader {
     int readContents ( QString filename );
     int getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu, double& slope, double& intercept );
 
-    const std::map<QString,std::tuple<QString, double, double, double, double, QString, QString, QString, double, QString, double>>& getNameMap();
-    const std::list<QString>& getNameList();
+    //const std::map<QString,std::tuple<QString, double, double, double, double, QString, QString, QString, double, QString, double>>& getNameMap();
+    //const std::list<QString>& getNameList();
 
+    const DataHeaderListType& getNameList();
+
+    const DataHeaderMapType& getNameMap();
+  
+    const DataHeaderIndexMapType& getIndexMap();
+  
   };
 
 #endif //VIEWER_DataHeader_H

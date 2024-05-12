@@ -49,6 +49,7 @@ class Cnst {
   //static const unsigned long MaxMFileBufSize {75000000};
 
   static const int MaxSigIndex {1023};
+  static const int MaxSignals {1024};
 
   // next value is number of 16-byte complex doubles (total mem used = 16 * value below)
   static const unsigned long MaxFftSize {45000000};

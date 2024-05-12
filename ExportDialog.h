@@ -16,14 +16,21 @@
 #include <QAction>
 #include <QMenu>
 #include <QTextEdit>
+#include <QString>
 
-class ExportDialog : QDialog {
+#include "UserPrefsFac.h"
+
+class ExportDialog : public QDialog {
+
+  Q_OBJECT
 
 public:
   ExportDialog(QWidget *parent, const Qt::WindowFlags &f);
   virtual ~ExportDialog() override;
   void open ( void );
   void close ( void );
+
+  UserPrefs *up;
 
   QWidget *refWidget;
   QGridLayout *gl;
@@ -34,24 +41,36 @@ public:
   QLabel *descLabel;
   QLineEdit *descLineEdit;
   QString description;
-  QPushButton *menuButton;
   QLabel *startTimeLabel;
   QLineEdit *startTimeLineEdit;
   QString startTime;
-  double startTimeInSecVal;
+  double startTimeValInSec;
   QLabel *endTimeLabel;
   QLineEdit *endTimeLineEdit;
   QString endTime;
-  double endTimeInSecVal;
+  double endTimeValInSec;
+  QPushButton *menuButton;
   QLabel *exportFormatLabel;
   QMenu *exportFormatMenu;
-  QAction *csfAction;
+  QAction *csvAction;
   QAction *uff58bAction;
+  QString exportFormat;
   QLabel *chanSelectLabel;
   QTextEdit *chanSelectTextEdit;
   QString chanSelect;
   QPushButton *ok;
   QPushButton *cancel;
+
+signals:
+  void uff58bExport( void );
+  void csvExport( void );
+
+private slots:
+  void performAction( bool );
+  void okButtonClicked( bool );
+  void cancelButtonClicked( bool );
+  void textUpdated( const QString &s );
+  void textUpdated( void );
 
 };
 

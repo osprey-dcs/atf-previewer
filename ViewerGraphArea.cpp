@@ -37,6 +37,9 @@ ViewerGraphArea::ViewerGraphArea( int _id, QWidget *_parent ) : ViewerGraphAreaB
   graph = QSharedPointer<ViewerGraph>( new ViewerGraph( id, ViewerGraph::ScaleType::Linear,
                                                         ViewerGraph::DataType::TimeSeries, this ) );
   mousePos = QSharedPointer<QLabel>( new QLabel( "          " ) );
+  exportSelection = QSharedPointer<QLabel>( new QLabel( " " ) );
+  selectionXMin = QSharedPointer<QLabel>( new QLabel( " " ) );
+  selectionXMax = QSharedPointer<QLabel>( new QLabel( " " ) );
   sigLabel = QSharedPointer<QLabel>( new QLabel( "Signal" ) );
   sigName = QSharedPointer<Combo>( new Combo( this ) );
   sigName->setEditable( true );
@@ -58,6 +61,12 @@ ViewerGraphArea::ViewerGraphArea( int _id, QWidget *_parent ) : ViewerGraphAreaB
   hlayout->addWidget( sigLabel.data() );
   hlayout->addWidget( sigName.data() );
   hlayout->addWidget( calcFft.data() );
+  hlayout->addSpacing( 100 );
+  hlayout->addWidget( exportSelection.data() );
+  hlayout->addSpacing( 20 );
+  hlayout->addWidget( selectionXMin.data() );
+  hlayout->addSpacing( 20 );
+  hlayout->addWidget( selectionXMax.data() );
   hlayout->addStretch( 1 );
   hlayout->addWidget( mousePos.data() );
   
@@ -117,5 +126,30 @@ void ViewerGraphArea::updateMousePosition( double x, double y ) {
   QString text( strm.str().c_str() );
   mousePos->setText( text );
   mousePos->update();
+
+}
+
+void ViewerGraphArea::updateSelectionRange( double xMin, double xMax ) {
+
+  selectionXMinValue = xMin;
+  selectionXMaxValue = xMax;
+  
+  std::stringstream strm1, strm2;
+
+  strm1 << "[ XMin: " << std::setw(9) << std::left << std::setprecision(8) << xMin;
+  QString text( strm1.str().c_str() );
+  text = text.simplified();
+  selectionXMin->setText( text );
+  selectionXMin->update();
+
+  strm2 << " XMax: " << std::setw(9) << std::left << std::setprecision(8) << xMax << " ]";
+  text = strm2.str().c_str();
+  text = text.simplified();
+  selectionXMax->setText( text );
+  selectionXMax->update();
+
+  text = "Export Selection";
+  exportSelection->setText( text );
+  exportSelection->update();
 
 }
