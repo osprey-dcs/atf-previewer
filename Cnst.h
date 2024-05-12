@@ -36,7 +36,10 @@ class Cnst {
   inline static const std::string HdrExtension {"hdr"};
   inline static const std::string Filter {"*.hdr"};
   inline static const std::string BinExtension {"j"};
-  
+
+  inline static const std::string csvExtension {"csv"};
+  inline static const std::string uff58aExtension {"uff58a"};
+
   // normal file reads
   inline static const std::string BinDataName {"File"};
   static const unsigned long MaxMFileBufSize {0};

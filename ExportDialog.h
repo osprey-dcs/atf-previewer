@@ -19,6 +19,8 @@
 #include <QString>
 
 #include "UserPrefsFac.h"
+#include "Cnst.h"
+#include "FileUtil.h"
 
 class ExportDialog : public QDialog {
 

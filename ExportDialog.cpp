@@ -206,15 +206,34 @@ void ExportDialog::close ( void ) {
 void ExportDialog::performAction( bool checked ) {
 
   QAction *action = qobject_cast<QAction *>( sender() );
+  
   if ( action == csvAction ) {
+    
     exportFormatLabel->setText( "CSV" );
     up->setString( "ExportFormat", "CSV" );
     up->update();
+
+    std::cout << "fileName is " << fileNameLineEdit->text().toStdString() << std::endl;
+    QString name = FileUtil::extractFileName( fileNameLineEdit->text() );
+    QString dir = FileUtil::extractDir( fileNameLineEdit->text() );
+    QString newFile = dir + name + "." + Cnst::csvExtension.c_str();
+    fileNameLineEdit->setText( newFile );
+    fileNameLineEdit->update();
+    
   }
   else if ( action == uff58bAction ) {
+    
     exportFormatLabel->setText( "UFF58b" );
     up->setString( "ExportFormat", "UFF58b" );
     up->update();
+
+    std::cout << "fileName is " << fileNameLineEdit->text().toStdString() << std::endl;
+    QString name = FileUtil::extractFileName( fileNameLineEdit->text() );
+    QString dir = FileUtil::extractDir( fileNameLineEdit->text() );
+    QString newFile = dir + name + "." + Cnst::uff58aExtension.c_str();
+    fileNameLineEdit->setText( newFile );
+    fileNameLineEdit->update();
+    
   }
 
 }
