@@ -232,12 +232,16 @@ int PsnFileConverter::convert ( int chassisIndex, int startingSigIndex, const Da
         }
 
         v1 = tmp1 >> 8;
+        if ( v1 & 0x800000 ) v1 |= 0xff000000;
         iout++;
         v2 = ( ( tmp1 & 0xff ) << 16 ) | ( tmp2 >> 16 );
+        if ( v2 & 0x800000 ) v2 |= 0xff000000;
         iout++;
+        if ( v3 & 0x800000 ) v3 |= 0xff000000;
         v3 = ( ( tmp2 & 0xffff ) << 8 ) | ( tmp3 >> 24 );
         iout++;
         v4 = tmp3 & 0xffffff;
+        if ( v4 & 0x800000 ) v4 |= 0xff000000;
         iout++;
 
         if ( isignal >= Cnst::MaxSignals ) {
