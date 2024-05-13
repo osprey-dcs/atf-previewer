@@ -83,7 +83,7 @@ int main( int argc, char **argv ) {
     stat = bft->getRawBinFileType( rawDataFileName, rawDataFileType );
     if ( stat ) {
       std::cout << "Error " << stat << " from getRawBinFileType" << std::endl;
-      return stat;
+      continue;
     }
     
     FileConverterFac fcf;
