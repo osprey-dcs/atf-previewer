@@ -44,7 +44,6 @@ class BinDataBase {
   
   using TwoDIntPtr = int(*)[5];
 
-  std::shared_ptr<LineSeriesBuilderBase> xlsb;
   std::shared_ptr<LineSeriesBuilderBase> slsb;
   std::shared_ptr<LineSeriesBuilderBase> lsb;
   std::shared_ptr<LineSeriesBuilderBase> sfulsb;
@@ -63,12 +62,14 @@ class BinDataBase {
 
   virtual void initMaxBufSize( unsigned long max );
 
+  virtual int getDataFullTimeRange( QString filename, double sampleRate, double& minTime, double& maxTime );
+  
   virtual int getRecordRangeForTime( QString filename, double sampleRate, double minTime, double maxTime,
                                      unsigned long& min, unsigned long& max );
   
-  virtual void inputSeekToStartOfData( std::filebuf &fb, unsigned long firstDataByte );
+  virtual void inputSeekToStartOfData( std::filebuf& fb, unsigned long firstDataByte );
 
-  virtual void outputSeekToStartOfData( std::filebuf &fb, unsigned long firstDataByte );
+  virtual void outputSeekToStartOfData( std::filebuf& fb, unsigned long firstDataByte );
 
   virtual int getMaxElements ( QString filename, int sigIndex, unsigned long& max );
 

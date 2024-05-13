@@ -65,7 +65,11 @@ class Cnst {
   static constexpr double LoopsPerSec {1.0/EventProcessPeriod};
 
   static constexpr double InitialMinTime {0.0};
-  static constexpr double InitialMaxTime {60.0};
+
+  // set this to zero to use all data at startup
+  static constexpr double InitialMaxTime {0.0};
+
+  
   static constexpr double InitialMinFreq {0.0};
   static constexpr double InitialMaxFreq {1000.0};
   static constexpr double InitialMinSig {-1023.0};

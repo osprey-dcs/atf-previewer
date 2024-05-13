@@ -470,11 +470,6 @@ void ViewerCtlr::process(void ) {
         //grArea->graph->getAxesLimits( x0, y0, x1, y1 );
         //std::cout << "x0 = " << x0 << ", x1 = " << x1 << ", y0 = " << y0 << ", y1 = " << y1 << std::endl;
 
-        x0 = Cnst::InitialMinTime;
-        x1 = Cnst::InitialMaxTime;
-        y0 = Cnst::InitialMinSig;
-        y1 = Cnst::InitialMaxSig;
-        
         // get num of pixels in x
         QSizeF size = grArea->graph->chart->size();
         //std::cout << "x pixels = " << size.width() << std::endl;
@@ -484,6 +479,27 @@ void ViewerCtlr::process(void ) {
 
         QString binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
 
+        double minTime=0, maxTime=1;
+        int st = bd->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
+        
+        x0 = Cnst::InitialMinTime;
+        x1 = Cnst::InitialMaxTime;
+        y0 = Cnst::InitialMinSig;
+        y1 = Cnst::InitialMaxSig;
+
+        if ( x1 == 0.0 ) { // use all data
+          double minTime=0, maxTime=1;
+          int st = bd->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
+          if ( !st ) {
+            x0 = minTime;
+            x1 = maxTime;
+            //std::cout << "use full data range " << x0 << " to " << x1 << std::endl;
+          }
+          else {
+            x1 = x0 + 1.0;
+          }
+        }
+        
         // Viewer graph object, setSeries function,  manages qls
         QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
         double miny, maxy;
@@ -1490,12 +1506,12 @@ int ViewerCtlr::doCsvExport ( void ) {
 
       minTime = minByte / sizeof(int) / sampleRate;
 
-      std::cout << "minTime = " << minTime << std::endl;
-      std::cout << "maxTime = " <<  maxTime << std::endl;
-      std::cout << "minByte = " <<  minByte << std::endl;
-      std::cout << "maxByte = " <<  maxByte << std::endl;
-      std::cout << "recRange (ele) = " << recRange/sizeof(int) << std::endl;
-      std::cout << "numSignals = " << numSignals << std::endl;
+      //std::cout << "minTime = " << minTime << std::endl;
+      //std::cout << "maxTime = " <<  maxTime << std::endl;
+      //std::cout << "minByte = " <<  minByte << std::endl;
+      //std::cout << "maxByte = " <<  maxByte << std::endl;
+      //std::cout << "recRange (ele) = " << recRange/sizeof(int) << std::endl;
+      //std::cout << "numSignals = " << numSignals << std::endl;
 
     }
     
@@ -1566,7 +1582,7 @@ int ViewerCtlr::doCsvExport ( void ) {
 
   unsigned long rec = 0;
   double time = minTime;
-  std::cout << "numFullOps = " << numFullOps << ", numRemaining = " << numRemaining << std::endl;
+  //std::cout << "numFullOps = " << numFullOps << ", numRemaining = " << numRemaining << std::endl;
   //read and write binary files in chunks
   for ( i=0; i<numFullOps; i++ ) {
 
@@ -1674,6 +1690,12 @@ int ViewerCtlr::doUff58bExport ( void ) {
                                     minByte, maxByte );
     unsigned long recRange = maxByte - minByte;
     minTime = minByte / sizeof(int) / sampleRate;
+
+    //std::cout << "minTime = " << minTime << std::endl;
+    //std::cout << "maxTime = " <<  maxTime << std::endl;
+    //std::cout << "minByte = " <<  minByte << std::endl;
+    //std::cout << "maxByte = " <<  maxByte << std::endl;
+    //std::cout << "recRange (ele) = " << recRange/sizeof(int) << std::endl;
 
     // build the uff58b header lines
     st = uff58b->set58bHeader( recRange );
@@ -1931,6 +1953,18 @@ void ViewerCtlr::selectionRange ( int vgaId, double xMin, double xMax ) {
   ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>( vg->parent1 );
 
   if( isFFT( vga ) ) return;
+
+  if ( xMin < 0.0 ) xMin = 0.0;
+
+  if ( haveDataForFft ) {
+    double minTime=0, maxTime=0;
+    QString binFile = FileUtil::makeBinFileName( dh.get(), this->fileName, 0 );
+    int st = bd->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
+    if ( !st ) {
+      if ( xMax > maxTime ) xMax = maxTime;
+      if ( xMin < minTime ) xMin = minTime;
+    }
+  }
   
   vga->updateSelectionRange( xMin, xMax );
 

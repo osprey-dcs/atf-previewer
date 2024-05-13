@@ -44,15 +44,6 @@ class BinDataMFile : public BinDataBase {
 
   public:
   
-  using TwoDIntPtr = int(*)[5];
-
-  std::shared_ptr<LineSeriesBuilderBase> xlsb;
-  std::shared_ptr<LineSeriesBuilderBase> slsb;
-  std::shared_ptr<LineSeriesBuilderBase> lsb;
-  std::shared_ptr<LineSeriesBuilderBase> sfulsb;
-  std::shared_ptr<LineSeriesBuilderBase> fulsb;
-  //TwoDIntPtr buf;
-
   BinDataMFile ();
   virtual ~BinDataMFile ();
   BinDataMFile ( const BinDataMFile& ) = delete;
@@ -121,30 +112,6 @@ class BinDataMFile : public BinDataBase {
     LineSeriesBuilderBase *lsb,
     double& miny,
     double &maxy );
-
-  int genFftFillUnderLineSeriesFromBuffer (
-    int num,
-    fftw_complex *buf,
-    double sampleRate,
-    int plotAreaWidthPixels,
-    QtCharts::QLineSeries& qls,
-    double& minx,
-    double& maxx,
-    double& miny,
-    double& maxy );
-
-  int genFftFillUnderLineSeriesFromBufferByFreq (
-    int num,
-    fftw_complex *buf,
-    double sampleRate,
-    int plotAreaWidthPixels,
-    double freqMin,
-    double freqMax,
-    QtCharts::QLineSeries& qls,
-    double& minx,
-    double& maxx,
-    double& miny,
-    double& maxy );
 
   VDisk vdisk;
 
