@@ -74,7 +74,7 @@ class ViewerGraphAreaBase : public QWidget {
     int id, w, h;
     QSharedPointer<QVBoxLayout> vlayout;
     QSharedPointer<QHBoxLayout> hlayout;
-    QSharedPointer<ViewerGraph> graph;
+    QSharedPointer<ViewerGraphBase> graph;
 
     int curSigIndex;
     QString curFileName;

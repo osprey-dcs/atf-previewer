@@ -429,16 +429,18 @@ void ViewerCtlr::process(void ) {
         
             double minx, maxx, miny, maxy;
 
-            stat = this->bd->genFftFillUnderLineSeriesFromBuffer( numFft, fftOut, sampleRate, size.width(),
-                                                              *qls, minx, maxx, miny, maxy );
+            stat = this->bd->genFftLineSeriesFromBuffer( numFft, fftOut, sampleRate, size.width(),
+                                                      *qls, minx, maxx, miny, maxy, true );
             if ( !stat ) {
               companVga->setInitialState();
               companVga->graph->setSeries( qls, sigIndex, reqFileName, minx, maxx, miny, maxy );
+              //std::cout << "after - minx, maxx, miny, maxy = "
+              //          << minx << ", " << maxx << ", " << miny << ", " << maxy << std::endl;
               mainWindow->setNumFftPoints( numFft );
             }
             else {
               mainWindow->setNumPoints( 0ul );
-              std::cout << "genFftFillUnderLineSeriesFromBuffer failure" << std::endl;
+              std::cout << "genFftLineSeriesFromBuffer failure" << std::endl;
               delete qls; qls = nullptr;
             }
         
@@ -564,7 +566,7 @@ void ViewerCtlr::process(void ) {
 
           double x0, x1, y0, y1;
           x0 = Cnst::InitialMinFreq;
-          x1 = sampleRate;
+          x1 = sampleRate / 2;
 
           //std::cout << "x0, x1 = " << x0 << ", " << x1 << std::endl;
 
@@ -576,14 +578,14 @@ void ViewerCtlr::process(void ) {
 
           double x0WithLimits = x0, x1WithLimits = x1;
           if ( x0WithLimits < 0.0 ) x0WithLimits = 0.0;
-          if ( x1WithLimits < sampleRate ) x1WithLimits = sampleRate;
+          if ( x1WithLimits < sampleRate / 2 ) x1WithLimits = sampleRate / 2;
           if ( x1WithLimits < x0WithLimits ) std::swap( x1WithLimits, x0WithLimits );
 
           mainWindow->setWhat( "Reseting..." );
 
-          stat = this->bd->genFftFillUnderLineSeriesFromBufferByFreq
+          stat = this->bd->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
-              x0WithLimits, x1WithLimits, *qls, minx, maxx, miny, maxy );
+              x0WithLimits, x1WithLimits, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
             //std::cout << "after - minx, maxx, miny, maxy = "
@@ -669,6 +671,13 @@ void ViewerCtlr::process(void ) {
               haveDataForFft = true;
             }
 
+            // clear associated fft graph
+            ViewerGraphAreaBase *companVga = this->companionVga( grArea );
+            if ( companVga ) {
+              companVga->setInitialState();
+              companVga->clear();
+            }
+
           }
           else {
           
@@ -711,9 +720,9 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Panning..." );
 
-          stat = this->bd->genFftFillUnderLineSeriesFromBufferByFreq
+          stat = this->bd->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
-              x0, x1, *qls, minx, maxx, miny, maxy );
+              x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
             //std::cout << "after - minx, maxx, miny, maxy = "
@@ -791,6 +800,13 @@ void ViewerCtlr::process(void ) {
 
             setSlider( grArea );
 
+            // clear associated fft graph
+            ViewerGraphAreaBase *companVga = this->companionVga( grArea );
+            if ( companVga ) {
+              companVga->setInitialState();
+              companVga->clear();
+            }
+
           }
           else {
           
@@ -833,9 +849,9 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Scaling..." );
           
-          stat = this->bd->genFftFillUnderLineSeriesFromBufferByFreq
+          stat = this->bd->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
-              x0, x1, *qls, minx, maxx, miny, maxy );
+              x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
             //std::cout << "after - minx, maxx, miny, maxy = "
@@ -848,7 +864,7 @@ void ViewerCtlr::process(void ) {
           else {
 
             delete qls; qls = nullptr;
-            std::cout << "genFftFillUnderLineSeriesFromBuffer failure" << std::endl;
+            std::cout << "genFftLineSeriesFromBuffer failure" << std::endl;
           
           }
             
@@ -912,6 +928,13 @@ void ViewerCtlr::process(void ) {
 
             setSlider( grArea );
 
+            // clear associated fft graph
+            ViewerGraphAreaBase *companVga = this->companionVga( grArea );
+            if ( companVga ) {
+              companVga->setInitialState();
+              companVga->clear();
+            }
+            
           }
           else {
           
@@ -960,12 +983,12 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Scaling..." );
           
-          //stat = this->bd->genFftFillUnderLineSeriesFromBufferByFreq
+          //stat = this->bd->genFftLineSeriesFromBufferByFreq
           //  ( numFft, fftOut, sampleRate, size.width(),
-          //    x0, x1, *qls, minx, maxx, miny, maxy );
-          stat = this->bd->genFftFillUnderLineSeriesFromBufferByFreq
+          //    x0, x1, *qls, minx, maxx, miny, maxy, true );
+          stat = this->bd->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
-              x0, x1, *qls, minx, maxx, miny, maxy );
+              x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
             //std::cout << "after - minx, maxx, miny, maxy = "
@@ -986,7 +1009,7 @@ void ViewerCtlr::process(void ) {
           else {
 
             delete qls; qls = nullptr;
-            std::cout << "genFftFillUnderLineSeriesFromBuffer failure" << std::endl;
+            std::cout << "genFftLineSeriesFromBuffer failure" << std::endl;
           
           }
             
@@ -1057,7 +1080,14 @@ void ViewerCtlr::process(void ) {
             }
 
             setSlider( grArea );
-
+            
+            // clear associated fft graph
+            ViewerGraphAreaBase *companVga = this->companionVga( grArea );
+            if ( companVga ) {
+              companVga->setInitialState();
+              companVga->clear();
+            }
+            
           }
           else {
           
@@ -1107,9 +1137,9 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Getting prev view..." );
           
-          stat = this->bd->genFftFillUnderLineSeriesFromBufferByFreq
+          stat = this->bd->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
-              x0, x1, *qls, minx, maxx, miny, maxy );
+              x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
             //std::cout << "after - minx, maxx, miny, maxy = "
@@ -1122,7 +1152,7 @@ void ViewerCtlr::process(void ) {
           else {
 
             delete qls; qls = nullptr;
-            std::cout << "genFftFillUnderLineSeriesFromBuffer failure" << std::endl;
+            std::cout << "genFftLineSeriesFromBuffer failure" << std::endl;
           
           }
             
@@ -1192,7 +1222,14 @@ void ViewerCtlr::process(void ) {
             }
 
             setSlider( grArea );
-
+            
+            // clear associated fft graph
+            ViewerGraphAreaBase *companVga = this->companionVga( grArea );
+            if ( companVga ) {
+              companVga->setInitialState();
+              companVga->clear();
+            }
+            
           }
           else {
           
@@ -1330,7 +1367,7 @@ void ViewerCtlr::sigNameChange1(int index, int sigIndex, QWidget *w ) {
 void ViewerCtlr::sigAreaChanged(const QRectF& plotArea ) {
   //std::cout << "sigAreaChange" << std::endl;
   QtCharts::QChart *chart = qobject_cast<QtCharts::QChart *>(sender());
-  ViewerGraph *vg = qobject_cast<ViewerGraph *>(chart->parent());
+  ViewerGraphBase *vg = qobject_cast<ViewerGraphBase *>(chart->parent());
   ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>(vg->parent());
 
   if ( ( vga->id < 0 ) || ( vga->id > Cnst::NumGraphs) ) {
@@ -1778,7 +1815,7 @@ void ViewerCtlr::haveHorizontalPan (int id, int curSigIndex, QString& curFileNam
   //  ", cur file = " << curFileName.toStdString() << std::endl;
   //std::cout << "x0 = " << x0 << ", x1 = " << x1 << ", y0 = " << y0 << ", y1 = " << y1 << std::endl;
 
-  ViewerGraph *vg = qobject_cast<ViewerGraph *>(sender());
+  ViewerGraphBase *vg = qobject_cast<ViewerGraphBase *>(sender());
   ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>( vg->parent1 );
   //std::cout << "vga id = " << vga->id << std::endl;
 
@@ -1798,7 +1835,7 @@ void ViewerCtlr::haveScale (int id, int curSigIndex, QString& curFileName,
   //  ", cur file = " << curFileName.toStdString() << std::endl;
   //std::cout << "x0 = " << x0 << ", x1 = " << x1 << ", y0 = " << y0 << ", y1 = " << y1 << std::endl;
 
-  ViewerGraph *vg = qobject_cast<ViewerGraph *>(sender());
+  ViewerGraphBase *vg = qobject_cast<ViewerGraphBase *>(sender());
   ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>( vg->parent1 );
   //std::cout << "vga id = " << vga->id << std::endl;
 
@@ -1817,7 +1854,7 @@ void ViewerCtlr::haveRubberBandScale (int id, int curSigIndex, QString& curFileN
   //  ", cur file = " << curFileName.toStdString() << std::endl;
 
   double  x0, x1, y0, y1;
-  ViewerGraph *vg = qobject_cast<ViewerGraph *>(sender());
+  ViewerGraphBase *vg = qobject_cast<ViewerGraphBase *>(sender());
   vg->getAxesLimits( x0, y0, x1, y1 );
   vg->views.pushView( x0, y0, x1, y1 );
   vg->prevViewAction->setEnabled( true );
@@ -1838,7 +1875,7 @@ void ViewerCtlr::havePrevViewRequest (int id, int curSigIndex, QString& curFileN
   //  ", cur file = " << curFileName.toStdString() << std::endl;
 
   double  x0, x1, y0, y1;
-  ViewerGraph *vg = qobject_cast<ViewerGraph *>(sender());
+  ViewerGraphBase *vg = qobject_cast<ViewerGraphBase *>(sender());
 
   ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>( vg->parent1 );
   //std::cout << "vga id = " << vga->id << std::endl;
@@ -1856,7 +1893,7 @@ void ViewerCtlr::haveReset (int id, int curSigIndex, QString& curFileName ) {
   //std::cout << "have Reset - id = " << id << ", cur sig index = " << curSigIndex <<
   //  ", cur file = " << curFileName.toStdString() << std::endl;
 
-  ViewerGraph *vg = qobject_cast<ViewerGraph *>(sender());
+  ViewerGraphBase *vg = qobject_cast<ViewerGraphBase *>(sender());
   ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>( vg->parent1 );
   //std::cout << "vga id = " << vga->id << std::endl;
 
@@ -1890,7 +1927,7 @@ void ViewerCtlr::selectionRange ( int vgaId, double xMin, double xMax ) {
   
   //std::cout << "selectionRange - id = " << vgaId << ", xMin = " << xMin << ", xMax = " << xMax << std::endl;
   
-  ViewerGraph *vg = qobject_cast<ViewerGraph *>(sender());
+  ViewerGraphBase *vg = qobject_cast<ViewerGraphBase *>(sender());
   ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>( vg->parent1 );
 
   if( isFFT( vga ) ) return;
@@ -1918,7 +1955,7 @@ void ViewerCtlr::selectionRange ( int vgaId, double xMin, double xMax ) {
 void ViewerCtlr::mousePosition ( int vgaId, double x, double y ) {
 
   //std::cout << "mouse pos - id = " << vgaId << ", x = " << x << ", y = " << y << std::endl;
-  ViewerGraph *vg = qobject_cast<ViewerGraph *>(sender());
+  ViewerGraphBase *vg = qobject_cast<ViewerGraphBase *>(sender());
   ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>( vg->parent1 );
 
   if ( isFFT( vga ) ) {

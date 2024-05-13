@@ -22,19 +22,19 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include <QDebug>
 
-#include "ViewerGraph.h"
+#include "ViewerGraphLogY.h"
 
 static QColor QColorBlack( "black" );
 static QColor QColorWhite( "white" );
 
-ViewerGraph::ViewerGraph( int _id, DataType _dataType, QWidget *_parent ) :
+ViewerGraphLogY::ViewerGraphLogY( int _id, DataType _dataType, QWidget *_parent ) :
   ViewerGraphBase( _id, _dataType, _parent ) {
 
   id = _id;
   parent1 = _parent;
   dataType = _dataType;
   
-  scaleType = ViewerGraph::ScaleType::YLinear;
+  scaleType = ViewerGraphLogY::ScaleType::YLog;
   shiftState = false;
   ctrlState = false;
 
@@ -52,28 +52,29 @@ ViewerGraph::ViewerGraph( int _id, DataType _dataType, QWidget *_parent ) :
   chart->setParent( dynamic_cast<QObject*>(this) );
   chart->addSeries( qls );
 
-  axisY = QSharedPointer<QtCharts::QAbstractAxis>( new QtCharts::QValueAxis() );
-  axisY->setTitleText( "Mag" );
-  dynamic_cast<QtCharts::QValueAxis *>(axisY.data())->setLabelFormat( "%.10g" );
-  dynamic_cast<QtCharts::QValueAxis *>(axisY.data())->setTickCount( 2 );
-  if ( dataType == ViewerGraph::DataType::TimeSeries ) {
-    axisY->setRange( Cnst::InitialMinSig, Cnst::InitialMaxSig );
-     axisY->setGridLineColor( QRgb( Cnst::InitialGridRgb ) );
+  axisY = QSharedPointer<QtCharts::QAbstractAxis>( new QtCharts::QLogValueAxis() );
+  if ( dataType == ViewerGraphLogY::DataType::TimeSeries ) {
+    axisY->setTitleText( "Mag" );
+    dynamic_cast<QtCharts::QLogValueAxis *>(axisY.data())->setLabelFormat( "%.10g" );
+    axisY->setRange( Cnst::InitialMinSigLog, Cnst::InitialMaxSigLog );
   }
-  else if ( dataType == ViewerGraph::DataType::FFT ) {
-    axisY->setRange( Cnst::InitialMinFft, Cnst::InitialMaxFft );
-    axisY->setGridLineColor( QRgb( Cnst::InitialGridRgb ) );
+  else if ( dataType == ViewerGraphLogY::DataType::FFT ) {
+    axisY->setTitleText( "Mag)" );
+    dynamic_cast<QtCharts::QLogValueAxis *>(axisY.data())->setLabelFormat( "%.10g" );
+    axisY->setRange( Cnst::InitialMinFftLog, Cnst::InitialMaxFftLog );
   }
+  axisY->setGridLineColor( QRgb( Cnst::InitialGridRgb ) );
   chart->addAxis( axisY.data(), Qt::AlignLeft );
   qls->attachAxis( axisY.data() );
-   axisX = QSharedPointer<QtCharts::QAbstractAxis>( new QtCharts::QValueAxis() );
-  if ( dataType == ViewerGraph::DataType::TimeSeries ) {
+
+  axisX = QSharedPointer<QtCharts::QAbstractAxis>( new QtCharts::QValueAxis() );
+  if ( dataType == ViewerGraphLogY::DataType::TimeSeries ) {
     axisX->setTitleText( "Time (sec)" );
     dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setLabelFormat( "%.10g" );
     dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setTickCount( 2 );
     axisX->setRange( Cnst::InitialMinTime, Cnst::InitialMaxTime );
   }
-  else if ( dataType == ViewerGraph::DataType::FFT ) {
+  else if ( dataType == ViewerGraphLogY::DataType::FFT ) {
     axisX->setTitleText( "Freq (Hz)" );
     dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setLabelFormat( "%.10g" );
     dynamic_cast<QtCharts::QValueAxis *>(axisX.data())->setTickCount( 2 );
@@ -126,7 +127,7 @@ ViewerGraph::ViewerGraph( int _id, DataType _dataType, QWidget *_parent ) :
   panLeftAction = QSharedPointer<QAction>( new QAction( "Pan Left" ) );
   this->popupMenu->addAction( panLeftAction.data() );
   
-  panUpAction = QSharedPointer<QAction>( new QAction(   "Pan Up" ) );
+  panUpAction = QSharedPointer<QAction>( new QAction( "Pan Up" ) );
   this->popupMenu->addAction( panUpAction.data() );
   
   panDownAction = QSharedPointer<QAction>( new QAction( "Pan Down" ) );
@@ -153,63 +154,21 @@ ViewerGraph::ViewerGraph( int _id, DataType _dataType, QWidget *_parent ) :
 
 }
 
-ViewerGraph::~ViewerGraph( ) {
+ViewerGraphLogY::~ViewerGraphLogY( ) {
 
 }
 
-void ViewerGraph::setYTitle( std::string& s ) {
+void ViewerGraphLogY::setYTitle( std::string& s ) {
 
   this->yTitle = QString( s.c_str() );
 
 }
 
-bool ViewerGraph::eventFilter( QObject *watched, QEvent *event ) {
+bool ViewerGraphLogY::eventFilter( QObject *watched, QEvent *event ) {
 
-  double chartXMin=0, chartXMax=0, chartYMin=0, chartYMax=0,
-    panDistX=0, panDistY=0, zoomDistX=0, zoomDistY=0,
-    newXMin=0, newXMax=0, newYMin=0, newYMax=0,
-    plotW=0, plotH=0, chartXRange=1, chartYRange=1, xFact, yFact,
-    x0, x1, y0, y1, mouseX, mouseY, boxX, boxY, boxW, boxH;
-  int plotX, plotY;
- 
   if ( watched == this->qrb ) {
-    //std::cout << __FILE__ << ", line = " << __LINE__ << std::endl;
-    //std::cout << "rb event, event = " << (int) event->type() << std::endl;
-    //if ( event->type() == QEvent::Resize ) {
-    //  plotX = this->qrb->pos().x() - chart->plotArea().x();
-    //  plotY = this->qrb->pos().y() - chart->plotArea().y();
-    //  std::cout << "rb resize event, x = " << plotX << std::endl;
-    //  std::cout << "rb resize event, y = " << plotY << std::endl;
-    //  std::cout << "rb resize event, w = " << this->qrb->size().width() << std::endl;
-    //  std::cout << "rb resize event, h = " << this->qrb->size().height() << std::endl;
-    //  this->getPlotSize( plotW, plotH );
-    //  this->getAxesLimits(  chartXMin, chartYMin, chartXMax, chartYMax );
-    //  if ( ( chartXMax - chartXMin ) != 0 ) chartXRange = chartXMax - chartXMin;
-    //  if ( ( chartYMax - chartYMin ) != 0 ) chartYRange = chartYMax - chartYMin;
-    //  xFact = chartXRange / plotW;
-    //  yFact = chartYRange / plotH;
-    //  std::cout << "xFact = " << xFact << std::endl;
-    //  boxX = plotX * xFact + chartXMin;
-    //  boxY = chartYRange - plotY * yFact + chartYMin;
-    //  boxW = this->qrb->size().width() * xFact;
-    //  boxH = this->qrb->size().height() * yFact;
-    //  std::cout << "box x, y, w, h = " << boxX << ", " << boxY << ", " << boxW << ", " << boxH << std::endl;
-    //}
     if ( event->type() ==  QEvent::HideToParent ) {
-      plotX = this->qrb->pos().x() - chart->plotArea().x();
-      plotY = this->qrb->pos().y() - chart->plotArea().y();
-      this->getPlotSize( plotW, plotH );
-      this->getAxesLimits(  chartXMin, chartYMin, chartXMax, chartYMax );
-      if ( ( chartXMax - chartXMin ) != 0 ) chartXRange = chartXMax - chartXMin;
-      if ( ( chartYMax - chartYMin ) != 0 ) chartYRange = chartYMax - chartYMin;
-      xFact = chartXRange / plotW;
-      yFact = chartYRange / plotH;
-      boxX = plotX * xFact + chartXMin;
-      boxY = chartYRange - plotY * yFact + chartYMin;
-      boxW = this->qrb->size().width() * xFact;
-      boxH = this->qrb->size().height() * yFact;
       emit rubberBandScale( this->id, this->curSigIndex, this->curFileName );
-      emit rubberBandRange( this->id, boxX, boxX+boxW );
     }
   }
 
@@ -220,14 +179,14 @@ bool ViewerGraph::eventFilter( QObject *watched, QEvent *event ) {
 
 }
 
-void ViewerGraph::getAxesLimits( double& x0, double &y0,
+void ViewerGraphLogY::getAxesLimits( double& x0, double &y0,
                                   double &x1, double& y1 ) {
 
   auto xAxes = chart->axes(Qt::Horizontal, qls );
   auto yAxes = chart->axes(Qt::Vertical, qls );
 
   QtCharts::QValueAxis *xAxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
-  QtCharts::QValueAxis *yAxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
+  QtCharts::QLogValueAxis *yAxis = dynamic_cast<QtCharts::QLogValueAxis *>( yAxes[0] );
 
   x0 = xAxis->min();
   x1 = xAxis->max();
@@ -236,14 +195,14 @@ void ViewerGraph::getAxesLimits( double& x0, double &y0,
 
 }
 
-void ViewerGraph::setAxesLimits( double x0, double y0,
+void ViewerGraphLogY::setAxesLimits( double x0, double y0,
                                  double x1, double y1, bool adjScales ) {
 
   auto xAxes = chart->axes(Qt::Horizontal, qls );
   auto yAxes = chart->axes(Qt::Vertical, qls );
 
   QtCharts::QValueAxis *xValAxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
-  QtCharts::QValueAxis *yValAxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
+  QtCharts::QLogValueAxis *yValAxis = dynamic_cast<QtCharts::QLogValueAxis *>( yAxes[0] );
 
   qls->detachAxis( xAxes[0] );
   qls->detachAxis( yAxes[0] );
@@ -255,22 +214,10 @@ void ViewerGraph::setAxesLimits( double x0, double y0,
   double min, max;
   int ticks;
   getBetterAxesParams( x0, x1, 2, min, max, ticks, adjScales );
-  //std::cout << "1   x0 = " << x0 << ", x1 = " << x1 << ", 2 = " << 2 << ", min = " << min
-  //          << ", max = " << max << ", ticks = " << ticks << std::endl << std::endl;
   xValAxis->setRange( min, max );
   xValAxis->setTickCount( ticks );
 
-  getBetterAxesParams( y0, y1, 2, min, max, ticks, adjScales );
-  //std::cout << "1   y0 = " << y0 << ", y1 = " << y1 << ", 2 = " << 2
-  //          << ", min = " << min << ", max = " << max << ", ticks = " << ticks << std::endl << std::endl;
-  yValAxis->setRange( min, max );
-  yValAxis->setTickCount( ticks );
-
-  //xValAxis->setRange( x0, x1 );
-  //xValAxis->setTickCount( 2 );
-
-  //yValAxis->setRange( y0, y1 );
-  //yValAxis->setTickCount( 2 );
+  yValAxis->setRange( y0, y1 );
   
   qls->attachAxis( xAxes[0] );
   qls->attachAxis( yAxes[0] );
@@ -279,17 +226,17 @@ void ViewerGraph::setAxesLimits( double x0, double y0,
 
 }
 
-void ViewerGraph::getPlotSize( double& w, double &h ) {
+void ViewerGraphLogY::getPlotSize( double& w, double &h ) {
 
   w = (double) this->chart->plotArea().width();
   h = (double) this->chart->plotArea().height();
 
 }
 
-void ViewerGraph::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QString fileName, double minX,
+void ViewerGraphLogY::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QString fileName, double minX,
                               double maxX, double minY, double maxY, bool adjScales ) {
 
-  //std::cout << "ViewerGraph::setSeries 7" << std::endl;
+  //std::cout << "ViewerGraphLogY::setSeries 7" << std::endl;
 
   // There's a memory leak somewhere in the following
 
@@ -304,7 +251,7 @@ void ViewerGraph::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QStri
   auto yAxes = chart->axes(Qt::Vertical, qls );
 
   QtCharts::QValueAxis *xaxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
-  QtCharts::QValueAxis *yaxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
+  QtCharts::QLogValueAxis *yaxis = dynamic_cast<QtCharts::QLogValueAxis *>( yAxes[0] );
 
   qls->detachAxis( xaxis );
   qls->detachAxis( yaxis );
@@ -328,35 +275,19 @@ void ViewerGraph::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QStri
   qls->attachAxis( xaxis );
   qls->attachAxis( yaxis );
 
-  //xaxis->setRange( minX, maxX );
-  //yaxis->setRange( minY, maxY );
+  yaxis->setRange( minY, maxY );
   
   double newMinX, newMaxX, newMinY, newMaxY;
   int newXTicks, newYTicks;
   getBetterAxesParams( minX, maxX, 5, newMinX, newMaxX, newXTicks, adjScales );
-  //std::cout << "2   minX = " << minX << ", maxX = " << maxX << ", 5 = " << 5
-  //  << ", newMinX = " << newMinX << ", newMaxX = " << newMaxX
-  //<< ", newXTicks = " << newXTicks << std::endl  << std::endl;
-  //QtCharts::QValueAxis *xaxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
   xaxis->setRange( newMinX, newMaxX );
   xaxis->setTickCount( newXTicks );
-
-  getBetterAxesParams( minY, maxY, 5, newMinY, newMaxY, newYTicks, adjScales );
-  //std::cout << "2   minY = " << minY << ", maxY = " << maxY << ", 5 = " << 5
-  //          << ", newMinY = " << newMinY << ", newMaxY = " << newMaxY
-  //          << ", newYTicks = " << newYTicks << std::endl << std::endl;
-  //QtCharts::QValueAxis *yaxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
-  yaxis->setRange( newMinY, newMaxY );
-  yaxis->setTickCount( newYTicks );
-  yaxis->setTitleText( this->yTitle );
-  //std::cout << "this->yTitle = [" << this->yTitle.toStdString() << "]" << std::endl;
-
 
   parent1->update();
 
 }
 
-void ViewerGraph::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QString fileName, double minX,
+void ViewerGraphLogY::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QString fileName, double minX,
                               double maxX, bool adjScales ) {
 
   // There's a memory leak somewhere in the following
@@ -372,7 +303,7 @@ void ViewerGraph::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QStri
   auto yAxes = chart->axes(Qt::Vertical, qls );
 
   QtCharts::QValueAxis *xaxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
-  QtCharts::QValueAxis *yaxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
+  QtCharts::QLogValueAxis *yaxis = dynamic_cast<QtCharts::QLogValueAxis *>( yAxes[0] );
 
   qls->detachAxis( xaxis );
   qls->detachAxis( yaxis );
@@ -396,22 +327,16 @@ void ViewerGraph::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QStri
   double newMinX, newMaxX, newMinY, newMaxY;
   int newXTicks, newYTicks;
   getBetterAxesParams( minX, maxX, 5, newMinX, newMaxX, newXTicks, adjScales );
-  //std::cout << "3   minX = " << minX << ", maxX = " << maxX << ", 5 = " << 5
-  //  << ", newMinX = " << newMinX << ", newMaxX = " << newMaxX << ", newXTicks = " << newXTicks << std::endl  << std::endl;
-  //QtCharts::QValueAxis *xaxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
   xaxis->setRange( newMinX, newMaxX );
   xaxis->setTickCount( newXTicks );
 
-  //std::cout << "this->yTitle = " << this->yTitle.toStdString() << std::endl;
   yaxis->setTitleText( this->yTitle );
   
-  //xAxes[0]->setRange( minX, maxX );
-
   parent1->update();
 
 }
 
-void ViewerGraph::setEmptySeries ( QtCharts::QLineSeries *newQls ) {
+void ViewerGraphLogY::setEmptySeries ( QtCharts::QLineSeries *newQls ) {
 
   // There's a memory leak somewhere in the following
 
@@ -450,10 +375,10 @@ void ViewerGraph::setEmptySeries ( QtCharts::QLineSeries *newQls ) {
     xaxis->setTickCount( 2 );
   }
 
-  QtCharts::QValueAxis *yaxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
+  QtCharts::QLogValueAxis *yaxis = dynamic_cast<QtCharts::QLogValueAxis *>( yAxes[0] );
   if ( yaxis ) {
     yaxis->setRange( Cnst::InitialMinSig, Cnst::InitialMaxSig );
-    yaxis->setTickCount( 2 );
+    //yaxis->setTickCount( 2 );
     yaxis->setTitleText( "" );
   }
 
@@ -461,19 +386,19 @@ void ViewerGraph::setEmptySeries ( QtCharts::QLineSeries *newQls ) {
 
 }
 
-int ViewerGraph::getCurSigIndex ( void ) {
+int ViewerGraphLogY::getCurSigIndex ( void ) {
 
   return this->curSigIndex;
 
 }
 
-QString& ViewerGraph::getCurFileName ( void ) {
+QString& ViewerGraphLogY::getCurFileName ( void ) {
 
   return this->curFileName;
 
 }
 
-void ViewerGraph::clear( void ) {
+void ViewerGraphLogY::clear( void ) {
 
   QtCharts::QLineSeries *emptyQls = new QtCharts::QLineSeries();
   this->setEmptySeries( emptyQls );
@@ -481,7 +406,7 @@ void ViewerGraph::clear( void ) {
 
 }
 
-bool ViewerGraph::inside( int x, int y ) {
+bool ViewerGraphLogY::inside( int x, int y ) {
 
   if ( ( x >= 0 ) && ( x <= chart->plotArea().width() ) &&
        ( y >= 0 ) && ( y <= ( chart->plotArea().height() ) ) ) {
@@ -493,13 +418,13 @@ bool ViewerGraph::inside( int x, int y ) {
 
 }
 
-void ViewerGraph::enterEvent( QEvent *ev ) {
+void ViewerGraphLogY::enterEvent( QEvent *ev ) {
   setFocus();
   shiftState = false;
   ctrlState = false;
 }
 
-void ViewerGraph::wheelEvent( QWheelEvent *ev ) {
+void ViewerGraphLogY::wheelEvent( QWheelEvent *ev ) {
 
   if ( isEmpty ) {
     return;
@@ -525,7 +450,7 @@ void ViewerGraph::wheelEvent( QWheelEvent *ev ) {
   auto xAxes = chart->axes(Qt::Horizontal, qls );
   auto yAxes = chart->axes(Qt::Vertical, qls );
   QtCharts::QValueAxis *xAxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
-  QtCharts::QValueAxis *yAxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
+  QtCharts::QLogValueAxis *yAxis = dynamic_cast<QtCharts::QLogValueAxis *>( yAxes[0] );
 
   if ( ( chartXMax - chartXMin ) != 0 ) chartXRange = chartXMax - chartXMin;
   if ( ( chartYMax - chartYMin ) != 0 ) chartYRange = chartYMax - chartYMin;
@@ -607,7 +532,7 @@ void ViewerGraph::wheelEvent( QWheelEvent *ev ) {
 
 }
 
-void ViewerGraph::mousePressEvent( QMouseEvent *ev ) {
+void ViewerGraphLogY::mousePressEvent( QMouseEvent *ev ) {
 
   if ( isEmpty ) {
     //std::cout << "empty" << std::endl;
@@ -629,8 +554,12 @@ void ViewerGraph::mousePressEvent( QMouseEvent *ev ) {
   this->getPlotSize( plotW, plotH );
   this->getAxesLimits(  chartXMin, chartYMin, chartXMax, chartYMax );
 
+  //std::cout << "plotX = " << plotX << ", plotY = " << plotY << ", plotW = " << plotW << ", plotH = " << plotH << std::endl;
+  //std::cout << "chartXMin = " << chartXMin << ", chartXMax = " << chartXMax << ", chartYMin = " << chartYMin << ", chartYMax = " << chartYMax << std::endl;
+  //std::cout << " = " << x << ", x = " << x << ", x = " << x << ", x = " << x << std::endl;
+
   if ( ( chartXMax - chartXMin ) != 0 ) chartXRange = chartXMax - chartXMin;
-  if ( ( chartYMax - chartYMin ) != 0 ) chartYRange = chartYMax - chartYMin;
+  if ( ( chartYMax - chartYMin ) != 0 ) chartYRange = log10( chartYMax ) - log10( chartYMin );
 
   xFact = chartXRange / plotW;
   yFact = chartYRange / plotH;
@@ -642,8 +571,8 @@ void ViewerGraph::mousePressEvent( QMouseEvent *ev ) {
   
   if ( !shiftState && ctrlState && ( button & 1 ) && in ) {
     double mouseX = plotX * xFact + chartXMin;
-    double mouseY = chartYRange - plotY * yFact + chartYMin;
-    //std::cout << "pos:   " << mouseX << ",  " << mouseY << std::endl;
+    double mouseY = chartYRange - plotY * yFact + log10( chartYMin );
+    mouseY = pow(10.0, mouseY );
     emit mousePos( this->id, mouseX, mouseY );
   }
   // pan right
@@ -704,7 +633,7 @@ void ViewerGraph::mousePressEvent( QMouseEvent *ev ) {
 
 }
 
-void ViewerGraph::mouseReleaseEvent( QMouseEvent *ev ) {
+void ViewerGraphLogY::mouseReleaseEvent( QMouseEvent *ev ) {
   
   if ( isEmpty ) return;
   
@@ -716,7 +645,7 @@ void ViewerGraph::mouseReleaseEvent( QMouseEvent *ev ) {
 
 }
 
-void ViewerGraph::mouseMoveEvent( QMouseEvent *ev ) {
+void ViewerGraphLogY::mouseMoveEvent( QMouseEvent *ev ) {
   
   if ( isEmpty ) return;
   
@@ -727,7 +656,7 @@ void ViewerGraph::mouseMoveEvent( QMouseEvent *ev ) {
 
 }
 
-void ViewerGraph::keyPressEvent( QKeyEvent *ev ) {
+void ViewerGraphLogY::keyPressEvent( QKeyEvent *ev ) {
 
   if ( isEmpty ) return;
   
@@ -740,7 +669,7 @@ void ViewerGraph::keyPressEvent( QKeyEvent *ev ) {
   QtCharts::QChartView::keyPressEvent( ev );
 }
 
-void ViewerGraph::keyReleaseEvent( QKeyEvent *ev ) {
+void ViewerGraphLogY::keyReleaseEvent( QKeyEvent *ev ) {
 
   if ( isEmpty ) return;
   
@@ -753,7 +682,7 @@ void ViewerGraph::keyReleaseEvent( QKeyEvent *ev ) {
   QtCharts::QChartView::keyReleaseEvent( ev );
 }
 
-void ViewerGraph::performAction ( QAction *a ) {
+void ViewerGraphLogY::performAction ( QAction *a ) {
 
   double chartXMin=0, chartXMax=0, chartYMin=0, chartYMax=0;
 
@@ -800,12 +729,12 @@ void ViewerGraph::performAction ( QAction *a ) {
     panVertical( -1.0 * panDistY );
   }
   else {
-    //std::cout << "ViewerGraph::performAction: Unknown action" << std::endl;
+    //std::cout << "ViewerGraphLogY::performAction: Unknown action" << std::endl;
   }
 
 }
 
-void ViewerGraph::zoomIn ( double zoomDistX, double zoomDistY ) {
+void ViewerGraphLogY::zoomIn ( double zoomDistX, double zoomDistY ) {
     
   double chartXMin=0, chartXMax=0, chartYMin=0, chartYMax=0,
     newXMin=0, newXMax=0, newYMin=0, newYMax=0;
@@ -817,8 +746,10 @@ void ViewerGraph::zoomIn ( double zoomDistX, double zoomDistY ) {
 
   newXMin = chartXMin + zoomDistX;
   newXMax = chartXMax - zoomDistX;
-  newYMin = chartYMin + zoomDistY;
-  newYMax = chartYMax - zoomDistY;
+  if ( zoomDistY > 0.0 ) {
+    newYMin = pow( 10.0, log10( chartYMin ) + 1 );
+    newYMax = pow( 10.0, log10( chartYMax ) - 1 );
+  }
   
   this->setAxesLimits( newXMin, newYMin, newXMax, newYMax );
   this->getAxesLimits(  chartXMin, chartYMin, chartXMax, chartYMax );
@@ -827,7 +758,7 @@ void ViewerGraph::zoomIn ( double zoomDistX, double zoomDistY ) {
 
 }
 
-void ViewerGraph::zoomOut ( double zoomDistX, double zoomDistY ) {
+void ViewerGraphLogY::zoomOut ( double zoomDistX, double zoomDistY ) {
     
   double chartXMin=0, chartXMax=0, chartYMin=0, chartYMax=0,
     newXMin=0, newXMax=0, newYMin=0, newYMax=0;
@@ -839,8 +770,10 @@ void ViewerGraph::zoomOut ( double zoomDistX, double zoomDistY ) {
 
   newXMin = chartXMin - zoomDistX;
   newXMax = chartXMax + zoomDistX;
-  newYMin = chartYMin - zoomDistY;
-  newYMax = chartYMax + zoomDistY;
+  if ( zoomDistY > 0.0 ) {
+    newYMin = pow( 10.0, log10( chartYMin ) - 1 );
+    newYMax = pow( 10.0, log10( chartYMax ) + 1 );
+  }
   
   this->setAxesLimits( newXMin, newYMin, newXMax, newYMax );
   this->getAxesLimits(  chartXMin, chartYMin, chartXMax, chartYMax );
@@ -849,7 +782,7 @@ void ViewerGraph::zoomOut ( double zoomDistX, double zoomDistY ) {
 
 }
 
-void ViewerGraph::panHorizontal ( double panDist ) {
+void ViewerGraphLogY::panHorizontal ( double panDist ) {
     
   double chartXMin=0, chartXMax=0, chartYMin=0, chartYMax=0,
     newXMin=0, newXMax=0, newYMin=0, newYMax=0;
@@ -871,20 +804,38 @@ void ViewerGraph::panHorizontal ( double panDist ) {
 
 }
 
-void ViewerGraph::panVertical ( double panDist ) {
+void ViewerGraphLogY::panVertical ( double panDist ) {
     
   double chartXMin=0, chartXMax=0, chartYMin=0, chartYMax=0,
     newXMin=0, newXMax=0, newYMin=0, newYMax=0;
+
+  //std::cout << "ViewerGraphLogY::panVertical" << std::endl;
   
   this->getAxesLimits(  chartXMin, chartYMin, chartXMax, chartYMax );
 
   this->views.pushView( chartXMin, chartYMin, chartXMax, chartYMax );
   this->prevViewAction->setEnabled( true );
 
-  newXMin = chartXMin;
-  newXMax = chartXMax;
-  newYMin = chartYMin + panDist;
-  newYMax = chartYMax + panDist;
+  //std::cout << "chartXMin = " << chartXMin << ", chartXMax = " << chartXMax << ", chartYMin = " << chartYMin << ", chartYMax = " << chartYMax << std::endl;
+
+  if ( panDist > 0 ) {
+    
+    newXMin = chartXMin;
+    newXMax = chartXMax;
+    newYMin = pow( 10.0, log10( chartYMin ) + 1 );
+    newYMax = pow( 10.0, log10( chartYMax ) + 1 );
+
+  }
+  else {
+
+    newXMin = chartXMin;
+    newXMax = chartXMax;
+    newYMin = pow( 10.0, log10( chartYMin ) - 1 );
+    newYMax = pow( 10.0, log10( chartYMax ) - 1 );
+
+  }
+
+   //std::cout << "newXMin = " << newXMin << ", newXMax = " << newXMax << ", newYMin = " << newYMin << ", newYMax = " << newYMax << std::endl;
   
   this->setAxesLimits( newXMin, newYMin, newXMax, newYMax );
   this->getAxesLimits(  chartXMin, chartYMin, chartXMax, chartYMax );
@@ -893,7 +844,7 @@ void ViewerGraph::panVertical ( double panDist ) {
 
 }
 
-void ViewerGraph::getBetterAxesParams ( double min, double max, int ticks,
+void ViewerGraphLogY::getBetterAxesParams ( double min, double max, int ticks,
                                         double& adj_min, double& adj_max, int& num_label_ticks, bool adjScales ) {
 
 double dmin, dmax, diff, mag, norm;
@@ -1100,107 +1051,3 @@ int imag, inorm, imin, imax, inc1, inc2, inc5, imin1, imax1,
   num_label_ticks = idiv + 1;
 
 }
-
-//void ViewerGraph::getBetterAxesParams ( double min, double max, int ticks,
-//                                        double& newMin, double& newMax, int& newTicks ) {
-//
-//  double diff;
-//  double min1;
-//  double max1;
-//  double ticks1;
-//
-//  std::cout << "getBetterAxesParams" << std::endl;
-//  std::cout << "min = " << min << std::endl;
-//  std::cout << "max = " << max << std::endl;
-//  //std::cout << "ticks = " << ticks << std::endl;
-//
-//
-//  diff = log10( max - min );
-//  std::cout << "diff = " << diff << std::endl;
-//  diff = floor( log10( max - min ) );
-//  std::cout << "floor diff = " << diff << std::endl;
-//  
-//  min1 = floor( min / pow( 10.0, diff ) ) * pow( 10.0, diff );
-//  std::cout << "min1 = " << min1 << std::endl;
-//  if ( min1 > min ) {
-//    min1 = min1 - pow( 10.0, diff );
-//  }
-//
-//  max1 = ceil( max / pow( 10.0, diff ) ) * pow( 10.0, diff );
-//  std::cout << "max1 = " << max1 << std::endl;
-//  if ( max1 < max ) {
-//    max1 = max1 + pow( 10.0, diff );
-//  }
-//
-//  double fact =  pow( 10.0, diff );
-//  double div = ( max1 - min1 ) / fact;
-//
-//  std::cout << "fact = " << fact << std::endl;
-//  std::cout << "div = " << div << std::endl;
-//
-//  if ( div >= 9 ) {
-//    max1 = min1 + 10.0 * fact;
-//    ticks1 = 5;
-//  }
-//  else if ( div > 8 ) {
-//    max1 = min1 + 10.0 * fact;
-//    ticks1 = 5;
-//  }
-//  else if ( div == 8 ) {
-//    max1 = min1 + 8.0 * fact;
-//    ticks1 = 4;
-//  }
-//  else if ( div >= 7 ) {
-//    max1 = min1 + 8.0 * fact;
-//    ticks1 = 4;
-//  }
-//  else if ( div > 6 ) {
-//    max1 = min1 + 8.0 * fact;
-//    min1 = min1 - fact;
-//    ticks1 = 6;
-//  }
-//  else if ( div > 5 ) {
-//    max1 = min1 + 6.0 * fact;
-//    ticks1 = 6;
-//  }
-//  else if ( div > 4 ) {
-//    max1 = min1 + 5.0 * fact;
-//    ticks1 = 5;
-//  }
-//  else if ( div > 3 ) {
-//    max1 = min1 + 4.0 * fact;
-//    ticks1 = 4;
-//  }
-//  else if ( div > 2 ) {
-//    max1 = min1 + 3.0 * fact;
-//    ticks1 = 3;
-//  }
-//  else if ( div > 1 ) {
-//    max1 = min1 + 2.0 * fact;
-//    ticks1 = 2;
-//  }
-//  else {  
-//    max1 = min1 + 1.0 * fact;
-//    ticks1 = 5;
-//  }
-//
-//  std::cout << "final min1 = " << min1 << std::endl;
-//  std::cout << "final max1 = " << max1 << std::endl;
-//  std::cout << "final ticks1 = " << ticks1 << std::endl;
-//
-//  ticks1++;
-//
-//  double inc = ( max1 - min1 ) / (ticks1-1);
-//  double val = min1;
-//  for ( int i=0; i<ticks1; i++ ) {
-//    std::cout << val << "   ";
-//    val += inc;
-//  }
-//  std::cout << std::endl;
-//    
-//
-//  newMin = min1;
-//  newMax = max1;
-//  newTicks = ticks1;
-//  
-//}

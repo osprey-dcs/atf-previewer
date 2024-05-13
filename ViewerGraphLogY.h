@@ -17,25 +17,25 @@ If not, see <https://www.gnu.org/licenses/>.
 // Created by jws3 on 4/5/24.
 //
 
-#ifndef VIEWER_VIEWERGRAPH_H
-#define VIEWER_VIEWERGRAPH_H
+#ifndef VIEWER_VIEWERGRAPHYLOG_H
+#define VIEWER_VIEWERGRAPHYLOG_H
 
 #include "ViewerGraphBase.h"
 
-class ViewerGraph : public ViewerGraphBase {
+class ViewerGraphLogY : public ViewerGraphBase {
 
    Q_OBJECT
 
 public:
   
-  explicit ViewerGraph( int _id, DataType dataType, QWidget *oneParent = nullptr );
-  virtual ~ViewerGraph();
-  ViewerGraph( const ViewerGraph& ) = delete;
-  ViewerGraph( ViewerGraph& ) = delete;
-  ViewerGraph( ViewerGraph&& ) = delete;
-  ViewerGraph& operator=( const ViewerGraph& ) = delete;
-  ViewerGraph& operator=( ViewerGraph& ) = delete;
-  ViewerGraph& operator=( ViewerGraph&& ) = delete;
+  explicit ViewerGraphLogY( int _id, DataType dataType, QWidget *oneParent = nullptr );
+  virtual ~ViewerGraphLogY();
+  ViewerGraphLogY( const ViewerGraphLogY& ) = delete;
+  ViewerGraphLogY( ViewerGraphLogY& ) = delete;
+  ViewerGraphLogY( ViewerGraphLogY&& ) = delete;
+  ViewerGraphLogY& operator=( const ViewerGraphLogY& ) = delete;
+  ViewerGraphLogY& operator=( ViewerGraphLogY& ) = delete;
+  ViewerGraphLogY& operator=( ViewerGraphLogY&& ) = delete;
   void setYTitle( std::string& s );
   void enterEvent( QEvent *ev );
   void wheelEvent( QWheelEvent *ev );
@@ -117,4 +117,4 @@ private:
 };
 
 
-#endif //VIEWER_VIEWERGRAPH_H
+#endif //VIEWER_VIEWERGRAPHYLOG_H

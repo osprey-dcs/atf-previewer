@@ -34,8 +34,7 @@ ViewerGraphArea::ViewerGraphArea( int _id, QWidget *_parent ) : ViewerGraphAreaB
   hlayout = QSharedPointer<QHBoxLayout>( new QHBoxLayout() );
   hlayout2 = QSharedPointer<QHBoxLayout> ( new QHBoxLayout() );
   slider = QSharedPointer<ViewerSlider>( new ViewerSlider( this ) );
-  graph = QSharedPointer<ViewerGraph>( new ViewerGraph( id, ViewerGraph::ScaleType::Linear,
-                                                        ViewerGraph::DataType::TimeSeries, this ) );
+  graph = QSharedPointer<ViewerGraphBase>( new ViewerGraph( id, ViewerGraph::DataType::TimeSeries, this ) );
   mousePos = QSharedPointer<QLabel>( new QLabel( "          " ) );
   exportSelection = QSharedPointer<QLabel>( new QLabel( " " ) );
   selectionXMin = QSharedPointer<QLabel>( new QLabel( " " ) );

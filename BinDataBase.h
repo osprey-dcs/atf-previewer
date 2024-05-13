@@ -150,6 +150,32 @@ class BinDataBase {
     double& miny,
     double& maxy );
 
+virtual int genFftLineSeriesFromBuffer (
+ int num,
+ fftw_complex *buf,
+ double sampleRate,
+ int plotAreaWidthPixels,
+ QtCharts::QLineSeries& qls,
+ double& minx,
+ double& maxx,
+ double& miny,
+ double& maxy,
+ bool suppressZeros=false );
+
+virtual int genFftLineSeriesFromBufferByFreq (
+ int num,
+ fftw_complex *buf,
+ double sampleRate,
+ int plotAreaWidthPixels,
+ double freqMin,
+ double freqMax,
+ QtCharts::QLineSeries& qls,
+ double& minx,
+ double& maxx,
+ double& miny,
+ double& maxy,
+ bool suppressZeros=false );
+  
 };
 
 #endif //VIEWER_BINDATABASE_H

@@ -72,7 +72,7 @@ class ViewerGraphArea : public ViewerGraphAreaBase {
     // int id, w, h;
     // QVBoxLayout *vlayout;
     // QHBoxLayout *hlayout;
-    // ViewerGraph *graph;
+    // ViewerGraphBase *graph;
 
     QSharedPointer<QHBoxLayout> hlayout2;
     QSharedPointer<ViewerSlider> slider;

@@ -32,8 +32,7 @@ ViewerGraphAreaFft::ViewerGraphAreaFft( int _id, QWidget *_parent ) : ViewerGrap
   hlayout = QSharedPointer<QHBoxLayout>( new QHBoxLayout() );
   mousePos = QSharedPointer<QLabel>( new QLabel( "" ) );
   peakInfo = QSharedPointer<QLabel>( new QLabel( "" ) );
-  graph = QSharedPointer<ViewerGraph>( new ViewerGraph( id, ViewerGraph::ScaleType::Linear,
-                                                        ViewerGraph::DataType::FFT, this ) );
+  graph = QSharedPointer<ViewerGraphBase>( new ViewerGraphLogY( id, ViewerGraph::DataType::FFT, this ) );
   w = 200;
   h = 100;
   this->setMinimumSize( w, h );

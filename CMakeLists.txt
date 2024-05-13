@@ -25,8 +25,12 @@ add_executable(viewer main.cpp
         ViewerCtlr.h
         ViewerGraphArea.cpp
         ViewerGraphArea.h
+        ViewerGraphBase.cpp
+        ViewerGraphBase.h
         ViewerGraph.cpp
         ViewerGraph.h
+        ViewerGraphLogY.cpp
+        ViewerGraphLogY.h
         DataHeader.cpp
         DataHeader.h
         DataHeaderFac.cpp

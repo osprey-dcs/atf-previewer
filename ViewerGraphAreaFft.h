@@ -43,7 +43,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <QtCharts/QChartView>
 #include <QtCharts/QLegend>
 #include <QtCharts/QLineSeries>
-#include "ViewerGraph.h"
+#include "ViewerGraphLogY.h"
 #include "Combo.h"
 #include "ViewerGraphAreaBase.h"
 #include "ViewerCtlrPushButton.h"
@@ -73,7 +73,7 @@ class ViewerGraphAreaFft : public ViewerGraphAreaBase {
     // int id, w, h;
     // QVBoxLayout *vlayout;
     // QHBoxLayout *hlayout;
-    // ViewerGraph *graph;
+    // ViewerGraphBase *graph;
     QSharedPointer<QLabel> mousePos;
     QSharedPointer<QLabel> peakInfo;
 

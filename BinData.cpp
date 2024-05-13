@@ -786,3 +786,238 @@ int BinData::genFftFillUnderLineSeriesFromBufferByFreq (
   return 0;
 
 }
+
+// generate line series using entire buffer
+int BinData::genFftLineSeriesFromBuffer (
+ int num,
+ fftw_complex *buf,
+ double sampleRate,
+ int plotAreaWidthPixels,
+ QtCharts::QLineSeries& qls,
+ double& minx,
+ double& maxx,
+ double& miny,
+ double& maxy,
+ bool suppressZeros ) {
+
+  if ( num <= 5 ) {
+    return -1;
+  }
+
+  //std::cout << "BinData::genFftLineSeriesFromBuffer" << std::endl;
+  //std::cout << "sampleRate = " << sampleRate << std::endl;
+
+  if ( num == 0 ) num = 1;
+  double frac = 2.0 / (double) num;
+
+  double nyquist = sampleRate / 2.0;
+
+  if ( num < ( plotAreaWidthPixels * 5 ) ) { // build simple line series
+
+    this->slsb->setXPixelWidth( plotAreaWidthPixels );
+    this->slsb->setXAxisLimits( 0.0, sampleRate/2 );
+    this->slsb->setLineSeries( &qls );
+    this->slsb->startNewSeries();
+
+    double minYVal = sqrt( buf[0][0]*buf[0][0] + buf[0][1]*buf[0][1] ) * frac;
+    double maxYVal = minYVal;
+    double minXVal = 0.0;
+    double maxXVal = sampleRate / 2.0;
+    double freq, y;
+
+    for ( int i=0; i<num; i++ ) {
+
+      freq = (double) i / (double) num * sampleRate;
+
+      if ( freq <= nyquist ) {
+      
+        y = sqrt( buf[i][0]*buf[i][0] + buf[i][1]*buf[i][1] ) * frac;
+
+        if ( ( y >= 1e-10 ) || !suppressZeros ) {
+          
+          minYVal = std::fmin( y, minYVal );
+          maxYVal = std::fmax( y, maxYVal );
+          this->slsb->addPoint( freq, y );
+          
+        }
+        
+      }
+
+    }
+    this->slsb->processLastPoint();
+
+    minx = minXVal;
+    maxx = maxXVal;
+    miny = minYVal;
+    maxy = maxYVal;
+
+  }
+  else {
+
+    this->lsb->setXPixelWidth( plotAreaWidthPixels );
+    this->lsb->setXAxisLimits( 0.0, sampleRate/2 );
+    this->lsb->setLineSeries( &qls );
+    this->lsb->startNewSeries();
+
+    double minYVal = sqrt( buf[0][0]*buf[0][0] + buf[0][1]*buf[0][1] ) * frac;
+    double maxYVal = minYVal;
+    double minXVal = 0.0;
+    double maxXVal = sampleRate / 2.0;
+    double freq, y;
+    
+    for ( int i=0; i<num; i++ ) {
+
+      //std::cout << "num = " << num << "i = " << i << std::endl;
+      
+      freq = (double) i / (double) num * sampleRate;
+
+      if ( freq <= nyquist ) {
+      
+        y = sqrt( buf[i][0]*buf[i][0] + buf[i][1]*buf[i][1] ) * frac;
+
+        if ( ( y >= 1e-10 ) || !suppressZeros ) {
+
+          minYVal = std::fmin( y, minYVal );
+          maxYVal = std::fmax( y, maxYVal );
+          this->lsb->addPoint( freq, y );
+          
+        }
+        
+      }
+
+    }
+    this->lsb->processLastPoint();
+
+    minx = minXVal;
+    maxx = maxXVal;
+    miny = minYVal;
+    maxy = maxYVal;
+
+  }
+
+  return 0;
+
+}
+
+// generate line series from freq min to freq max
+int BinData::genFftLineSeriesFromBufferByFreq (
+ int num,
+ fftw_complex *buf,
+ double sampleRate,
+ int plotAreaWidthPixels,
+ double freqMin,
+ double freqMax,
+ QtCharts::QLineSeries& qls,
+ double& minx,
+ double& maxx,
+ double& miny,
+ double& maxy,
+ bool suppressZeros ) {
+
+  //std::cout << "BinData::genFftLineSeriesFromBufferByFreq" << std::endl;
+  //std::cout << "freqMin = " << freqMin << ", freqMax = " << freqMax << std::endl;
+
+  bool firstSample = true;
+  double minYVal, maxYVal, minXVal, maxXVal, freq, y;
+      
+  if ( num <= 5 ) {
+    return -1;
+  }
+
+  if ( num == 0 ) num = 1;
+  double frac = 2.0 / (double) num;
+
+  double nyquist = sampleRate / 2.0;
+
+  freqMax = std::fmin( freqMax, nyquist );
+
+  if ( num < ( plotAreaWidthPixels * 5 ) ) { // build simple line series
+
+    this->slsb->setXPixelWidth( plotAreaWidthPixels );
+    this->slsb->setXAxisLimits( freqMin, freqMax );
+    this->slsb->setLineSeries( &qls );
+    this->slsb->startNewSeries();
+
+    double freqRange = freqMax - freqMin;
+
+    for ( int i=0; i<num; i++ ) {
+      
+      freq = (double) i / (double) num * freqRange + freqMin;
+
+      if ( ( freq >= freqMin ) && ( freq <= freqMax ) ) {
+
+        y = sqrt( buf[i][0]*buf[i][0] + buf[i][1]*buf[i][1] ) * frac;
+
+        if ( ( y >= 1e-10 ) || !suppressZeros ) {
+
+          if ( firstSample ) {
+            firstSample = false;
+            minYVal = maxYVal = y;
+            minXVal = maxXVal = freq;
+          }
+
+          minYVal = std::fmin( y, minYVal );
+          maxYVal = std::fmax( y, maxYVal );
+          this->slsb->addPoint( freq, y );
+          
+        }
+        
+      }
+
+    }
+      
+    this->slsb->processLastPoint();
+
+    minx = minXVal;
+    maxx = maxXVal;
+    miny = minYVal;
+    maxy = maxYVal;
+
+  }
+  else {
+
+    this->lsb->setXPixelWidth( plotAreaWidthPixels );
+    this->lsb->setXAxisLimits(  freqMin, freqMax );
+    this->lsb->setLineSeries( &qls );
+    this->lsb->startNewSeries();
+
+    for ( int i=0; i<num; i++ ) {
+      
+      freq = (double) i / (double) num * sampleRate;
+
+      if ( ( freq >= freqMin ) && ( freq <= freqMax ) ) {
+      
+        y = sqrt( buf[i][0]*buf[i][0] + buf[i][1]*buf[i][1] ) * frac;
+
+        if ( ( y >= 1e-10 ) || !suppressZeros ) {
+          
+          if ( firstSample ) {
+            firstSample = false;
+            minYVal = maxYVal = y;
+            minXVal = maxXVal = freq;
+          }
+        
+          minYVal = std::fmin( y, minYVal );
+          maxYVal = std::fmax( y, maxYVal );
+          minXVal = std::fmin( freq, minXVal );
+          maxXVal = std::fmax( freq, maxXVal );
+          this->lsb->addPoint( freq, y );
+
+        }
+
+      }
+        
+    }
+      
+    this->lsb->processLastPoint();
+
+    minx = minXVal;
+    maxx = maxXVal;
+    miny = minYVal;
+    maxy = maxYVal;
+
+  }
+    
+  return 0;
+
+}

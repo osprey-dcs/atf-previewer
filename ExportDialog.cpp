@@ -213,7 +213,7 @@ void ExportDialog::performAction( bool checked ) {
     up->setString( "ExportFormat", "CSV" );
     up->update();
 
-    std::cout << "fileName is " << fileNameLineEdit->text().toStdString() << std::endl;
+    //std::cout << "fileName is " << fileNameLineEdit->text().toStdString() << std::endl;
     QString name = FileUtil::extractFileName( fileNameLineEdit->text() );
     QString dir = FileUtil::extractDir( fileNameLineEdit->text() );
     QString newFile = dir + name + "." + Cnst::csvExtension.c_str();
@@ -227,7 +227,7 @@ void ExportDialog::performAction( bool checked ) {
     up->setString( "ExportFormat", "UFF58b" );
     up->update();
 
-    std::cout << "fileName is " << fileNameLineEdit->text().toStdString() << std::endl;
+    //std::cout << "fileName is " << fileNameLineEdit->text().toStdString() << std::endl;
     QString name = FileUtil::extractFileName( fileNameLineEdit->text() );
     QString dir = FileUtil::extractDir( fileNameLineEdit->text() );
     QString newFile = dir + name + "." + Cnst::uff58aExtension.c_str();

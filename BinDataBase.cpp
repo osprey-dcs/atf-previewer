@@ -831,3 +831,38 @@ int BinDataBase::genFftFillUnderLineSeriesFromBufferByFreq (
   return 0;
 
 }
+
+int BinDataBase::genFftLineSeriesFromBuffer (
+ int num,
+ fftw_complex *buf,
+ double sampleRate,
+ int plotAreaWidthPixels,
+ QtCharts::QLineSeries& qls,
+ double& minx,
+ double& maxx,
+ double& miny,
+ double& maxy,
+ bool suppressZeros ) {
+
+  return 0;
+
+}
+
+int BinDataBase::genFftLineSeriesFromBufferByFreq (
+ int num,
+ fftw_complex *buf,
+ double sampleRate,
+ int plotAreaWidthPixels,
+ double freqMin,
+ double freqMax,
+ QtCharts::QLineSeries& qls,
+ double& minx,
+ double& maxx,
+ double& miny,
+ double& maxy,
+ bool suppressZeros ) {
+
+  return 0;
+
+}
+

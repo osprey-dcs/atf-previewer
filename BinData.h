@@ -141,6 +141,32 @@ class BinData : public BinDataBase {
     double& miny,
     double& maxy );
 
+  int genFftLineSeriesFromBuffer (
+    int num,
+    fftw_complex *buf,
+    double sampleRate,
+    int plotAreaWidthPixels,
+    QtCharts::QLineSeries& qls,
+    double& minx,
+    double& maxx,
+    double& miny,
+    double& maxy,
+    bool suppressZeros=false );
+
+  int genFftLineSeriesFromBufferByFreq (
+    int num,
+    fftw_complex *buf,
+    double sampleRate,
+    int plotAreaWidthPixels,
+    double freqMin,
+    double freqMax,
+    QtCharts::QLineSeries& qls,
+    double& minx,
+    double& maxx,
+    double& miny,
+    double& maxy,
+    bool suppressZeros=false );
+
   double sampleFreq = 1.0;
   //double slope = 1.0, intercept = 0.0;
 
