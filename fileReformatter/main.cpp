@@ -22,7 +22,7 @@
 #include <errno.h>
 #include <string.h>
 
-static const char* version = "0.0.3";
+static const char* version = "0.0.4";
 
 int main( int argc, char **argv ) {
 
@@ -41,7 +41,7 @@ int main( int argc, char **argv ) {
     hdrFile = argv[3];
   }
   else if ( argc != 3 ) {
-    std::cout << "usage: " << argv[0] << "{run name} {header filename}" << std::endl;
+    std::cout << "usage: " << argv[0] << "{run name (including directory)} {header filename (including directory)}" << std::endl;
     return -1;
   }
 

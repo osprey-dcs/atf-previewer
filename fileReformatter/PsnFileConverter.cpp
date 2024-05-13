@@ -110,6 +110,8 @@ int PsnFileConverter::convert ( int chassisIndex, int startingSigIndex, const Da
 
     bool skip = false;
 
+    //std::cout << "headerType = " << headerType.toStdString() << std::endl;
+
     if ( headerType == "PSNA" ) {
       
       bodyLen = bswap_32( binHeaderPsna.bodyLen );
@@ -151,8 +153,9 @@ int PsnFileConverter::convert ( int chassisIndex, int startingSigIndex, const Da
       hihi = bswap_32( binHeaderPsnb.hihi );
 
       loc += sizeof(BinHdrPsnbType);
-      dataLen = bodyLen - 24;
 
+      dataLen = bodyLen - 40;
+      
     }
     else { // for this to work, body len of any unknown record type must always exclude 24 bytes of the header
       
