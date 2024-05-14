@@ -56,14 +56,14 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
     return -1;
   }
 
-  stat = createAndOpenOutputFiles( chanList, startingSigIndex, dh, simpleName, binDataFileDir, verbose );
+  stat = createAndOpenOutputFiles( chanList, startingSigIndex, binDataFileDir, simpleName, verbose );
   if ( stat ) {
     fb.close();
     std::cout << "Output files open failure " << std::endl;
     return -1;
   }
 
-  stat = createAndOpenStatusOutputFile( chassisIndex, dh, simpleName, binDataFileDir, verbose );
+  stat = createAndOpenStatusOutputFile( chassisIndex, binDataFileDir, simpleName, verbose );
   if ( stat ) {
     fb.close();
     std::cout << "Status file open failure " << std::endl;
@@ -443,8 +443,24 @@ int PsnFileConverter::readBinData(std::filebuf& fb, unsigned long loc, unsigned 
 
 }
 
-int PsnFileConverter::createAndOpenOutputFiles( std::list<int>& chanList, int startingSigIndex, const DataHeader *dh,
-                                                const QString& simpleName, const QString& binDataFileDir,
+QString PsnFileConverter::buildOutputFileName( int sigIndex, const QString& binDataFileDir,
+                                                const QString& simpleName ) {
+
+  std::stringstream strm;
+  
+  strm << binDataFileDir.toStdString() << simpleName.toStdString() << "-Chan" <<
+    std::setw(4) << std::setfill( '0' ) << sigIndex <<
+    "." << Cnst::BinExtension;
+    
+  QString fname;
+  fname = strm.str().c_str();
+  
+  return fname;
+  
+}
+
+int PsnFileConverter::createAndOpenOutputFiles( std::list<int>& chanList, int startingSigIndex,
+                                                const QString& binDataFileDir, const QString& simpleName, 
                                                 bool verbose ) {
 
   QString fname;
@@ -458,12 +474,7 @@ int PsnFileConverter::createAndOpenOutputFiles( std::list<int>& chanList, int st
   // open all files
   for ( int i : chanList ) {
 
-    std::stringstream strm;
-    strm << binDataFileDir.toStdString() << simpleName.toStdString() << "-Chan" <<
-      std::setw(4) << std::setfill( '0' ) << i - 1 + startingSigIndex <<
-      "." << Cnst::BinExtension;
-    
-    fname = strm.str().c_str();
+    fname = buildOutputFileName( i - 1 + startingSigIndex, binDataFileDir, simpleName );
 
     if ( verbose ) {
       std::cout << "  Writing output file: " << fname.toStdString() << std::endl;
@@ -536,8 +547,23 @@ void PsnFileConverter::closeOutputFiles ( std::list<int>& chanList ) {
 
 }
 
-int PsnFileConverter::createAndOpenStatusOutputFile ( int chassisIndex, const DataHeader *dh, const QString& simpleName,
-                                                      const QString& binDataFileDir, bool verbose ) {
+QString PsnFileConverter::buildStatusOutputFileName( int chassisIndex, const QString& binDataFileDir,
+                                        const QString& simpleName ) {
+
+  std::stringstream strm;
+
+  strm << binDataFileDir.toStdString() << simpleName.toStdString() << "-Chassis" <<
+    std::setw(2) << std::setfill( '0' ) << chassisIndex << "-Status" << "." << Cnst::StatusExtension;
+
+  QString fname;
+  fname = strm.str().c_str();
+
+  return fname;
+
+}
+
+int PsnFileConverter::createAndOpenStatusOutputFile ( int chassisIndex, const QString& binDataFileDir,
+                                                      const QString& simpleName, bool verbose ) {
 
   QString fname;
   unsigned long sizeInBytes = 0;
@@ -548,12 +574,8 @@ int PsnFileConverter::createAndOpenStatusOutputFile ( int chassisIndex, const Da
 
   statusFileLoc = 0;
 
-  std::stringstream strm;
-  strm << binDataFileDir.toStdString() << simpleName.toStdString() << "-Chassis" <<
-    std::setw(2) << std::setfill( '0' ) << chassisIndex << "-Status" << "." << Cnst::StatusExtension;
-
-  fname = strm.str().c_str();
-
+  fname = buildStatusOutputFileName( chassisIndex, binDataFileDir, simpleName );
+  
   if ( verbose ) {
     std::cout << "  Writing output status file: " << fname.toStdString() << std::endl;
   }

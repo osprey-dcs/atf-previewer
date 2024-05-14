@@ -19,7 +19,9 @@ add_executable(FileReformatter2 main.cpp
         FileUtil.cpp
         PsnFileConverter.cpp
         PsnFileConverter.h
-        FileConverterFac.cpp)
+        FileConverterFac.cpp
+        DataHeaderFac.cpp
+        DataHeaderFac.h)
 target_link_libraries(FileReformatter2
         Qt5::Core
 )

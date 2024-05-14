@@ -1,3 +1,18 @@
+/*
+This file is part of viewer.
+
+viewer is free software: you can redistribute it and/or modify it under the terms
+of the GNU General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later version.
+
+viewer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with viewer.
+If not, see <https://www.gnu.org/licenses/>. 
+*/
+
 //
 // Created by jws3 on 4/2/24.
 //
@@ -14,15 +29,19 @@
 #include <QDebug>
 
 #include "DataHeader.h"
-//#include "DataHeaderFac.h"
+#include "DataHeaderFac.h"
 
 DataHeader::DataHeader() {
+
+  //int ok = readContents();
+  //std::cout << "after readContents, ok = " << ok << std::endl;
 
 }
 
 DataHeader::~DataHeader() {
 
   sigs.clear();
+  sigsByIndex.clear();
   sigNameList.clear();
   
 }
@@ -56,32 +75,32 @@ QString DataHeader::getString(const QString &s ) {
   QString qs;
   QJsonValue jv = jo[s];
 
-    if ( jv.isString() ) {
-      qs = jv.toString();
-    }
-    else {
-      qs = "";
-    }
-
-    return qs;
-
+  if ( jv.isString() ) {
+    qs = jv.toString();
+  }
+  else {
+    qs = "";
   }
 
-  int DataHeader::getString(const QString &s, QString& qs ) {
+  return qs;
+
+}
+
+int DataHeader::getString(const QString &s, QString& qs ) {
 
   QJsonValue jv = jo[s];
 
-    if ( jv.isString() ) {
-      qs = jv.toString();
-    }
-    else {
-      qs = "";
-      return -1;
-    }
-
-    return 0;
-
+  if ( jv.isString() ) {
+    qs = jv.toString();
   }
+  else {
+    qs = "";
+    return -1;
+  }
+
+  return 0;
+
+}
 
   int DataHeader::getString(const QString &s, std::string& ss ) {
 
@@ -108,6 +127,129 @@ QString DataHeader::getString(const QString &s ) {
 
   }
 
+  static void clearJsonObj ( QJsonObject& jobj ) {
+
+    //std::cout << "\nclearJsonObj\n";
+    
+    QJsonObject::iterator it = jobj.begin();
+    while ( it != jobj.end() ) {
+      //QString qsk = it.key();
+      //QString qsv = it.value().toString();
+      //std::cout << qsk.toStdString() << "  " << qsv.toStdString() << std::endl;
+      jobj.erase( it );
+      it = jobj.begin();
+    }
+
+    //std::cout << "\n";
+
+  }
+
+  int DataHeader::writeNewHeaderFile ( std::map<int,QString>& fileMap, const QString& inFile,
+                                       const QString& outFile, bool verbose ) {
+
+
+    if ( verbose ) std::cout << "DataHeader::writeNewHeaderFile, inFile = " << inFile.toStdString() << std::endl;
+
+    //for ( auto k : fileMap ) {
+    //  std::cout << "fileMap[" << std::get<0>( k ) << "] = " << std::get<1>( k ).toStdString()<< std::endl;
+    //}
+
+    QFile inf( inFile );
+    bool result = inf.open( QIODevice::ReadOnly );
+    if ( !result ) return -1;
+    QString contents = inf.readAll();
+    inf.close();
+
+    QJsonDocument jdoc = QJsonDocument::fromJson(contents.toUtf8());
+    QJsonObject jobj = jdoc.object();
+
+    QJsonDocument jdocNew;
+    QJsonObject jobjNew;
+    QJsonArray jvaNew;
+    QJsonValue jvNew;
+    QString qsKey {"OutDataFile"};
+
+    jobjNew["AcquisitionId"] = jobj["AcquisitionId"];
+    jobjNew["AcquisitionId"] = jobj["AcquisitionId"];
+    jobjNew["AcquisitionStartDate"] = jobj["AcquisitionStartDate"];
+    jobjNew["AcquisitionEndDate"] = jobj["AcquisitionEndDate"];
+    jobjNew["AcquisitionStartDate2"] = jobj["AcquisitionStartDate2"];
+    jobjNew["AcquisitionEndDate2"] = jobj["AcquisitionEndDate2"];
+    jobjNew["Role1Name"] = jobj["Role1Name"];
+    jobjNew["SampleRate"] = jobj["SampleRate"];
+
+    QJsonValue jv;
+    jv = jobj["Signals"];
+    if ( jv.isArray() ) {
+
+      QJsonArray jva = jv.toArray();
+
+      for ( QJsonValue jv1 : jva ) {
+
+        if ( jv1.isObject() ) {
+
+          QJsonObject jobj1New;
+
+          //std::cout << jv1["Name"].toString().toStdString() << std::endl;
+
+          QJsonObject jobj1 = jv1.toObject();
+          int sigNum = jobj1["SigNum"].toInt();
+          QString outputDatafileName = fileMap[sigNum];
+          if ( verbose ) std::cout << "sig num = " << sigNum << ", outputDatafileName = " <<
+            outputDatafileName.toStdString() << std::endl;
+          QJsonObject::iterator it = jobj1.begin();
+          while ( it != jobj1.end() ) {
+            QString qsk = it.key();
+            //if ( it.value().isString() ) {
+            //  QString qsv = it.value().toString();
+            //  std::cout << qsk.toStdString() << "  " << qsv.toStdString() << std::endl;
+            //}
+            //else if ( it.value().isDouble() ) {
+            //  QString qsv = it.value().toString();
+            //  std::cout << qsk.toStdString() << "  " << it.value().toDouble() << std::endl;
+            //}
+            jobj1New[it.key()] = it.value();
+            it++;
+          }
+          jobj1New[qsKey] = (QJsonValue) QString( outputDatafileName );
+          //int sn = jobj1New["SigNum"].toInt();
+          //std::cout << "jobj1New[\"SigNum\"] = " << sn << std::endl;
+          //std::cout << "qsKey = " << qsKey.toStdString() << std::endl;
+          //std::cout << "jobj1New[qsKey] = " << jobj1New[qsKey].toString().toStdString() << std::endl;
+
+          jvaNew.append( jobj1New );
+          
+          clearJsonObj( jobj1New );
+          
+        }
+
+      }
+
+      jobjNew["Signals"] = jvaNew;
+
+    }
+
+    jdocNew.setObject( jobjNew );
+
+    //qDebug() << jdocNew;
+
+    if ( verbose ) std::cout << "write out file " << outFile.toStdString() << std::endl;
+
+    QFile outf{ outFile };
+    result = outf.open( QIODevice::WriteOnly );
+    if ( result ) {
+        outf.write(jdocNew.toJson(QJsonDocument::Indented));
+        outf.close();
+    }
+    else {
+      std::cout << "Viewer header file could not be opened" << std::endl;
+      return -1;
+    }
+    
+    return 0;
+
+  }
+
   int DataHeader::update( QString filename ) {
 
     jd.setObject(jo);
@@ -120,24 +262,7 @@ QString DataHeader::getString(const QString &s ) {
     }
     else {
       std::cout << "Viewer header file could not be opened" << std::endl;
-    }
-
-    return 0;
-
-  }
-
-  int DataHeader::updateAll( QString filename ) {
-
-    jd1.setObject(jo1);
-
-    QFile outf{ filename };
-    bool result = outf.open( QIODevice::WriteOnly );
-    if ( result ) {
-        outf.write(jd1.toJson(QJsonDocument::Indented));
-        outf.close();
-    }
-    else {
-      std::cout << "Viewer header file could not be opened" << std::endl;
+      return -1;
     }
 
     return 0;
@@ -154,6 +279,7 @@ QString DataHeader::getString(const QString &s ) {
 
     sigNameList.clear();
     sigs.clear();
+    sigsByIndex.clear();
 
     jd = QJsonDocument::fromJson(contents.toUtf8());
     jo = jd.object();
@@ -166,15 +292,47 @@ QString DataHeader::getString(const QString &s ) {
       for ( QJsonValue jv1 : jva ) {
 
         if ( jv1.isObject() ) {
-          auto tp = std::make_tuple(
+
+          QJsonObject qjo = jv1["Address"].toObject();
+          auto tp = std::make_tuple
+            (
              jv1["Egu"].toString(),
              jv1["Slope"].toDouble(),
              jv1["Intercept"].toDouble(),
-             jv1["SigNum"].toDouble() );
+             jv1["SigNum"].toDouble(),
+             jv1["Type"].toDouble(),
+             jv1["YAxisLabel"].toString(),
+             jv1["Desc"].toString(),
+             jv1["ResponseNode"].toString(),
+             jv1["ResponseDirection"].toDouble(),
+             jv1["ReferenceNode"].toString(),
+             jv1["ReferenceDirection"].toDouble(),
+             jv1["Coupling"].toDouble(),
+             qjo["Chassis"].toDouble(),
+             qjo["Channel"].toDouble() );
 
              sigs[jv1["Name"].toString()] = tp;
-
              sigNameList.push_back( jv1["Name"].toString() );
+
+          qjo = jv1["Address"].toObject();
+          auto tp1 = std::make_tuple
+            (
+             jv1["Egu"].toString(),
+             jv1["Slope"].toDouble(),
+             jv1["Intercept"].toDouble(),
+             jv1["Name"].toString(),
+             jv1["Type"].toDouble(),
+             jv1["YAxisLabel"].toString(),
+             jv1["Desc"].toString(),
+             jv1["ResponseNode"].toString(),
+             jv1["ResponseDirection"].toDouble(),
+             jv1["ReferenceNode"].toString(),
+             jv1["ReferenceDirection"].toDouble(),
+             jv1["Coupling"].toDouble(),
+             qjo["Chassis"].toDouble(),
+             qjo["Channel"].toDouble() );
+                
+             sigsByIndex[jv1["SigNum"].toDouble()] = tp1;
 
         }
 
@@ -208,71 +366,8 @@ QString DataHeader::getString(const QString &s ) {
 
   }
 
-  int DataHeader::readAllContents ( QString filename ) {
-
-
-  QJsonArray ja;
-  QJsonObject *jo;
-
-  jo = new QJsonObject;
-  jo->insert("one","111");
-  jo->insert("twp", 222);
-
-  ja.push_back( *jo );
-
-  delete jo;
-  jo = new QJsonObject;
-  jo->insert("one1","111");
-  jo->insert("twp1", 222);
-
-  ja.push_back( *jo );
-
-  delete jo;
-  jo1.insert( "signals", ja );
-
-  return 0;
-
-    QFile inf( filename );
-    bool result = inf.open( QIODevice::ReadOnly );
-    if ( !result ) return -1;
-    QString contents = inf.readAll();
-    inf.close();
-
-    jd1 = QJsonDocument::fromJson(contents.toUtf8());
-    jo1 = jd1.object();
-
-    QJsonValue jv;
-    jv = jo1["Signals"];
-    if ( jv.isArray() ) {
-
-      QJsonArray jva = jv.toArray();
-      for ( QJsonValue jv1 : jva ) {
-
-        if ( jv1.isObject() ) {
-
-          QJsonObject jvo1 = jv1.toObject();
-          jvo1.insert( "111", "222" );
-          QJsonObject::iterator it = jvo1.begin();
-          while ( it != jvo1.end() ) {
-
-            qDebug() << it.key() << "  " << *it;
-            it++;
-
-          }
-
-        }
-
-        std::cout << "-------------------------------------\n";
-
-      }
-
-    }
-    
-    return 0;
-
-  }
-
-int DataHeader::getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu, double& slope, double& intercept ) {
+int DataHeader::getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu,
+                                       double& slope, double& intercept ) {
 
   name = "";
   egu = "";
@@ -300,10 +395,22 @@ int DataHeader::getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu
 
 }
 
-const std::list<QString>& DataHeader::getNameList() {
+//const std::list<QString>& DataHeader::getNameList() {
+//  return sigNameList;
+//}
+
+//const std::map<QString,std::tuple<QString, double, double, double, double, QString, QString, QString, double, QString, double>>& DataHeader::getNameMap() {
+//  return sigs;
+//};
+
+const DataHeader::DataHeaderListType& DataHeader::getNameList() {
   return sigNameList;
 }
 
-const std::map<QString,std::tuple<QString, double, double, double>>& DataHeader::getNameMap() {
+const DataHeader::DataHeaderMapType& DataHeader::getNameMap() {
   return sigs;
+};
+
+const DataHeader::DataHeaderIndexMapType& DataHeader::getIndexMap() {
+  return sigsByIndex;
 };

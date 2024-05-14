@@ -3,5 +3,8 @@
 ./data
 ./save
 cmake-build-debug
+input
+config
+output
 .idea
 

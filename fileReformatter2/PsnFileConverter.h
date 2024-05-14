@@ -58,14 +58,17 @@ private:
   int readHeaderType( std::filebuf& fb, unsigned long loc, QString& headerType, bool& eof );
   int readBinData ( std::filebuf& fb, unsigned long loc, unsigned int dataLen,
                    unsigned int *buf, unsigned int& numBytesRead, bool& complete );
-  int createAndOpenOutputFiles ( std::list<int>& chanList, int startingSigIndex, const DataHeader *dh,
-                                 const QString& simpleName, const QString& binDataFileDir,
+  QString buildOutputFileName( int sigIndex, const QString& binDataFileDir, const QString& simpleName );
+  int createAndOpenOutputFiles ( std::list<int>& chanList, int startingSigIndex,
+                                 const QString& binDataFileDir, const QString& simpleName, 
                                  bool verbose=false );
   int writeOutputFiles ( std::list<int>& chanList, int numValues, unsigned int array[Cnst::MaxSignals+1][Cnst::Max4PerWord] );
   void closeOutputFiles ( std::list<int>& chanList );
 
-  int createAndOpenStatusOutputFile ( int chassisIndex, const DataHeader *dh, const QString& simpleName,
-                                      const QString& binDataFileDir, bool verbose=false );
+  QString buildStatusOutputFileName( int chassisIndex, const QString& binDataFileDir,
+                                      const QString& simpleName );
+  int createAndOpenStatusOutputFile ( int chassisIndex, const QString& binDataFileDir, 
+                                      const QString& simpleName, bool verbose=false );
   int writeStatusOutputFile ( int numValues, unsigned int array[Cnst::MaxStatus][NumStatusFields] );
   void closeStatusOutputFile ( void );
 

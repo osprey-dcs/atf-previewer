@@ -39,6 +39,22 @@ int FileConverter::convert ( int chassisIndex, std::list<int>& chanList, int sta
 
 }
 
+QString FileConverter::buildOutputFileName( int sigIndex, const QString& binDataFileDir, const QString& simpleName ) {
+
+  QString str;
+  return str;
+
+}
+
+QString FileConverter::buildStatusOutputFileName( int chassisIndex, const QString& binDataFileDir,
+                                            const QString& simpleName ) {
+
+  QString str;
+  return str;
+
+}
+
+
 void FileConverter::show( void ) {
   std::cout << "Base Class FileConverter" << std::endl;
 }

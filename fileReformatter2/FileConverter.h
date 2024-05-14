@@ -28,7 +28,9 @@ public:
   virtual int convert( int chassisIndex, std::list<int>& chanList, int startingSigIndex,
                        const DataHeader *dh, const QString& rawDataFile,
                        const QString& binDataFileDir, const QString& simpleName, bool verbose=false );
-  
+  virtual QString buildOutputFileName( int sigIndex, const QString& binDataFileDir, const QString& simpleName );
+  virtual QString buildStatusOutputFileName( int chassisIndex, const QString& binDataFileDir,
+                                      const QString& simpleName );
   virtual void show( void );
 
   std::filebuf fb[Cnst::MaxSignals+1];

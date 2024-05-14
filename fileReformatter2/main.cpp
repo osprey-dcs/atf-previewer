@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <list>
+#include <map>
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -40,10 +41,20 @@ int main ( int argc, char **argv ) {
     }
     if (long_options[option_index].name == "chassis") {
       chassisSet = true;
-      chassisArg = strdup( optarg );
+      if ( optarg ) {
+        chassisArg = strdup( optarg );
+      }
+      else {
+        chassisArg = strdup( "unknown" );
+      }
     } else if (long_options[option_index].name == "output") {
       outputSet = true;
-      outputArg = strdup( optarg );
+      if ( optarg ) {
+        outputArg = strdup( optarg );
+      }
+      else {
+        outputArg = strdup( "unknown" );
+      }
     }
     else if (long_options[option_index].name == "verbose") {
       verboseSet = true;
@@ -73,12 +84,12 @@ int main ( int argc, char **argv ) {
   QString outFileDir = FileUtil::extractDir( outputJsonFile );
   QString outBinFileRoot = outFileDir + simpleName;
 
-  std::cout << "         output hdr file = " << outputJsonFile.toStdString() << std::endl;
-  std::cout << "          input cfg file = " << configJsonFile.toStdString() << std::endl;
-  std::cout << "  input binary data file = " << inputRawDataFile.toStdString() << std::endl;
-  std::cout << "output dir and file root = " << outBinFileRoot.toStdString() << std::endl;
-
-
+  if ( verboseSet ) {
+    std::cout << "         output hdr file = " << outputJsonFile.toStdString() << std::endl;
+    std::cout << "          input cfg file = " << configJsonFile.toStdString() << std::endl;
+    std::cout << "  input binary data file = " << inputRawDataFile.toStdString() << std::endl;
+    std::cout << "output dir and file root = " << outBinFileRoot.toStdString() << std::endl;
+  }
 
   std::shared_ptr<DataHeader> dh = std::make_shared<DataHeader>();
 
@@ -90,7 +101,7 @@ int main ( int argc, char **argv ) {
     std::cout << "Error " << st << " from getRawBinFileType" << std::endl;
     return -1;
   }
-  std::cout << "inputRawDataFileType = " << inputRawDataFileType.toStdString() << std::endl;
+  if ( verboseSet ) std::cout << "inputRawDataFileType = " << inputRawDataFileType.toStdString() << std::endl;
 
   std::list<int> chanList;
   st = bft->getRawBinFileChanList( inputRawDataFile, chanList );
@@ -99,11 +110,13 @@ int main ( int argc, char **argv ) {
     return -1;
   }
 
-  std::cout << "channels: ";
-  for ( int ival : chanList ) {
-    std::cout << ival << " ";
+  if ( verboseSet ) {
+    std::cout << "channels: ";
+    for ( int ival : chanList ) {
+      std::cout << ival << " ";
+    }
+    std::cout << std::endl;
   }
-  std::cout << std::endl;
 
   FileConverterFac fcf;
   std::shared_ptr<FileConverter> fc = fcf.getFileConverter( inputRawDataFileType );
@@ -112,11 +125,26 @@ int main ( int argc, char **argv ) {
     return -1;
   }
 
+  if ( verboseSet ) std::cout << "fileMap:" << std::endl;
+  std::map<int,QString> fileMap;
+  for ( int ch : chanList ) {
+    int sigIndex = ( chassisNum - 1 ) * 32 + ch;
+    QString fname = fc->buildOutputFileName( sigIndex, outFileDir, simpleName );
+    fileMap[sigIndex] = fname;
+    if ( verboseSet ) std::cout << "fileMap[" << sigIndex << "] = " << fname.toStdString() << std::endl;
+  }
+  
   int startingChanIndex = ( chassisNum - 1 ) * 32 + 1;
   st = fc->convert ( chassisNum, chanList, startingChanIndex, dh.get(), inputRawDataFile, outFileDir,
                      simpleName, verboseSet );
   if ( st ) {
     std::cout << "Error " << st << " from convert" << std::endl;
+    return st;
+  }
+
+  st = dh->writeNewHeaderFile( fileMap, configJsonFile, outputJsonFile, verboseSet );
+  if ( st ) {
+    std::cout << "Error " << st << " from writeNewHearderFile" << std::endl;
     return st;
   }
 
