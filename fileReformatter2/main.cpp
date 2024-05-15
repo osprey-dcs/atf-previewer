@@ -15,7 +15,7 @@
 #include "FileUtil.h"
 #include "Cnst.h"
 
-static const char *version = "0.0.1";
+static const char *version = "0.0.2";
 
 static struct option long_options[] = {
   { "version", no_argument,       0, 0 },
@@ -37,7 +37,7 @@ int main ( int argc, char **argv ) {
   bool verboseSet = false;
   bool versionSet = false;
 
-  for ( int i=0; i<3; i++ ) {
+  for ( int i=0; i<4; i++ ) {
     options = getopt_long(argc, argv, "", long_options, &option_index);
     if (options == -1) {
       break;
@@ -114,8 +114,15 @@ int main ( int argc, char **argv ) {
   }
   if ( verboseSet ) std::cout << "inputRawDataFileType = " << inputRawDataFileType.toStdString() << std::endl;
 
+  FileConverterFac fcf;
+  std::shared_ptr<FileConverter> fc = fcf.getFileConverter( inputRawDataFileType );
+  if ( !fc ) {
+    std::cout << "Error from getFileConverter - no type found" << std::endl;
+    return -1;
+  }
+
   std::list<int> chanList;
-  st = bft->getRawBinFileChanList( inputRawDataFile, chanList );
+  st = fc->getRawBinFileChanList( inputRawDataFile, chanList );
   if ( st ) {
     std::cout << "Error " << st << " from getRawBinFileType" << std::endl;
     return -1;
@@ -127,13 +134,6 @@ int main ( int argc, char **argv ) {
       std::cout << ival << " ";
     }
     std::cout << std::endl;
-  }
-
-  FileConverterFac fcf;
-  std::shared_ptr<FileConverter> fc = fcf.getFileConverter( inputRawDataFileType );
-  if ( !fc ) {
-    std::cout << "Error from getFileConverter - no type found" << std::endl;
-    return -1;
   }
 
   if ( verboseSet ) std::cout << "fileMap:" << std::endl;

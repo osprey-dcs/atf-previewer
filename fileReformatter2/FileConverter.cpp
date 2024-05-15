@@ -54,6 +54,12 @@ QString FileConverter::buildStatusOutputFileName( int chassisIndex, const QStrin
 
 }
 
+int FileConverter::getRawBinFileChanList( const QString& rawBinFileName, std::list<int>& chanList ) {
+
+  return 0;
+  
+}
+
 
 void FileConverter::show( void ) {
   std::cout << "Base Class FileConverter" << std::endl;

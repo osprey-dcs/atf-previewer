@@ -24,7 +24,6 @@ class BinFileType {
 public:
   BinFileType();
   int getRawBinFileType( const QString& rawBinFileName, QString& rawBinFileType );
-  int getRawBinFileChanList( const QString& rawBinFileName, std::list<int>& chanList );
 
 };
 

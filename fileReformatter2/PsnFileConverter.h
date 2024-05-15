@@ -71,6 +71,7 @@ private:
                                       const QString& simpleName, bool verbose=false );
   int writeStatusOutputFile ( int numValues, unsigned int array[Cnst::MaxStatus][NumStatusFields] );
   void closeStatusOutputFile ( void );
+  int getRawBinFileChanList( const QString& rawBinFileName, std::list<int>& chanList );
 
   #pragma pack(push, 1)
   typedef struct BinHdrPsnaTag {

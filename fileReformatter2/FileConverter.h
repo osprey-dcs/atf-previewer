@@ -31,6 +31,7 @@ public:
   virtual QString buildOutputFileName( int sigIndex, const QString& binDataFileDir, const QString& simpleName );
   virtual QString buildStatusOutputFileName( int chassisIndex, const QString& binDataFileDir,
                                       const QString& simpleName );
+  virtual int getRawBinFileChanList( const QString& rawBinFileName, std::list<int>& chanList );
   virtual void show( void );
 
   std::filebuf fb[Cnst::MaxSignals+1];
