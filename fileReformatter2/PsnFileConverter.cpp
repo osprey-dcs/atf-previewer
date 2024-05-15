@@ -137,6 +137,8 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
     else if ( headerType == "PSNB" ) {
 
       bodyLen = bswap_32( binHeaderPsnb.bodyLen );
+      rcvSeconds = bswap_32( binHeaderPsnb.rcvSeconds );
+      rcvNanoseconds = bswap_32( binHeaderPsnb.rcvNanoseconds );
       status = bswap_32( binHeaderPsnb.status );
       chanMask = bswap_32( binHeaderPsnb.chanMask );
       seqHigh = bswap_32( binHeaderPsnb.seqHigh );
@@ -145,8 +147,6 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
       seq = ( seq << 32 ) | seqLow;
       seconds = bswap_32( binHeaderPsnb.seconds );
       nanoseconds = bswap_32( binHeaderPsnb.nanoseconds );
-      rcvSeconds = bswap_32( binHeaderPsnb.rcvSeconds );
-      rcvNanoseconds = bswap_32( binHeaderPsnb.rcvNanoseconds );
       lo = bswap_32( binHeaderPsnb.lo );
       lolo = bswap_32( binHeaderPsnb.lolo );
       hi = bswap_32( binHeaderPsnb.hi );
@@ -160,12 +160,12 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
     else { // for this to work, body len of any unknown record type must always exclude 24 bytes of the header
       
       bodyLen = bswap_32( binHeaderGeneric.bodyLen );
+      rcvSeconds = 0;
+      rcvNanoseconds = 0;
       status = 0;
       chanMask = 0;
       seconds = 0;
       nanoseconds = 0;
-      rcvSeconds = 0;
-      rcvNanoseconds = 0;
       lo = 0;
       lolo = 0;
       hi = 0;

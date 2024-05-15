@@ -19,7 +19,7 @@ int BinFileType::getRawBinFileChanList( const QString& rawBinFileName, std::list
   }
 
   unsigned long loc = 5 * sizeof(int);
-  // read file type
+  // read chan mask (active adc channels)
   auto result2 = fb.pubseekoff( loc, std::ios::beg, std::ios::in );
   if ( result2 < 0 ) {
     std::cout << "result2 is " << result2 << std::endl;
