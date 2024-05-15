@@ -15,8 +15,10 @@
 #include "FileUtil.h"
 #include "Cnst.h"
 
+static const char *version = "0.0.1";
 
 static struct option long_options[] = {
+  { "version", no_argument,       0, 0 },
   { "verbose", no_argument,       0, 0 },
   { "chassis", required_argument, 0, 0 },
   { "output", required_argument,  0, 0 },
@@ -33,6 +35,7 @@ int main ( int argc, char **argv ) {
   bool outputSet = false;
   char *outputArg = nullptr;
   bool verboseSet = false;
+  bool versionSet = false;
 
   for ( int i=0; i<3; i++ ) {
     options = getopt_long(argc, argv, "", long_options, &option_index);
@@ -59,6 +62,14 @@ int main ( int argc, char **argv ) {
     else if (long_options[option_index].name == "verbose") {
       verboseSet = true;
     }
+    else if (long_options[option_index].name == "version") {
+      versionSet = true;
+    }
+  }
+
+  if ( versionSet ) {
+    std::cout << "Version " << version << std::endl;
+    return 0;
   }
 
   if ( !chassisSet || !outputSet || ( argc < ( optind + 2 ) || ( argc > ( optind + 2 ) ) ) ) {
@@ -142,7 +153,8 @@ int main ( int argc, char **argv ) {
     return st;
   }
 
-  st = dh->writeNewHeaderFile( fileMap, configJsonFile, outputJsonFile, verboseSet );
+  st = dh->writeNewHeaderFile( chassisNum, fileMap,
+                               configJsonFile, outputJsonFile, verboseSet );
   if ( st ) {
     std::cout << "Error " << st << " from writeNewHearderFile" << std::endl;
     return st;

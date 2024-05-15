@@ -144,15 +144,36 @@ int DataHeader::getString(const QString &s, QString& qs ) {
 
   }
 
-  int DataHeader::writeNewHeaderFile ( std::map<int,QString>& fileMap, const QString& inFile,
+  static bool doCopy ( int recChassis, int recSigNum, int inputChassis, std::map<int,QString>& fileMap ) {
+
+    if ( recChassis != inputChassis ) return false;
+
+    try {
+      QString outDataFile = fileMap[recSigNum];
+      if ( outDataFile == "" ) return false;
+    }
+    catch ( const std::exception& e ) {
+      return false;
+    }
+
+    return true;
+
+  }
+
+  int DataHeader::writeNewHeaderFile ( int chassisNum, std::map<int,QString>& fileMap, const QString& inFile,
                                        const QString& outFile, bool verbose ) {
 
 
     if ( verbose ) std::cout << "DataHeader::writeNewHeaderFile, inFile = " << inFile.toStdString() << std::endl;
 
-    //for ( auto k : fileMap ) {
-    //  std::cout << "fileMap[" << std::get<0>( k ) << "] = " << std::get<1>( k ).toStdString()<< std::endl;
-    //}
+    // Note that the signal number being written consists of up to 32 items ranging from 1 to 1024 starting
+    // from ( chassisNum - 1 ) * 32 + 1. The fileMap key is the signal number which ranges from 1 to 1024.
+    //
+    // the "Address" object contains the chassis number and the channel number. The channel number ranges
+    // from 1 to 32
+    //
+    // We only copy json records if the record chassis number matches the parameter chassisNum and
+    // fileMap[record signal number] is non-blank
 
     QFile inf( inFile );
     bool result = inf.open( QIODevice::ReadOnly );
@@ -193,31 +214,33 @@ int DataHeader::getString(const QString &s, QString& qs ) {
           //std::cout << jv1["Name"].toString().toStdString() << std::endl;
 
           QJsonObject jobj1 = jv1.toObject();
-          int sigNum = jobj1["SigNum"].toInt();
-          QString outputDatafileName = fileMap[sigNum];
-          if ( verbose ) std::cout << "sig num = " << sigNum << ", outputDatafileName = " <<
-            outputDatafileName.toStdString() << std::endl;
+          
+          int recSigNum = jobj1["SigNum"].toInt();
+          
+          QJsonObject qjo = jv1["Address"].toObject();
+          int recChassisNum = qjo["Chassis"].toDouble();
+          
           QJsonObject::iterator it = jobj1.begin();
           while ( it != jobj1.end() ) {
+            
             QString qsk = it.key();
-            //if ( it.value().isString() ) {
-            //  QString qsv = it.value().toString();
-            //  std::cout << qsk.toStdString() << "  " << qsv.toStdString() << std::endl;
-            //}
-            //else if ( it.value().isDouble() ) {
-            //  QString qsv = it.value().toString();
-            //  std::cout << qsk.toStdString() << "  " << it.value().toDouble() << std::endl;
-            //}
+
             jobj1New[it.key()] = it.value();
             it++;
+            
           }
+          
+          QString outputDatafileName = fileMap[recSigNum]; // add the file here but the entire record may
+                                                        // be discarded below
           jobj1New[qsKey] = (QJsonValue) QString( outputDatafileName );
-          //int sn = jobj1New["SigNum"].toInt();
-          //std::cout << "jobj1New[\"SigNum\"] = " << sn << std::endl;
-          //std::cout << "qsKey = " << qsKey.toStdString() << std::endl;
-          //std::cout << "jobj1New[qsKey] = " << jobj1New[qsKey].toString().toStdString() << std::endl;
 
-          jvaNew.append( jobj1New );
+          if ( verbose ) std::cout << "rec chassis num = " << recChassisNum << std::endl;
+          if ( verbose ) std::cout << "rec sig num = " << recSigNum << ", outputDatafileName = " <<
+           outputDatafileName.toStdString() << std::endl;
+          
+          if ( doCopy( recChassisNum, recSigNum, chassisNum, fileMap ) ) {
+            jvaNew.append( jobj1New );
+          }
           
           clearJsonObj( jobj1New );
           

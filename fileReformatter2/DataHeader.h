@@ -86,7 +86,7 @@ class DataHeader {
     int getString(const QString &s, QString& ss );
     int getString(const QString &s, std::string& ss );
     int setString(const QString &s, const QString& ss );
-    int writeNewHeaderFile ( std::map<int,QString>& fileMap, const QString& inFile,
+  int writeNewHeaderFile ( int chassisNum, std::map<int,QString>& fileMap, const QString& inFile,
                              const QString& outFile, bool verbose=false );
     int update( QString filename );
     int readContents ( QString filename );
