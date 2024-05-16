@@ -78,7 +78,7 @@ int ChanSelector::setText( QString s ) {
         }
         else if ( c == "," ) {
           if ( ( startDigit > 0 ) && ( startDigit <= Cnst::MaxSigIndex+1 ) ) {
-            chanSet.insert( startDigit-1 );
+            chanSet.insert( startDigit );
           }
           else {
             error = 3;
@@ -133,7 +133,7 @@ int ChanSelector::setText( QString s ) {
           //std::cout << "endDigit = " << endDigit << std::endl;
           for ( int i=startDigit; i<=endDigit; i++ ) {
             if ( ( i > 0 ) && ( i <= Cnst::MaxSigIndex+1 ) ) {
-              chanSet.insert( i-1 );
+              chanSet.insert( i );
             }
             else {
               error = 3;
@@ -178,7 +178,7 @@ int ChanSelector::setText( QString s ) {
   }
   else if ( state == FindDigitOrCommaOrDashOrEnd ) {
     if ( ( startDigit > 0 ) && ( startDigit <= Cnst::MaxSigIndex+1 ) ) {
-      chanSet.insert( startDigit-1 );
+      chanSet.insert( startDigit );
     }
     else {
       error = 3;
@@ -187,7 +187,7 @@ int ChanSelector::setText( QString s ) {
   else if ( state == FindDigitOrCommaOrEnd ) {
     for ( int i=startDigit; i<=endDigit; i++ ) {
       if ( ( i > 0 ) && ( i <= Cnst::MaxSigIndex+1 ) ) {
-        chanSet.insert( i-1 );
+        chanSet.insert( i );
       }
       else {
         error = 3;

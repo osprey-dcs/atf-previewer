@@ -1568,14 +1568,15 @@ int ViewerCtlr::doCsvExport ( void ) {
 
   int st, i, ii, numSignals;
   QString str;
-  std::filebuf fbInput[1024];
+  std::filebuf fbInput[1024+1];
   std::ofstream fbExport;
-  int signalIndices[1024];
+  int signalIndices[1024+1];
 
   QString simpleName = FileUtil::extractFileName( this->fileName ) + "." + Cnst::HdrExtension.c_str();
   
   // add extension to get header file name
   QString hdrFile = this->fileName + "." + Cnst::HdrExtension.c_str();
+  //std::cout << "hdrFile = " << hdrFile.toStdString() << std::endl;
 
   // create csv object
   CsvExport *csv = new CsvExport( hdrFile );
@@ -1606,9 +1607,13 @@ int ViewerCtlr::doCsvExport ( void ) {
   // write header and data to the csv file for each signal in list
   for ( int sigIndex : sigNumList ) {
 
+    //std::cout << "sigIndex = " << sigIndex << std::endl;
+
     // get binary file name from fileName and signal + extension
     binFile = FileUtil::makeBinFileName( dh.get(), fileName, sigIndex );
 
+    //std::cout << "binFile = " << binFile.toStdString() << std::endl;
+    
     signalIndices[numSignals] = sigIndex;
 
     if ( once ) {
@@ -1649,11 +1654,12 @@ int ViewerCtlr::doCsvExport ( void ) {
 
     }
     
-    //std::fbin = open input bin files
+    //std::fbin = open input bin files and count numSignals
     auto result = fbInput[numSignals].open( binFile.toStdString(), std::ios::in | std::ios::binary );
     if ( !result ) {
       fbExport.close();
       closeAll( fbInput, numSignals-1 );
+      std::cout << "Open file " << binFile.toStdString() << " failed"  << std::endl;
       return -1;
     }
     //std::cout << "input file " << binFile.toStdString() << " is open\n";
@@ -1687,9 +1693,11 @@ int ViewerCtlr::doCsvExport ( void ) {
   nr = new int[numSignals];
   QString *names = new QString[numSignals];
 
+  //std::cout << "get signal names" << std::endl;
   for ( int i=0; i<numSignals; i++ ) {
     int ii = signalIndices[i];
     names[i] = std::get<DataHeader::SIGNAME>( indexMap[ii] );
+    //std::cout << "sig name " << ii << " = " << names[i].toStdString() << std::endl;
   }
 
   st = csv->writeSignalNames( fbExport, names, numSignals );
