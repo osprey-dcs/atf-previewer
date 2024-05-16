@@ -34,6 +34,8 @@ public:
                    QString &startTime, QString &endTime,
                    QString &inputCsvFileName, QString &headerFileName );
 
+  int writeSignalProperties( std::ofstream &fb, int *signalIndices, int numSignals );
+  
   int writeSignalNames( std::ofstream &fb, QString *names, int numNames );
   
   int writeData( std::ofstream &fb, unsigned long rec, double time, double *buf, unsigned long numBytes );

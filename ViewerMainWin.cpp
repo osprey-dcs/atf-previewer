@@ -402,8 +402,6 @@ void ViewerMainWin::paintEvent (QPaintEvent *event) {
   QPainter p(this);
   QPen pen( p.pen() );
   QBrush brush( p.brush() );
-  char string[31+1];
-  int stringWidth;
   QRegion xR( 0, 0, w, h );
 
   p.save();

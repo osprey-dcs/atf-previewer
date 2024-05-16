@@ -1568,9 +1568,9 @@ int ViewerCtlr::doCsvExport ( void ) {
 
   int st, i, ii, numSignals;
   QString str;
-  std::filebuf fbInput[1024+1];
+  std::filebuf fbInput[Cnst::MaxSignals+1];
   std::ofstream fbExport;
-  int signalIndices[1024+1];
+  int signalIndices[Cnst::MaxSignals+1];
 
   QString simpleName = FileUtil::extractFileName( this->fileName ) + "." + Cnst::HdrExtension.c_str();
   
@@ -1670,11 +1670,11 @@ int ViewerCtlr::doCsvExport ( void ) {
 
   //std::cout << "numSignals = " << numSignals << std::endl;
 
-  QString id = "?";
-  QString desc = "?";
-  QString startTime = "?";
-  QString endTime = "?";
-  QString inputCsvFileName = "?";
+  QString id = dh->getString( "AcquisitionId" );
+  QString desc = mainWindow->exportDialog->description;
+  QString startTime = dh->getString( "AcquisitionStartDate" );
+  QString endTime = dh->getString( "AcquisitionEndDate" );
+  QString inputCsvFileName = "InputCsvFileName";
   st = csv->writeHeader( fbExport, id, desc, startTime, endTime, inputCsvFileName, simpleName );
   if ( st ) {
     fbExport.close();
@@ -1699,6 +1699,8 @@ int ViewerCtlr::doCsvExport ( void ) {
     names[i] = std::get<DataHeader::SIGNAME>( indexMap[ii] );
     //std::cout << "sig name " << ii << " = " << names[i].toStdString() << std::endl;
   }
+
+  st = csv->writeSignalProperties( fbExport, signalIndices, numSignals );
 
   st = csv->writeSignalNames( fbExport, names, numSignals );
 
@@ -1858,24 +1860,23 @@ int ViewerCtlr::doUff58bExport ( void ) {
     // build the uff58b header lines
     st = uff58b->set58bHeader( recRange );
 
-    st = uff58b->set80CharRec( 1, "Acceleration, Low Freq, LH Keel inboard at NLG Accumulator Y-axis - RAW" );
-    st = uff58b->set80CharRec( 2, std::get<DataHeader::SIGNAME>( indexMap[0] ) );
+    st = uff58b->set80CharRec( 1, std::get<DataHeader::DESC>( indexMap[sigIndex] ) );
+    st = uff58b->set80CharRec( 2, std::get<DataHeader::SIGNAME>( indexMap[sigIndex] ) );
     st = dh->getString( "AcquisitionStartDate", str );
     st = uff58b->set80CharRec( 3, str );
     st = uff58b->set80CharRec( 4, "input csv file" );
     st = uff58b->set80CharRec( 5, simpleName );
 
-    int funcType = 1; // time spectrum (0 to 27 possible values)
-    int funcIdNum = sigIndex+1; // signal number? + 1 because internal is zero-based, external is one-based
-                                //                this even confuses me and it may need to be changed
+    int funcType = std::get<DataHeader::TYPE>( indexMap[sigIndex] ); // time spectrum (0 to 27 possible values)
+    int funcIdNum = sigIndex; // signal number
     int versionOrSeq = 0;
     int loadCaseIdNum = 0;
     QString rspEntityName = "NONE";
-    int rspNode = 90200101;
-    int rspDir = 2; // +Y direction
+    int rspNode = std::get<DataHeader::RESPONSENODE>( indexMap[sigIndex] );
+    int rspDir = std::get<DataHeader::RESPONSEDIRECTION>( indexMap[sigIndex] );
     QString refEntityName = "NONE";
-    int refNode = 90200101;
-    int refDir = 2; // +Y direction
+    int refNode = std::get<DataHeader::REFERENCENODE>( indexMap[sigIndex] );
+    int refDir = std::get<DataHeader::REFERENCEDIRECTION>( indexMap[sigIndex] );
     st = uff58b->setDofIdentification( funcType, funcIdNum, versionOrSeq, loadCaseIdNum,
                                        rspEntityName, rspNode, rspDir, refEntityName, refNode, refDir );
 
@@ -1889,14 +1890,15 @@ int ViewerCtlr::doUff58bExport ( void ) {
 
     int lenUnitsExponent, forceUnitsExponent, tempUnitsExponent;
 
-    // abscissa data characteristics
+
+    // abscissa data characteristics - dummy, for now since we don't have dataType
     // first field is rec number (8-11)
     int dataType = 17; // time (21 possible values)
     uff58b->getExponents( dataType, rspDir, lenUnitsExponent, forceUnitsExponent, tempUnitsExponent );
     st = uff58b->setDataCharacteristics( 8, dataType, lenUnitsExponent, forceUnitsExponent,
                                          tempUnitsExponent, "Time", "NONE" );
     
-    // ordinate (or ordinate numerator) data characteristics
+    // ordinate (or ordinate numerator) data characteristics - dummy, for now since we don't have dataType
     dataType = 12; // acceleration (21 possible values)
     // exponents depend on dataType
     uff58b->getExponents( dataType, refDir, lenUnitsExponent, forceUnitsExponent, tempUnitsExponent );
