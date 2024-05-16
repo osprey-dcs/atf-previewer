@@ -1884,7 +1884,8 @@ int ViewerCtlr::uff58bExport ( void ) {
     st = uff58b->set80CharRec( 4, "input csv file" );
     st = uff58b->set80CharRec( 5, simpleName );
 
-    int funcType = std::get<DataHeader::TYPE>( indexMap[sigIndex] ); // time spectrum (0 to 27 possible values)
+    int funcType = 0; // general or unknown - (0 to 27 possible values)
+    int dataCategory = std::get<DataHeader::TYPE>( indexMap[sigIndex] ); // (21 possible values)
     int funcIdNum = sigIndex; // signal number
     int versionOrSeq = 0;
     int loadCaseIdNum = 0;
@@ -1907,21 +1908,19 @@ int ViewerCtlr::uff58bExport ( void ) {
 
     int lenUnitsExponent, forceUnitsExponent, tempUnitsExponent;
 
-
-    // abscissa data characteristics - dummy, for now since we don't have dataType
-    // first field is rec number (8-11)
-    int dataType = 17; // time (21 possible values)
-    uff58b->getExponents( dataType, rspDir, lenUnitsExponent, forceUnitsExponent, tempUnitsExponent );
-    st = uff58b->setDataCharacteristics( 8, dataType, lenUnitsExponent, forceUnitsExponent,
+    int ordinateDataCategory = 17; // time (21 possible values)
+    uff58b->getExponents( ordinateDataCategory, rspDir, lenUnitsExponent, forceUnitsExponent, tempUnitsExponent );
+    st = uff58b->setDataCharacteristics( 8, ordinateDataCategory, lenUnitsExponent, forceUnitsExponent,
                                          tempUnitsExponent, "Time", "NONE" );
     
-    // ordinate (or ordinate numerator) data characteristics - dummy, for now since we don't have dataType
-    dataType = 12; // acceleration (21 possible values)
-    // exponents depend on dataType
-    uff58b->getExponents( dataType, refDir, lenUnitsExponent, forceUnitsExponent, tempUnitsExponent );
-    st = uff58b->setDataCharacteristics( 9,  dataType, lenUnitsExponent, forceUnitsExponent,
-                                         tempUnitsExponent, "Acceleration", "NONE" );
-    
+    // exponents depend on dataCategory
+    uff58b->getExponents( dataCategory, refDir, lenUnitsExponent, forceUnitsExponent, tempUnitsExponent );
+    //st = uff58b->setDataCharacteristics( 9,  dataCategory, lenUnitsExponent, forceUnitsExponent,
+    //                                     tempUnitsExponent, "Acceleration", "NONE" );
+    st = uff58b->setDataCharacteristics( 9,  dataCategory, lenUnitsExponent, forceUnitsExponent,
+                                         tempUnitsExponent,
+                                         std::get<DataHeader::SIGNAME>( indexMap[sigIndex] ), "NONE" );
+
     // ordinate denominator data characteristics
     st = uff58b->setDataCharacteristics( 10, 0, 0, 0, 0, "NONE", "NONE" ); // unused
     
