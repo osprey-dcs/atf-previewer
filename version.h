@@ -3,6 +3,6 @@
 
 const static int g_major = 0;
 const static int g_minor = 0;
-const static int g_release = 10;
+const static int g_release = 11;
 
 #endif //VERSION_H

@@ -77,6 +77,8 @@ public:
   static const int HavePrevViewRequest = 7;
   static const int HaveNonSlotScaleRequest = 8;
   static const int HaveFullScaleRequest = 9;
+  static const int HaveUff58bExportRequest = 10;
+  static const int HaveCsvExportRequest = 11;
 
   //                   request  widget               signal   filename
   //                                                 index
@@ -88,8 +90,6 @@ public:
   double x, y, w, h;
   QRectF plotAreaDimensions[Cnst::NumGraphs];
   bool haveFile;
-  bool haveUff58bExportRequest;
-  bool haveCsvExportRequest;
   QString fileName;
   QString simpleFileName;
   bool haveHeader;
@@ -109,7 +109,6 @@ public:
   bool haveDataForFft;
   ViewerGraphAreaBase *lastDataRequestGraphArea;
   ViewerGraphAreaBase *fftVga;
-  //Uff58bExport *uff58bExport;
   double curTimeMinimum;
   double curTimeMaximum;
   bool haveCurTimeRange;
@@ -135,14 +134,17 @@ public:
   bool arrayAllNonZero ( const QRectF r[], int n );
   void nonSlotHaveScale (  ViewerGraphAreaBase *vga, int, QString&, double, double, double, double );
 
+  int uff58bExport( void );
+  int csvExport( void );
+                                                                                                    
 public slots:
   void dimension ( double, double, double, double );
   void sigNameChange ( int index );
   void sigNameChange1 ( int index, int id, QWidget *w );
   void sigAreaChanged ( const QRectF& plotArea );
   void fileSelected1 ( const QString& file );
-  int doCsvExport( void );
-  int doUff58bExport( void );
+  void doCsvExport( void );
+  void doUff58bExport( void );
   void haveHorizontalPan ( int, int, QString&, double, double, double, double );
   void haveFullScale ( int, int, QString& );
   void haveScale ( int, int, QString&, double, double, double, double );

@@ -86,8 +86,6 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
 
   this->mainWindow = mainw;
   this->haveFile = false;
-  this->haveUff58bExportRequest = false;
-  this->haveCsvExportRequest = false;
   this->fileName = "";
   this->haveHeader = false;
   this->readyForData = false;
@@ -399,7 +397,10 @@ void ViewerCtlr::process(void ) {
 
       int request = std::get<ViewerCtlr::Req>( dataReq );
       ViewerGraphAreaBase *grArea = std::get<ViewerCtlr::Vga>( dataReq );
-      int grAreaId = grArea->id;
+      int grAreaId;
+      if ( grArea ) {
+        grAreaId = grArea->id;
+      }
       int sigIndex = std::get<ViewerCtlr::SigIndex>( dataReq );
       QString reqFileName = std::get<ViewerCtlr::FileName>( dataReq );
 
@@ -407,13 +408,37 @@ void ViewerCtlr::process(void ) {
 
       // for fft calc and display, input data is from the time series graph
       // and displayed on the graph positioned under the time series one ( companion vga ).
-      
-      if ( ( request == ViewerCtlr::HaveFftRequest ) && this->readyForData &&
+
+      if ( request == ViewerCtlr::HaveUff58bExportRequest ) {
+        
+        this->mainWindow->setWorking( QString("Working...") );
+        this->mainWindow->setWhat( "UFF58b Export..." );
+        stat = uff58bExport();
+        if ( stat ) {
+          std::cout << "Error " << stat << " from uff58bExport" << std::endl;
+        }
+        this->mainWindow->setWorking( QString("Ready") );
+        this->mainWindow->setWhat( "Idle" );
+        
+      }
+      else if ( request == ViewerCtlr::HaveCsvExportRequest ) {
+        
+        this->mainWindow->setWorking( QString("Working...") );
+        this->mainWindow->setWhat( "CSV Export..." );
+        stat = csvExport();
+        if ( stat ) {
+          std::cout << "Error " << stat << " from csvExport" << std::endl;
+        }
+        this->mainWindow->setWorking( QString("Ready") );
+        this->mainWindow->setWhat( "Idle" );
+        
+      }
+      else if ( ( request == ViewerCtlr::HaveFftRequest ) && this->readyForData &&
           ( numFft > 0 ) && ( numFft < Cnst::MaxFftSize ) && ( this->haveDataForFft ) ) {
 
         //std::cout << "have fft request - numFft = " << numFft << std::endl;
 
-        mainWindow->setWhat( "FFT..." );
+        this->mainWindow->setWhat( "FFT..." );
 
         if ( lastDataRequestGraphArea && ( lastDataRequestGraphArea == grArea ) ) {
         
@@ -1408,14 +1433,6 @@ void ViewerCtlr::process(void ) {
       
     }
 
-    if ( haveUff58bExportRequest ) {
-      haveUff58bExportRequest = false;
-      stat = doUff58bExport();
-      if ( !stat ) {
-        std::cout << "Error " << stat << " from doUff58bExport" << std::endl;
-      }
-    }
-    
   }
 
 }
@@ -1557,7 +1574,7 @@ static void zero( int *val, int n ) {
   for ( int i=0; i<n; i++ ) val[i] = n;
 }
 
-int ViewerCtlr::doCsvExport ( void ) {
+int ViewerCtlr::csvExport ( void ) {
 
   //std::cout << "ViewerCtlr::doCsvExport" << std::endl;
 
@@ -1780,7 +1797,7 @@ int ViewerCtlr::doCsvExport ( void ) {
 }
 
 
-int ViewerCtlr::doUff58bExport ( void ) {
+int ViewerCtlr::uff58bExport ( void ) {
 
   if ( !haveHeader ) {
     std::cout << "No header file is open\n";
@@ -1988,6 +2005,20 @@ int ViewerCtlr::doUff58bExport ( void ) {
   
   return 0;
   
+}
+
+void ViewerCtlr::doUff58bExport( void ) {
+
+  int request = ViewerCtlr::HaveUff58bExportRequest;
+  dataRequestList.push_back( std::make_tuple( request, nullptr, 0, "" ) );
+
+}
+
+void ViewerCtlr::doCsvExport( void ) {
+
+  int request = ViewerCtlr::HaveCsvExportRequest;
+  dataRequestList.push_back( std::make_tuple( request, nullptr, 0, "" ) );
+
 }
 
 void ViewerCtlr::haveHorizontalPan (int id, int curSigIndex, QString& curFileName,
