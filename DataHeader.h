@@ -35,10 +35,10 @@ class DataHeader {
   public:
 
     typedef std::map<QString,std::tuple<QString, double, double, double,
-             double, QString, QString, QString, double, QString, double>> DataHeaderMapType;
+             double, QString, QString, QString, double, QString, double, double, double, double>> DataHeaderMapType;
 
     typedef std::map<double,std::tuple<QString, double, double, QString,
-             double, QString, QString, QString, double, QString, double>> DataHeaderIndexMapType;
+             double, QString, QString, QString, double, QString, double, double, double, double>> DataHeaderIndexMapType;
   
     typedef std::list<QString> DataHeaderListType;
 
@@ -54,12 +54,15 @@ class DataHeader {
     static const int RESPONSEDIRECTION {8};
     static const int REFERENCENODE {9};
     static const int REFERENCEDIRECTION {10};
+    static const int COUPLING {11};
+    static const int ADDRESS_CHASSIS {12};
+    static const int ADDRESS_CHANNEL {13};
   
     QJsonDocument jd;
     QJsonObject jo;
-    //                          0        1       2          3
-    //                          egu      slope   intercept  sig num  type    Y label  desc     rsp node  rsp dir  ref node  ref dir
-    //std::map<QString,std::tuple<QString, double, double,    double,  double, QString, QString, QString,  double,  QString,  double>> sigs;
+    //                            0        1       2          3        4       5        6        7         8        9        10        11        12            13
+    //                            egu      slope   intercept  sig num  type    Y label  desc     rsp node  rsp dir  ref node  ref dir  coupling  addr chassis  addr channel
+    //std::map<QString,std::tuple<QString, double, double,    double,  double, QString, QString, QString,  double,  QString,  double,  double,   double,       double>> sigs;
     //std::list<QString> sigNameList;
 
     DataHeaderMapType sigs;
@@ -83,12 +86,12 @@ class DataHeader {
     int getString(const QString &s, QString& ss );
     int getString(const QString &s, std::string& ss );
     int setString(const QString &s, const QString& ss );
+  int writeNewHeaderFile ( int chassisNum, std::map<int,QString>& fileMap, const QString& inFile,
+                             const QString& outFile, bool verbose=false );
     int update( QString filename );
     int readContents ( QString filename );
-    int getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu, double& slope, double& intercept );
-
-    //const std::map<QString,std::tuple<QString, double, double, double, double, QString, QString, QString, double, QString, double>>& getNameMap();
-    //const std::list<QString>& getNameList();
+    int getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu,
+                               double& slope, double& intercept );
 
     const DataHeaderListType& getNameList();
 

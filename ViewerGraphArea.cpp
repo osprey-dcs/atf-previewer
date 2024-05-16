@@ -46,6 +46,10 @@ ViewerGraphArea::ViewerGraphArea( int _id, QWidget *_parent ) : ViewerGraphAreaB
   curSigIndex = 0;
   curFileName = "";
   calcFft = QSharedPointer<ViewerCtlrPushButton>( new ViewerCtlrPushButton(this, "FFT" ) );
+  lockTimeScale = QSharedPointer<QPushButton>( new QPushButton( "Lock Time Scale" ) );
+  lockTimeScale->setCheckable( true );
+  lockTimeScale->setDown( false );
+  lockTimeScaleState = false;
   enableFftButton( false );
   curSliderValue = 0;
 
@@ -60,6 +64,8 @@ ViewerGraphArea::ViewerGraphArea( int _id, QWidget *_parent ) : ViewerGraphAreaB
   hlayout->addWidget( sigLabel.data() );
   hlayout->addWidget( sigName.data() );
   hlayout->addWidget( calcFft.data() );
+  hlayout->addWidget( lockTimeScale.data() );
+  
   hlayout->addSpacing( 100 );
   hlayout->addWidget( exportSelection.data() );
   hlayout->addSpacing( 20 );
@@ -75,8 +81,11 @@ ViewerGraphArea::ViewerGraphArea( int _id, QWidget *_parent ) : ViewerGraphAreaB
   vlayout->addWidget( graph.data() );
   this->setLayout( vlayout.data() );
 
-    curSliderValue = 0;
-    slider->setValue( 0 );
+  curSliderValue = 0;
+  slider->setValue( 0 );
+
+  connect( lockTimeScale.data(), SIGNAL( clicked( bool ) ),
+           this, SLOT( performAction( bool ) ) );
     
 }
 
@@ -151,4 +160,21 @@ void ViewerGraphArea::updateSelectionRange( double xMin, double xMax ) {
   exportSelection->setText( text );
   exportSelection->update();
 
+}
+
+void ViewerGraphArea::performAction ( bool flag ) {
+
+  QPushButton *b = qobject_cast<QPushButton *>(sender());
+
+  lockTimeScaleState = !lockTimeScaleState;
+
+  if ( lockTimeScaleState ) {
+    b->setDown( true );
+    emit enableLockTimeScale( true );
+  }
+  else {
+    b->setDown( false );
+    emit enableLockTimeScale( false );
+  }
+     
 }

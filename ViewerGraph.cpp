@@ -102,6 +102,9 @@ ViewerGraph::ViewerGraph( int _id, DataType _dataType, QWidget *_parent ) :
 
   this->popupMenu->addSeparator();
 
+  zoomFullScaleAction = QSharedPointer<QAction>( new QAction( "Zoom Full Scale" ) );
+  this->popupMenu->addAction( zoomFullScaleAction.data() );
+  
   zoomInAction = QSharedPointer<QAction>( new QAction( "Zoom In" ) );
   this->popupMenu->addAction( zoomInAction.data() );
   
@@ -769,6 +772,9 @@ void ViewerGraph::performAction ( QAction *a ) {
   else if ( a == this->prevViewAction.data() ) {
     emit prevView( this->id, this->curSigIndex, this->curFileName );
   }
+  else if ( a == this->zoomFullScaleAction.data() ) {
+    zoomFullScale();
+  }
   else if ( a == this->zoomInAction.data() ) {
     zoomIn( zoomDistX, zoomDistY );
   }
@@ -802,6 +808,12 @@ void ViewerGraph::performAction ( QAction *a ) {
   else {
     //std::cout << "ViewerGraph::performAction: Unknown action" << std::endl;
   }
+
+}
+
+void ViewerGraph::zoomFullScale ( ) {
+    
+  emit fullScale( this->id, this->curSigIndex, this->curFileName );
 
 }
 

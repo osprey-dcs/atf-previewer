@@ -87,7 +87,15 @@ class ViewerGraphArea : public ViewerGraphAreaBase {
     int curSigIndex;
     QString curFileName;
     QSharedPointer<ViewerCtlrPushButton> calcFft;
+    QSharedPointer<QPushButton> lockTimeScale;
+    bool lockTimeScaleState;
     int curSliderValue;
+
+public slots:
+  void performAction ( bool flag );
+
+signals:
+  void enableLockTimeScale ( bool );
 
 };
 

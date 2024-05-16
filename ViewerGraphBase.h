@@ -113,6 +113,7 @@ public:
   QSharedPointer<QMenu> popupMenu;
   QSharedPointer<QAction> resetAction;
   QSharedPointer<QAction> prevViewAction;
+  QSharedPointer<QAction> zoomFullScaleAction;
   QSharedPointer<QAction> zoomInAction;
   QSharedPointer<QAction> zoomOutAction;
   QSharedPointer<QAction> zoomXInAction;
@@ -147,6 +148,7 @@ private slots:
 
 private:
   virtual bool inside( int x, int y );
+  virtual void zoomFullScale ( void );
   virtual void zoomIn ( double zoomDistX, double zoomDistY );
   virtual void zoomOut ( double zoomDistX, double zoomDistY );
   virtual void panHorizontal ( double panDist );

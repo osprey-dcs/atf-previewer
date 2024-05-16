@@ -115,7 +115,13 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
   this->numFft = 0ul;
   this->maxFft = Cnst::MaxFftSize;
   this->haveDataForFft = false;
-        
+
+  this->haveCurTimeRange = false;
+  this->curTimeMinimum = 0;
+  this->curTimeMaximum = 0;
+
+  this->lockTimeScale = false;
+  
   // Main window dimension change requires replotting all signals
   // (I might not need this)
   this->connect( mainw.data(), SIGNAL( dimensionChange( double, double, double, double ) ),
@@ -135,14 +141,25 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
   for ( ViewerGraphAreaBase *w : mainw->getVgaList() ) {
 
     if ( isTimeSeries( w ) ) {
+      
       ViewerGraphArea *vga = qobject_cast<ViewerGraphArea *>( w );
       this->connect( vga->sigName.data(), SIGNAL( activated1( int, int, QWidget * ) ),
                      this, SLOT( sigNameChange1( int, int, QWidget * ) ) );
+      
+      this->connect( w->graph.data(), SIGNAL( fullScale( int, int, QString& ) ),
+                     this, SLOT( haveFullScale( int, int, QString& ) ) );
+
+      this->connect( vga, SIGNAL( enableLockTimeScale( bool ) ),
+                     this, SLOT( lockTimeScaleEvent( bool ) ) );
+      
     }
 
     this->connect( w->graph.data(), SIGNAL( horizontalPan( int, int, QString&, double, double, double, double ) ),
                    this, SLOT( haveHorizontalPan( int, int, QString&, double, double, double, double ) ) );
-  
+
+    this->connect( w->graph.data(), SIGNAL( scale( int, int, QString&, double, double, double, double ) ),
+                   this, SLOT( haveScale( int, int, QString&, double, double, double, double ) ) );
+    
     this->connect( w->graph.data(), SIGNAL( scale( int, int, QString&, double, double, double, double ) ),
                    this, SLOT( haveScale( int, int, QString&, double, double, double, double ) ) );
     
@@ -311,6 +328,7 @@ void ViewerCtlr::process(void ) {
 
   int stat;
   double slope = 1.0, intercept = 0.0;
+  QString binFile;
   
   // process all handled events here
 
@@ -385,6 +403,8 @@ void ViewerCtlr::process(void ) {
       int sigIndex = std::get<ViewerCtlr::SigIndex>( dataReq );
       QString reqFileName = std::get<ViewerCtlr::FileName>( dataReq );
 
+      //std::cout << "\nprocess - request = " << request << "\n\n";
+
       // for fft calc and display, input data is from the time series graph
       // and displayed on the graph positioned under the time series one ( companion vga ).
       
@@ -458,30 +478,27 @@ void ViewerCtlr::process(void ) {
         mainWindow->setWhat( "Idle" );
 
       }
-      else if ( ( request == ViewerCtlr::HaveDataRequest ) && isTimeSeries( grArea ) && this->readyForData ) {
+      else if ( ( ( request == ViewerCtlr::HaveDataRequest ) || ( request == ViewerCtlr::HaveFullScaleRequest ) )
+                && isTimeSeries( grArea ) && this->readyForData ) {
           
-        //std::cout << "haveDataRequest" << std::endl;
-
+        // stop locking scales between initial signal display
+        if ( ( request == HaveFullScaleRequest ) || ( !lockTimeScale ) ) this->haveCurTimeRange = false;
+        
         enableFftButton( grArea );
         lastDataRequestGraphArea = grArea;
 
         // get min/max time values
         double x0, x1, y0, y1;
-        //grArea->graph->getAxesLimits( x0, y0, x1, y1 );
-        //std::cout << "x0 = " << x0 << ", x1 = " << x1 << ", y0 = " << y0 << ", y1 = " << y1 << std::endl;
 
         // get num of pixels in x
         QSizeF size = grArea->graph->chart->size();
-        //std::cout << "x pixels = " << size.width() << std::endl;
 
         // save reqFileName before appending extension
         grArea->setCurInfo( reqFileName, sigIndex );
 
-        QString binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
+        binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
 
         double minTime=0, maxTime=1;
-        int st = bd->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
-        
         x0 = Cnst::InitialMinTime;
         x1 = Cnst::InitialMaxTime;
         y0 = Cnst::InitialMinSig;
@@ -493,9 +510,9 @@ void ViewerCtlr::process(void ) {
           if ( !st ) {
             x0 = minTime;
             x1 = maxTime;
-            //std::cout << "use full data range " << x0 << " to " << x1 << std::endl;
           }
           else {
+            std::cout << "Error " << st << " from getDataFullTimeRange" << std::endl;
             x1 = x0 + 1.0;
           }
         }
@@ -504,11 +521,6 @@ void ViewerCtlr::process(void ) {
         QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
         double miny, maxy;
         double dataTimeIncrementInSec = 1.0 / sampleRate;
-
-        double x0WithLimits = x0, x1WithLimits = x1;
-        if ( x0WithLimits < 0.0 ) x0WithLimits = 0.0;
-        if ( x1WithLimits < 0.0 ) x1WithLimits = 0.0;
-        if ( x1WithLimits < x0WithLimits ) std::swap( x1WithLimits, x0WithLimits );
 
         numFft = 0ul;
         numPts = 0ul;
@@ -530,17 +542,28 @@ void ViewerCtlr::process(void ) {
         //  file name, sig index, x scale width in pixels, start time in sec,
         //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
 
-        stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0WithLimits, x1WithLimits,
+        stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                         dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
         if ( !stat ) {
+
+          // if we have performed some kind of time scale adjustment and time scales are locked...
+          if ( this->haveCurTimeRange ) {
+            nonSlotHaveScale( grArea, sigIndex, reqFileName, this->curTimeMinimum,
+                              this->curTimeMaximum, miny, maxy );
+          }
 
           grArea->curSigIndex = sigIndex;
           grArea->setInitialState();
           
           mainWindow->setNumPoints( numPts );
 
-          // Viewer graph object manages qls
-          grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1, miny, maxy );
+          // don't draw the graph if we are going to rescale...
+          if ( !this->haveCurTimeRange ) {
+
+            // Viewer graph object manages qls
+            grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1, miny, maxy );
+
+          }
 
           if ( numFft ) {
             haveDataForFft = true;
@@ -592,16 +615,13 @@ void ViewerCtlr::process(void ) {
           QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
           double minx, maxx, miny, maxy;
 
-          double x0WithLimits = x0, x1WithLimits = x1;
-          if ( x0WithLimits < 0.0 ) x0WithLimits = 0.0;
-          if ( x1WithLimits < sampleRate / 2 ) x1WithLimits = sampleRate / 2;
-          if ( x1WithLimits < x0WithLimits ) std::swap( x1WithLimits, x0WithLimits );
+          if ( x1 > sampleRate / 2 ) x1 = sampleRate / 2;
 
           mainWindow->setWhat( "Reseting..." );
 
           stat = this->bd->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
-              x0WithLimits, x1WithLimits, *qls, minx, maxx, miny, maxy, true );
+              x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
             //std::cout << "after - minx, maxx, miny, maxy = "
@@ -665,11 +685,6 @@ void ViewerCtlr::process(void ) {
           double miny, maxy;
           double dataTimeIncrementInSec = 1.0 / sampleRate;
 
-          double x0WithLimits = x0, x1WithLimits = x1;
-          if ( x0WithLimits < 0.0 ) x0WithLimits = 0.0;
-          if ( x1WithLimits < 0.0 ) x1WithLimits = 0.0;
-          if ( x1WithLimits < x0WithLimits ) std::swap( x1WithLimits, x0WithLimits );
-
           numFft = 0ul;
           numPts = 0ul;
           haveDataForFft = false;
@@ -684,10 +699,14 @@ void ViewerCtlr::process(void ) {
         
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
-          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0WithLimits, x1WithLimits,
+          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                           dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
           if ( !stat ) {
 
+            this->haveCurTimeRange = true;
+            this->curTimeMinimum = x0;
+            this->curTimeMaximum = x1;
+          
             grArea->curSigIndex = sigIndex;
             grArea->setInitialState();
           
@@ -795,11 +814,6 @@ void ViewerCtlr::process(void ) {
           double miny, maxy;
           double dataTimeIncrementInSec = 1.0 / sampleRate;
           
-          double x0WithLimits = x0, x1WithLimits = x1;
-          if ( x0WithLimits < 0.0 ) x0WithLimits = 0.0;
-          if ( x1WithLimits < 0.0 ) x1WithLimits = 0.0;
-          if ( x1WithLimits < x0WithLimits ) std::swap( x1WithLimits, x0WithLimits );
-
           numFft = 0ul;
           numPts = 0ul;
           haveDataForFft = false;
@@ -814,9 +828,13 @@ void ViewerCtlr::process(void ) {
           
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
-          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0WithLimits, x1WithLimits,
+          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                         dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
           if ( !stat ) {
+          
+            this->haveCurTimeRange = true;
+            this->curTimeMinimum = x0;
+            this->curTimeMaximum = x1;
           
             mainWindow->setNumPoints( numPts );
           
@@ -916,18 +934,13 @@ void ViewerCtlr::process(void ) {
           // save reqFileName before appending extension
           grArea->setCurInfo( reqFileName, sigIndex );
         
-          QString binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
+          binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
         
           // Viewer graph object, setSeries function,  manages qls
           QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
           double miny, maxy;
           double dataTimeIncrementInSec = 1.0 / sampleRate;
           
-          double x0WithLimits = x0, x1WithLimits = x1;
-          if ( x0WithLimits < 0.0 ) x0WithLimits = 0.0;
-          if ( x1WithLimits < 0.0 ) x1WithLimits = 0.0;
-          if ( x1WithLimits < x0WithLimits ) std::swap( x1WithLimits, x0WithLimits );
-        
           numFft = 0ul;
           numPts = 0ul;
           haveDataForFft = false;
@@ -942,9 +955,13 @@ void ViewerCtlr::process(void ) {
           
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
-          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0WithLimits, x1WithLimits,
+          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                             dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
           if ( !stat ) {
+          
+            this->haveCurTimeRange = true;
+            this->curTimeMinimum = x0;
+            this->curTimeMaximum = x1;
           
             mainWindow->setNumPoints( numPts );
 
@@ -1023,11 +1040,6 @@ void ViewerCtlr::process(void ) {
             //std::cout << "after - minx, maxx, miny, maxy = "
             //          << minx << ", " << maxx << ", " << miny << ", " << maxy << std::endl;
 
-          double x0WithLimits = x0, x1WithLimits = x1;
-          if ( x0WithLimits < 0.0 ) x0WithLimits = 0.0;
-          if ( x1WithLimits < 0.0 ) x1WithLimits = 0.0;
-          if ( x1WithLimits < x0WithLimits ) std::swap( x1WithLimits, x0WithLimits );
-          
             // Viewer graph object manages qls
           grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1, y0, y1 );
 
@@ -1057,29 +1069,35 @@ void ViewerCtlr::process(void ) {
 
           double  x0, x1, y0, y1;
           grArea->graph->getAxesLimits( x0, y0, x1, y1 );
-          //std::cout << "333   x0, y0, x1, y1 = " << x0 << ", " << y0 << ", " << x1 << ", " << y1 << std::endl;
-          //grArea->graph->setAxesLimits( x0, y0, x1, y1 );
-          //grArea->graph->getAxesLimits( x0, y0, x1, y1 );
-          //std::cout << "444   x0, y0, x1, y1 = " << x0 << ", " << y0 << ", " << x1 << ", " << y1 << std::endl;
+
+          binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
+
+          double minTime, maxTime;
+          int st = bd->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
+          if ( !st ) {
+            x0 = std::fmax( x0, minTime );
+            x1 = std::fmin( x1, maxTime );
+          }
+          else {
+            std::cout << "Error " << st << " from getDataFullTimeRange\n";
+          }
+
+          this->haveCurTimeRange = true;
+          this->curTimeMinimum = x0;
+          this->curTimeMaximum = x1;
 
           // get num of pixels in x
           QSizeF size = grArea->graph->chart->size();
-          //std::cout << "x pixels = " << size.width() << std::endl;
 
           // save reqFileName before appending extension
           grArea->setCurInfo( reqFileName, sigIndex );
 
-          QString binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
+          binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
 
           // Viewer graph object, setSeries function,  manages qls
           QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
           double miny, maxy;
           double dataTimeIncrementInSec = 1.0 / sampleRate;
-
-          double x0WithLimits = x0, x1WithLimits = x1;
-          if ( x0WithLimits < 0.0 ) x0WithLimits = 0.0;
-          if ( x1WithLimits < 0.0 ) x1WithLimits = 0.0;
-          if ( x1WithLimits < x0WithLimits ) std::swap( x1WithLimits, x0WithLimits );
 
           numFft = 0ul;
           numPts = 0ul;
@@ -1095,7 +1113,7 @@ void ViewerCtlr::process(void ) {
           
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
-          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0WithLimits, x1WithLimits,
+          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                           dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
           if ( !stat ) {
           
@@ -1103,6 +1121,94 @@ void ViewerCtlr::process(void ) {
           
             // Viewer graph object manages qls
             grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1, y0, y1 );
+
+            if ( numFft ) {
+              haveDataForFft = true;
+            }
+
+            setSlider( grArea );
+            
+          }
+          else {
+          
+            mainWindow->setNumPoints( 0ul );
+            delete qls; qls = nullptr;
+            std::cout << "genLineSeries failure" << std::endl;
+          
+          }
+
+        }
+
+        mainWindow->setWhat( "Idle" );
+        
+      }
+      else if ( ( request == ViewerCtlr::HaveNonSlotScaleRequest ) && this->readyForData ) {
+
+        //std::cout << "ViewerCtlr::HaveNonSlotScaleRequest" << std::endl;
+
+          enableFftButton( grArea );
+          lastDataRequestGraphArea = grArea;
+        
+          // non slot scale does not cause rescale with signal emission hence the following kludge
+          //int maxMs = 100;
+          //for ( int i=0; i<25; i++ ) {
+          //  this->mainWindow->app->processEvents( QEventLoop::AllEvents, maxMs );
+          //  QThread::usleep( 10000 ); // 1/100 sec
+          //}
+
+          double  x0, x1, y0, y1;
+          grArea->graph->getAxesLimits( x0, y0, x1, y1 );
+          x0 = this->nonSlotHavScaleX0;
+          x1 = this->nonSlotHavScaleX1;
+          
+          binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
+
+          double minTime, maxTime;
+          int st = bd->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
+          if ( !st ) {
+            x0 = std::fmax( x0, minTime );
+            x1 = std::fmin( x1, maxTime );
+          }
+          else {
+            std::cout << "Error " << st << " from getDataFullTimeRange\n";
+          }
+
+          // get num of pixels in x
+          QSizeF size = grArea->graph->chart->size();
+
+          // save reqFileName before appending extension
+          grArea->setCurInfo( reqFileName, sigIndex );
+
+          binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
+
+          // Viewer graph object, setSeries function,  manages qls
+          QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
+          double miny, maxy;
+          double dataTimeIncrementInSec = 1.0 / sampleRate;
+
+          numFft = 0ul;
+          numPts = 0ul;
+          haveDataForFft = false;
+        
+          mainWindow->setWhat( "Reading file..." );
+    
+          QString qsdiscard, egudiscard;
+          stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
+          if ( stat ) {
+            std::cout << "getSigInfoBySigIndex failed" << std::endl;
+          }
+          
+          //  file name, sig index, x scale width in pixels, start time in sec,
+          //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
+          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
+                                          dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
+          
+          if ( !stat ) {
+          
+            mainWindow->setNumPoints( numPts );
+          
+            // Viewer graph object manages qls
+            grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1, miny, maxy );
 
             if ( numFft ) {
               haveDataForFft = true;
@@ -1126,18 +1232,12 @@ void ViewerCtlr::process(void ) {
           
           }
 
-        }
-
         mainWindow->setWhat( "Idle" );
         
       }
       else if ( ( request == ViewerCtlr::HavePrevViewRequest ) && this->readyForData ) {
 
         if ( isFFT( grArea ) ) {
-
-          if ( fftVga ) {
-            //std::cout << "fftVga id = " << fftVga->id << ", grArea id = " << grArea->id << std::endl;
-          }
 
           if ( !fftVga || ( fftVga != grArea ) ) {
             mainWindow->setWhat( "Idle" );
@@ -1211,17 +1311,12 @@ void ViewerCtlr::process(void ) {
           // save reqFileName before appending extension
           grArea->setCurInfo( reqFileName, sigIndex );
 
-          QString binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
+          binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
 
           // Viewer graph object, setSeries function,  manages qls
           QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
           double miny, maxy;
           double dataTimeIncrementInSec = 1.0 / sampleRate;
-
-          double x0WithLimits = x0, x1WithLimits = x1;
-          if ( x0WithLimits < 0.0 ) x0WithLimits = 0.0;
-          if ( x1WithLimits < 0.0 ) x1WithLimits = 0.0;
-          if ( x1WithLimits < x0WithLimits ) std::swap( x1WithLimits, x0WithLimits );
 
           numFft = 0ul;
           numPts = 0ul;
@@ -1237,9 +1332,13 @@ void ViewerCtlr::process(void ) {
           
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
-          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0WithLimits, x1WithLimits,
+          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                           dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
           if ( !stat ) {
+          
+            this->haveCurTimeRange = true;
+            this->curTimeMinimum = x0;
+            this->curTimeMaximum = x1;
           
             mainWindow->setNumPoints( numPts );
           
@@ -1279,8 +1378,10 @@ void ViewerCtlr::process(void ) {
     if ( this->haveFile ) {
       
       this->readyForData = false;
+      
       stat = processHeaderFile();
       if ( !stat ) {
+        
         this->haveDataForFft = false;
         this->haveHeader = true;
         this->dataRequestList.clear();
@@ -1291,12 +1392,18 @@ void ViewerCtlr::process(void ) {
         }
         this->mainWindow->setNumPoints( 0 );
         this->mainWindow->setNumFftPoints( 0 );
+        this->haveCurTimeRange = false;
+        this->curTimeMinimum = 0;
+        this->curTimeMaximum = 0;
 
       }
       else {
+
         this->haveHeader = false;
         this->readyForData = false;
+        
       }
+      
       this->haveFile = false;
       
     }
@@ -1465,7 +1572,7 @@ int ViewerCtlr::doCsvExport ( void ) {
   std::ofstream fbExport;
   int signalIndices[1024];
 
-  QString simpleName = FileUtil::extractFileName( this->fileName ) + "," + Cnst::HdrExtension.c_str();
+  QString simpleName = FileUtil::extractFileName( this->fileName ) + "." + Cnst::HdrExtension.c_str();
   
   // add extension to get header file name
   QString hdrFile = this->fileName + "." + Cnst::HdrExtension.c_str();
@@ -1484,24 +1591,18 @@ int ViewerCtlr::doCsvExport ( void ) {
   // open export file
   QString exportFileName = mainWindow->exportDialog->exportFileName;
   fbExport.open( exportFileName.toStdString() );
-  //if ( !result ) {
-  //  return -1;
-  //}
 
   //std::cout << "export file " << exportFileName.toStdString() << " is open\n";
 
   QString binFile;
-
-  // get min time
-  double minTime = mainWindow->exportDialog->startTimeValInSec;
-  double maxTime = mainWindow->exportDialog->endTimeValInSec;
-  double timeInc = 1.0 / sampleRate;
   
   numSignals = 0;
   bool once = true;
   unsigned long recRange;
-  unsigned long minByte, maxByte;
-  
+  double minT=0, maxT=0;
+  unsigned long minByte=0, maxByte=0;
+  double timeInc = 1.0 / sampleRate;
+    
   // write header and data to the csv file for each signal in list
   for ( int sigIndex : sigNumList ) {
 
@@ -1511,16 +1612,36 @@ int ViewerCtlr::doCsvExport ( void ) {
     signalIndices[numSignals] = sigIndex;
 
     if ( once ) {
+      
       once = false;
-      // get min and max rec number corresponding to min and max time
-      st = bd->getRecordRangeForTime( binFile, sampleRate, minTime, maxTime,
-                                      minByte, maxByte );
-      recRange = maxByte - minByte;
 
-      minTime = minByte / sizeof(int) / sampleRate;
+      if ( mainWindow->exportDialog->exportRange == "From Selection" ) {
 
-      //std::cout << "minTime = " << minTime << std::endl;
-      //std::cout << "maxTime = " <<  maxTime << std::endl;
+        // get min and max time
+        minT = mainWindow->exportDialog->startTimeValInSec;
+        maxT = mainWindow->exportDialog->endTimeValInSec;
+
+        // get min and max rec number corresponding to min and max time
+        st = bd->getRecordRangeForTime( binFile, sampleRate, minT, maxT,
+                                        minByte, maxByte );
+
+        recRange = maxByte - minByte + 1;
+
+      }
+      else {
+
+        unsigned long maxEle;
+        bd->getMaxElements ( binFile, 0, maxEle );
+        minByte = 0;
+        maxByte = maxEle * sizeof(int) - 1;
+        recRange = maxByte - minByte + 1;
+
+      }
+
+      minT = minByte / sizeof(int) / sampleRate;
+
+      //std::cout << "minT = " << minT << std::endl;
+      //std::cout << "maxT = " <<  maxT << std::endl;
       //std::cout << "minByte = " <<  minByte << std::endl;
       //std::cout << "maxByte = " <<  maxByte << std::endl;
       //std::cout << "recRange (ele) = " << recRange/sizeof(int) << std::endl;
@@ -1594,7 +1715,7 @@ int ViewerCtlr::doCsvExport ( void ) {
   }
 
   unsigned long rec = 0;
-  double time = minTime;
+  double time = minT;
   //std::cout << "numFullOps = " << numFullOps << ", numRemaining = " << numRemaining << std::endl;
   //read and write binary files in chunks
   for ( i=0; i<numFullOps; i++ ) {
@@ -1648,6 +1769,7 @@ int ViewerCtlr::doCsvExport ( void ) {
 
 }
 
+
 int ViewerCtlr::doUff58bExport ( void ) {
 
   if ( !haveHeader ) {
@@ -1691,21 +1813,36 @@ int ViewerCtlr::doUff58bExport ( void ) {
     // build a string containing just the binary file name without the directory
     QString simpleName = FileUtil::extractFileName( binFile );
     simpleName = simpleName + "." + Cnst::BinExtension.c_str();
-  
-    // get min time
-    double minTime = mainWindow->exportDialog->startTimeValInSec;
-    double maxTime = mainWindow->exportDialog->endTimeValInSec;
+
+    double minT=0, maxT=0;
+    unsigned long minByte=0, maxByte=0;
+
+    if ( mainWindow->exportDialog->exportRange == "From Selection" ) {
+    
+      // get min and max time
+      minT = mainWindow->exportDialog->startTimeValInSec;
+      maxT = mainWindow->exportDialog->endTimeValInSec;
+
+      // get min and max rec number corresponding to min and max time
+      st = bd->getRecordRangeForTime( binFile, sampleRate, minT, maxT,
+                                      minByte, maxByte );
+
+    }
+    else {
+
+      unsigned long maxEle;
+      bd->getMaxElements ( binFile, 0, maxEle );
+      minByte = 0;
+      maxByte = maxEle * sizeof(int) - 1;
+
+    }
+
     double timeInc = 1.0 / sampleRate;
+    unsigned long recRange = maxByte - minByte + 1;
+    minT = minByte / sizeof(int) / sampleRate;
 
-    // get min and max rec number corresponding to min and max time
-    unsigned long minByte, maxByte;
-    st = bd->getRecordRangeForTime( binFile, sampleRate, minTime, maxTime,
-                                    minByte, maxByte );
-    unsigned long recRange = maxByte - minByte;
-    minTime = minByte / sizeof(int) / sampleRate;
-
-    //std::cout << "minTime = " << minTime << std::endl;
-    //std::cout << "maxTime = " <<  maxTime << std::endl;
+    //std::cout << "minT = " << minT << std::endl;
+    //std::cout << "maxT = " <<  maxT << std::endl;
     //std::cout << "minByte = " <<  minByte << std::endl;
     //std::cout << "maxByte = " <<  maxByte << std::endl;
     //std::cout << "recRange (ele) = " << recRange/sizeof(int) << std::endl;
@@ -1740,7 +1877,7 @@ int ViewerCtlr::doUff58bExport ( void ) {
     //int ordinateDataType = 6; int eleSize = sizeof(double) * 2; // double prec complex
     //int abscissaSpacing = 0; // uneven
     int abscissaSpacing = 1; // even
-    st = uff58b->setDataForm( ordinateDataType, recRange/eleSize, abscissaSpacing, minTime, timeInc, 0.0 );
+    st = uff58b->setDataForm( ordinateDataType, recRange/eleSize, abscissaSpacing, minT, timeInc, 0.0 );
 
     int lenUnitsExponent, forceUnitsExponent, tempUnitsExponent;
 
@@ -1863,6 +2000,22 @@ void ViewerCtlr::haveHorizontalPan (int id, int curSigIndex, QString& curFileNam
 
 }
 
+void ViewerCtlr::haveFullScale (int id, int curSigIndex, QString& curFileName ) {
+
+  //std::cout << "have Full Scale - id = " << id << ", cur sig index = " << curSigIndex <<
+  //  ", cur file = " << curFileName.toStdString() << std::endl;
+
+  ViewerGraphBase *vg = qobject_cast<ViewerGraphBase *>(sender());
+  ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>( vg->parent1 );
+
+  if ( ( curSigIndex >= 0 ) && ( curSigIndex <= Cnst::MaxSigIndex ) ) {
+    prevSigIndex[vga->id] = curSigIndex;
+    int request = ViewerCtlr::HaveFullScaleRequest;
+    dataRequestList.push_back( std::make_tuple( request, vga, curSigIndex, curFileName ) );
+  }
+
+}
+
 void ViewerCtlr::haveScale (int id, int curSigIndex, QString& curFileName,
                             double x0, double x1, double y0, double y1 ) {
 
@@ -1876,9 +2029,24 @@ void ViewerCtlr::haveScale (int id, int curSigIndex, QString& curFileName,
 
   if ( ( curSigIndex >= 0 ) && ( curSigIndex <= Cnst::MaxSigIndex ) ) {
     prevSigIndex[vga->id] = curSigIndex;
-    //haveScaleRequest = true;
     int request = ViewerCtlr::HaveScaleRequest;
     dataRequestList.push_back( std::make_tuple( request, vga, curSigIndex, curFileName ) );
+  }
+
+}
+
+void ViewerCtlr::nonSlotHaveScale ( ViewerGraphAreaBase *vga, int curSigIndex, QString& curFileName,
+                            double x0, double x1, double y0, double y1 ) {
+
+  if ( ( curSigIndex >= 0 ) && ( curSigIndex <= Cnst::MaxSigIndex ) ) {
+
+    nonSlotHavScaleX0 = x0;
+    nonSlotHavScaleX1 = x1;
+
+    prevSigIndex[vga->id] = curSigIndex;
+    int request = ViewerCtlr::HaveNonSlotScaleRequest;
+    dataRequestList.push_back( std::make_tuple( request, vga, curSigIndex, curFileName ) );
+    
   }
 
 }
@@ -1889,6 +2057,7 @@ void ViewerCtlr::haveRubberBandScale (int id, int curSigIndex, QString& curFileN
   //  ", cur file = " << curFileName.toStdString() << std::endl;
 
   double  x0, x1, y0, y1;
+  
   ViewerGraphBase *vg = qobject_cast<ViewerGraphBase *>(sender());
   vg->getAxesLimits( x0, y0, x1, y1 );
   vg->views.pushView( x0, y0, x1, y1 );
@@ -1970,12 +2139,12 @@ void ViewerCtlr::selectionRange ( int vgaId, double xMin, double xMax ) {
   if ( xMin < 0.0 ) xMin = 0.0;
 
   if ( haveDataForFft ) {
-    double minTime=0, maxTime=0;
+    double minT=0, maxT=0;
     QString binFile = FileUtil::makeBinFileName( dh.get(), this->fileName, 0 );
-    int st = bd->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
+    int st = bd->getDataFullTimeRange( binFile, sampleRate, minT, maxT );
     if ( !st ) {
-      if ( xMax > maxTime ) xMax = maxTime;
-      if ( xMin < minTime ) xMin = minTime;
+      if ( xMax > maxT ) xMax = maxT;
+      if ( xMin < minT ) xMin = minT;
     }
   }
   
@@ -2127,17 +2296,17 @@ void ViewerCtlr::sliderValue( QWidget *w, int value ) {
 
   double range = chartXMax - chartXMin;
   double dataTimeIncrementInSec = 1.0 / sampleRate;
-  double maxTime = (double) curMaxElements * dataTimeIncrementInSec;
-  double minTime = (double) value / 100.0 * maxTime;
-  if ( minTime < 0.0 ) {
-    minTime -= 0.0;
+  double maxT = (double) curMaxElements * dataTimeIncrementInSec;
+  double minT = (double) value / 100.0 * maxT;
+  if ( minT < 0.0 ) {
+    minT -= 0.0;
   }
-  else if ( minTime > maxTime ) {
-    minTime = maxTime;
+  else if ( minT > maxT ) {
+    minT = maxT;
   }
 
-  double newChartXMin = minTime;
-  double newChartXMax = minTime + range;
+  double newChartXMin = minT;
+  double newChartXMax = minT + range;
 
   vga->graph->setAxesLimits(  newChartXMin, chartYMin, newChartXMax, chartYMax );
 
@@ -2158,11 +2327,17 @@ void ViewerCtlr::setSlider( QWidget *w ) {
   if ( vga->graph->isEmpty ) return;
 
   double dataTimeIncrementInSec = 1.0 / sampleRate;
-  double maxTime = (double) curMaxElements * dataTimeIncrementInSec;
+  double maxT = (double) curMaxElements * dataTimeIncrementInSec;
   vga->graph->getAxesLimits( chartXMin, chartYMin, chartXMax, chartYMax );
 
-  vga->curSliderValue = (int) ( chartXMin / maxTime * 100.0 );
+  vga->curSliderValue = (int) ( chartXMin / maxT * 100.0 );
 
   vga->slider->setValue( vga->curSliderValue );
 
+}
+
+void ViewerCtlr::lockTimeScaleEvent( bool flag ) {
+
+  lockTimeScale = flag;
+  
 }

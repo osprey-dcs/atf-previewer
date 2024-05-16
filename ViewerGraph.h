@@ -96,6 +96,7 @@ signals:
                       double minX, double maxX, double minY, double maxY );
   void verticalPan( int id, int curSigIndex, QString& curFileName,
                     double minX, double maxX, double minY, double maxY );
+  void fullScale( int id, int curSigIndex, QString& curFileName );
   void scale( int id, int curSigIndex, QString& curFileName,
               double minX, double maxX, double minY, double maxY );
   void reset( int id, int curSigIndex, QString& curFileName );
@@ -109,6 +110,7 @@ private slots:
 
 private:
   bool inside( int x, int y );
+  void zoomFullScale ( void );
   void zoomIn ( double zoomDistX, double zoomDistY );
   void zoomOut ( double zoomDistX, double zoomDistY );
   void panHorizontal ( double panDist );

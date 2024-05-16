@@ -75,7 +75,9 @@ public:
   static const int HaveRubberBandScaleRequest = 5;
   static const int HaveFftRequest = 6;
   static const int HavePrevViewRequest = 7;
-  
+  static const int HaveNonSlotScaleRequest = 8;
+  static const int HaveFullScaleRequest = 9;
+
   //                   request  widget               signal   filename
   //                                                 index
   std::list<std::tuple<int,     ViewerGraphAreaBase *,   int,     QString>> dataRequestList;
@@ -108,6 +110,12 @@ public:
   ViewerGraphAreaBase *lastDataRequestGraphArea;
   ViewerGraphAreaBase *fftVga;
   //Uff58bExport *uff58bExport;
+  double curTimeMinimum;
+  double curTimeMaximum;
+  bool haveCurTimeRange;
+  bool lockTimeScale;
+
+  double nonSlotHavScaleX0, nonSlotHavScaleX1;
 
   ViewerCtlr ( QSharedPointer<ViewerMainWin> mainWin );
   virtual ~ViewerCtlr ();
@@ -125,6 +133,7 @@ public:
   bool allZero ( const QRectF& r );
   bool allNonZero ( const QRectF& r );
   bool arrayAllNonZero ( const QRectF r[], int n );
+  void nonSlotHaveScale (  ViewerGraphAreaBase *vga, int, QString&, double, double, double, double );
 
 public slots:
   void dimension ( double, double, double, double );
@@ -135,6 +144,7 @@ public slots:
   int doCsvExport( void );
   int doUff58bExport( void );
   void haveHorizontalPan ( int, int, QString&, double, double, double, double );
+  void haveFullScale ( int, int, QString& );
   void haveScale ( int, int, QString&, double, double, double, double );
   void haveReset ( int, int, QString& );
   void haveRubberBandScale( int, int, QString& );
@@ -144,6 +154,7 @@ public slots:
   void selectionRange ( int, double, double );
   void sliderValue( QWidget *, int );
   void setSlider( QWidget *vga );
+  void lockTimeScaleEvent( bool );
 
 };
 

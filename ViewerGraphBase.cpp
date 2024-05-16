@@ -224,6 +224,10 @@ void ViewerGraphBase::performAction ( QAction *a ) {
 
 }
 
+void ViewerGraphBase::zoomFullScale ( void ) {
+    
+}
+
 void ViewerGraphBase::zoomIn ( double zoomDistX, double zoomDistY ) {
     
 }

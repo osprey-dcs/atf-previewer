@@ -86,16 +86,16 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   gl->addLayout( hl1, 5, 1, Qt::AlignLeft );
   gl->addLayout( hl2, 5, 2, Qt::AlignLeft );
 
-  menuButton = new QPushButton( "Out File Type" );
-  exportFormatMenu = new QMenu( menuButton );
+  exportFormatMenuButton = new QPushButton( "Out File Type" );
+  exportFormatMenu = new QMenu( exportFormatMenuButton );
   uff58bAction = new QAction( "&UFF58b");
   exportFormatMenu->addAction( uff58bAction );
   csvAction = new QAction( "&CSV");
   exportFormatMenu->addAction( csvAction );
-  menuButton->setMenu( exportFormatMenu );
+  exportFormatMenuButton->setMenu( exportFormatMenu );
   exportFormatLabel = new QLabel( "..." );
 
-  hl1->addWidget( menuButton );
+  hl1->addWidget( exportFormatMenuButton );
   hl2->addWidget( exportFormatLabel );
   hl2->addStretch( 7 );
 
@@ -104,8 +104,29 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   hl1 = new QHBoxLayout();
   hl2 = new QHBoxLayout();
 
-  gl->addLayout( hl1, 6, 1, Qt::AlignTop );
+  gl->addLayout( hl1, 6, 1, Qt::AlignLeft );
   gl->addLayout( hl2, 6, 2, Qt::AlignLeft );
+
+  exportRangeMenuButton = new QPushButton( "Export Range" );
+  exportRangeMenu = new QMenu( exportRangeMenuButton );
+  fromSelectionAction = new QAction( "&From Selection");
+  exportRangeMenu->addAction( fromSelectionAction );
+  allAction = new QAction( "&All Data");
+  exportRangeMenu->addAction( allAction );
+  exportRangeMenuButton->setMenu( exportRangeMenu );
+  exportRangeLabel = new QLabel( "..." );
+
+  hl1->addWidget( exportRangeMenuButton );
+  hl2->addWidget( exportRangeLabel );
+  hl2->addStretch( 7 );
+
+  // ----------------------------------------------
+
+  hl1 = new QHBoxLayout();
+  hl2 = new QHBoxLayout();
+
+  gl->addLayout( hl1, 7, 1, Qt::AlignTop );
+  gl->addLayout( hl2, 7, 2, Qt::AlignLeft );
 
   chanSelectLabel = new QLabel( "Channels");
   chanSelectTextEdit = new QTextEdit( this );
@@ -119,8 +140,8 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   hl1 = new QHBoxLayout();
   hl2 = new QHBoxLayout();
 
-  gl->addLayout( hl1, 7, 1, Qt::AlignLeft );
-  gl->addLayout( hl2, 7, 2, Qt::AlignLeft );
+  gl->addLayout( hl1, 8, 1, Qt::AlignLeft );
+  gl->addLayout( hl2, 8, 2, Qt::AlignLeft );
 
   ok = new QPushButton( "OK" );
   cancel = new QPushButton( "Cancel" );
@@ -149,6 +170,9 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   if ( up->getString( "ExportFormat", exportFormat ) ) exportFormat = "";
   exportFormatLabel->setText( exportFormat );
 
+  if ( up->getString( "ExportRange", exportRange ) ) exportRange = "";
+  exportRangeLabel->setText( exportRange );
+  
   if ( up->getString( "chanSelect", chanSelect ) ) chanSelect = "";
   chanSelectTextEdit->setPlainText( chanSelect );
 
@@ -170,6 +194,12 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
            this, SLOT( performAction( bool ) ) );
 
   connect( uff58bAction, SIGNAL( triggered( bool ) ),
+           this, SLOT( performAction( bool ) ) );
+
+  connect( fromSelectionAction, SIGNAL( triggered( bool ) ),
+           this, SLOT( performAction( bool ) ) );
+
+  connect( allAction, SIGNAL( triggered( bool ) ),
            this, SLOT( performAction( bool ) ) );
 
   connect( chanSelectTextEdit, SIGNAL( textChanged( void ) ),
@@ -233,6 +263,26 @@ void ExportDialog::performAction( bool checked ) {
     QString newFile = dir + name + "." + Cnst::uff58aExtension.c_str();
     fileNameLineEdit->setText( newFile );
     fileNameLineEdit->update();
+    
+  }
+
+  else if ( action == fromSelectionAction ) {
+    
+    exportRangeLabel->setText( "From Selection" );
+    up->setString( "ExportRange", "From Selection" );
+    up->update();
+
+    exportRange = "From Selection";
+    
+  }
+
+  else if ( action == allAction ) {
+    
+    exportRangeLabel->setText( "All Data" );
+    up->setString( "ExportRange", "All Data" );
+    up->update();
+
+    exportRange = "All Data";
     
   }
 
