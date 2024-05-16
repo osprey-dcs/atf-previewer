@@ -61,19 +61,20 @@ ViewerGraphArea::ViewerGraphArea( int _id, QWidget *_parent ) : ViewerGraphAreaB
   this->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
 
   vlayout->addLayout( hlayout.data() );
-  hlayout->addWidget( sigLabel.data() );
-  hlayout->addWidget( sigName.data() );
-  hlayout->addWidget( calcFft.data() );
-  hlayout->addWidget( lockTimeScale.data() );
+  hlayout->addWidget( sigLabel.data(), 0 );
+  hlayout->addWidget( sigName.data(), 0 );
+  sigName->setMinimumWidth( 250 );
+  hlayout->addWidget( calcFft.data(), 0 );
+  hlayout->addWidget( lockTimeScale.data(), 0 );
   
   hlayout->addSpacing( 100 );
-  hlayout->addWidget( exportSelection.data() );
+  hlayout->addWidget( exportSelection.data(), 0 );
   hlayout->addSpacing( 20 );
-  hlayout->addWidget( selectionXMin.data() );
+  hlayout->addWidget( selectionXMin.data(), 0 );
   hlayout->addSpacing( 20 );
-  hlayout->addWidget( selectionXMax.data() );
-  hlayout->addStretch( 1 );
-  hlayout->addWidget( mousePos.data() );
+  hlayout->addWidget( selectionXMax.data(), 0 );
+  hlayout->addStretch( 1000 );
+  hlayout->addWidget( mousePos.data(), 0 );
   
   vlayout->addLayout( hlayout2.data() );
   hlayout2->addWidget( slider.data() );

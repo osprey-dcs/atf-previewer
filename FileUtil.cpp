@@ -140,12 +140,15 @@ QString FileUtil::makeBinFileName( DataHeader *dh, const QString& hdrName, int s
   //QString binFile = binDir + FileUtil::extractFileName( hdrName ) + "-Sig" +
   //  QString::number( sigIndex ) + ".dat";
 
-  std::stringstream strm;
-  strm << FileUtil::extractDir( hdrName ).toStdString() <<
-    FileUtil::extractFileName( hdrName ).toStdString() << "-Chan" <<
-    std::setw(4) << std::setfill( '0' ) << sigIndex+1 << "." << Cnst::BinExtension;
+  DataHeader::DataHeaderIndexMapType indexMap = dh->getIndexMap();
+  QString binFile = std::get<DataHeader::DATA_FILENAME>( indexMap[sigIndex] );
+  
+  //std::stringstream strm;
+  //strm << FileUtil::extractDir( hdrName ).toStdString() <<
+  //  FileUtil::extractFileName( hdrName ).toStdString() << "-Chan" <<
+  //  std::setw(4) << std::setfill( '0' ) << sigIndex << "." << Cnst::BinExtension;
 
-  QString binFile( strm.str().c_str() );
+  //QString binFile( strm.str().c_str() );
 
   //std::cout << "FileUtil::makeBinFileName, binFile = " << binFile.toStdString() << std::endl;
 

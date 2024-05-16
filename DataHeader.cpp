@@ -332,7 +332,8 @@ int DataHeader::getString(const QString &s, QString& qs ) {
              jv1["ReferenceDirection"].toDouble(),
              jv1["Coupling"].toDouble(),
              qjo["Chassis"].toDouble(),
-             qjo["Channel"].toDouble() );
+             qjo["Channel"].toDouble(),
+             jv1["OutDataFile"].toString() );
 
              sigs[jv1["Name"].toString()] = tp;
              sigNameList.push_back( jv1["Name"].toString() );
@@ -353,8 +354,9 @@ int DataHeader::getString(const QString &s, QString& qs ) {
              jv1["ReferenceDirection"].toDouble(),
              jv1["Coupling"].toDouble(),
              qjo["Chassis"].toDouble(),
-             qjo["Channel"].toDouble() );
-                
+             qjo["Channel"].toDouble(),
+             jv1["OutDataFile"].toString() );
+
              sigsByIndex[jv1["SigNum"].toDouble()] = tp1;
 
         }
