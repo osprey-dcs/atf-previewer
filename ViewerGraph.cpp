@@ -154,6 +154,11 @@ ViewerGraph::ViewerGraph( int _id, DataType _dataType, QWidget *_parent ) :
     qrb->installEventFilter( this );
   }
 
+  lastXMin = 0;
+  lastXMax = 0;
+  lastYMin = 0;
+  lastYMax = 0;
+
 }
 
 ViewerGraph::~ViewerGraph( ) {
@@ -230,10 +235,10 @@ void ViewerGraph::getAxesLimits( double& x0, double &y0,
   auto yAxes = chart->axes(Qt::Vertical, qls );
 
   QtCharts::QValueAxis *xAxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
-  QtCharts::QValueAxis *yAxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
-
   x0 = xAxis->min();
   x1 = xAxis->max();
+
+  QtCharts::QValueAxis *yAxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
   y0 = yAxis->min();
   y1 = yAxis->max();
 
@@ -262,12 +267,16 @@ void ViewerGraph::setAxesLimits( double x0, double y0,
   //          << ", max = " << max << ", ticks = " << ticks << std::endl << std::endl;
   xValAxis->setRange( min, max );
   xValAxis->setTickCount( ticks );
+  lastXMin = min;
+  lastXMax = max;
 
   getBetterAxesParams( y0, y1, 2, min, max, ticks, adjScales );
   //std::cout << "1   y0 = " << y0 << ", y1 = " << y1 << ", 2 = " << 2
   //          << ", min = " << min << ", max = " << max << ", ticks = " << ticks << std::endl << std::endl;
   yValAxis->setRange( min, max );
   yValAxis->setTickCount( ticks );
+  lastYMin = min;
+  lastYMax = max;
 
   //xValAxis->setRange( x0, x1 );
   //xValAxis->setTickCount( 2 );
@@ -282,10 +291,27 @@ void ViewerGraph::setAxesLimits( double x0, double y0,
 
 }
 
+void ViewerGraph::getPlotPos( double& x0, double& y0, double& x1, double& y1 ) {
+
+  //x0 = (double) this->chart->plotArea().x();
+  //y0 = (double) this->chart->plotArea().y();
+  //x1 = (double) this->chart->plotArea().x() + (double) this->chart->plotArea().size().width();
+  //y1 = (double) this->chart->plotArea().y() + (double) this->chart->plotArea().size().height();
+
+  x0 = (double) this->chart->pos().x();
+  y0 = (double) this->chart->pos().y();
+  x1 = (double) this->chart->pos().x() + (double) this->chart->size().width();
+  y1 = (double) this->chart->pos().y() + (double) this->chart->size().height();
+
+}
+
 void ViewerGraph::getPlotSize( double& w, double &h ) {
 
-  w = (double) this->chart->plotArea().width();
-  h = (double) this->chart->plotArea().height();
+  //w = (double) this->chart->plotArea().size().width();
+  //h = (double) this->chart->plotArea().size().height();
+
+  w = (double) this->chart->size().width();
+  h = (double) this->chart->size().height();
 
 }
 
@@ -343,6 +369,9 @@ void ViewerGraph::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QStri
   //QtCharts::QValueAxis *xaxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
   xaxis->setRange( newMinX, newMaxX );
   xaxis->setTickCount( newXTicks );
+  lastXMin = newMinX;
+  lastXMax = newMaxX;
+
 
   getBetterAxesParams( minY, maxY, 5, newMinY, newMaxY, newYTicks, adjScales );
   //std::cout << "2   minY = " << minY << ", maxY = " << maxY << ", 5 = " << 5
@@ -352,6 +381,8 @@ void ViewerGraph::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QStri
   yaxis->setRange( newMinY, newMaxY );
   yaxis->setTickCount( newYTicks );
   yaxis->setTitleText( this->yTitle );
+  lastYMin = newMinY;
+  lastYMax = newMaxY;
   //std::cout << "this->yTitle = [" << this->yTitle.toStdString() << "]" << std::endl;
 
 
@@ -404,6 +435,8 @@ void ViewerGraph::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QStri
   //QtCharts::QValueAxis *xaxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
   xaxis->setRange( newMinX, newMaxX );
   xaxis->setTickCount( newXTicks );
+  lastXMin = newMinX;
+  lastXMax = newMaxX;
 
   //std::cout << "this->yTitle = " << this->yTitle.toStdString() << std::endl;
   yaxis->setTitleText( this->yTitle );
@@ -451,6 +484,8 @@ void ViewerGraph::setEmptySeries ( QtCharts::QLineSeries *newQls ) {
   if ( xaxis ) {
     xaxis->setRange( Cnst::InitialMinTime, Cnst::InitialMaxTime );
     xaxis->setTickCount( 2 );
+    lastXMin = Cnst::InitialMinTime;
+    lastXMax = Cnst::InitialMaxTime;
   }
 
   QtCharts::QValueAxis *yaxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
@@ -458,6 +493,9 @@ void ViewerGraph::setEmptySeries ( QtCharts::QLineSeries *newQls ) {
     yaxis->setRange( Cnst::InitialMinSig, Cnst::InitialMaxSig );
     yaxis->setTickCount( 2 );
     yaxis->setTitleText( "" );
+    lastYMin = Cnst::InitialMinSig;
+    lastYMax = Cnst::InitialMaxSig;
+
   }
 
   parent1->update();
@@ -734,13 +772,68 @@ void ViewerGraph::keyPressEvent( QKeyEvent *ev ) {
 
   if ( isEmpty ) return;
   
-  if ( ev->key() == 0x1000020 ) {
+  if ( ev->key() == Qt::Key_Shift ) { // 0x1000020 ) {
     shiftState = true;
   }
-  else if ( ev->key() == 0x1000021 ) {
+  else if ( ev->key() == Qt::Key_Control ) { // 0x1000021 ) {
     ctrlState = true;
   }
+  else if ( ev->key() == Qt::Key_Return ) {
+
+    emit scaleToSelection();
+
+  }
+  else if ( ev->key() == Qt::Key_Right ) {
+
+    if ( shiftState ) {
+    
+      if ( ctrlState ) {
+        emit rightBigInc( 1 );
+      }
+      else {
+        emit rightInc( 1 );
+      }
+
+    }
+    else {
+
+      if ( ctrlState ) {
+        emit leftBigInc( 1 );
+      }
+      else {
+        emit leftInc( 1 );
+      }
+
+    }
+    
+  }
+  else if ( ev->key() == Qt::Key_Left ) {
+
+    if ( shiftState ) {
+    
+      if ( ctrlState ) {
+        emit rightBigInc( -1 );
+      }
+      else {
+        emit rightInc( -1 );
+      }
+
+    }
+    else {
+
+      if ( ctrlState ) {
+        emit leftBigInc( -1 );
+      }
+      else {
+        emit leftInc( -1 );
+      }
+
+    }
+
+  }
+  
   QtCharts::QChartView::keyPressEvent( ev );
+
 }
 
 void ViewerGraph::keyReleaseEvent( QKeyEvent *ev ) {
@@ -1112,107 +1205,3 @@ int imag, inorm, imin, imax, inc1, inc2, inc5, imin1, imax1,
   num_label_ticks = idiv + 1;
 
 }
-
-//void ViewerGraph::getBetterAxesParams ( double min, double max, int ticks,
-//                                        double& newMin, double& newMax, int& newTicks ) {
-//
-//  double diff;
-//  double min1;
-//  double max1;
-//  double ticks1;
-//
-//  std::cout << "getBetterAxesParams" << std::endl;
-//  std::cout << "min = " << min << std::endl;
-//  std::cout << "max = " << max << std::endl;
-//  //std::cout << "ticks = " << ticks << std::endl;
-//
-//
-//  diff = log10( max - min );
-//  std::cout << "diff = " << diff << std::endl;
-//  diff = floor( log10( max - min ) );
-//  std::cout << "floor diff = " << diff << std::endl;
-//  
-//  min1 = floor( min / pow( 10.0, diff ) ) * pow( 10.0, diff );
-//  std::cout << "min1 = " << min1 << std::endl;
-//  if ( min1 > min ) {
-//    min1 = min1 - pow( 10.0, diff );
-//  }
-//
-//  max1 = ceil( max / pow( 10.0, diff ) ) * pow( 10.0, diff );
-//  std::cout << "max1 = " << max1 << std::endl;
-//  if ( max1 < max ) {
-//    max1 = max1 + pow( 10.0, diff );
-//  }
-//
-//  double fact =  pow( 10.0, diff );
-//  double div = ( max1 - min1 ) / fact;
-//
-//  std::cout << "fact = " << fact << std::endl;
-//  std::cout << "div = " << div << std::endl;
-//
-//  if ( div >= 9 ) {
-//    max1 = min1 + 10.0 * fact;
-//    ticks1 = 5;
-//  }
-//  else if ( div > 8 ) {
-//    max1 = min1 + 10.0 * fact;
-//    ticks1 = 5;
-//  }
-//  else if ( div == 8 ) {
-//    max1 = min1 + 8.0 * fact;
-//    ticks1 = 4;
-//  }
-//  else if ( div >= 7 ) {
-//    max1 = min1 + 8.0 * fact;
-//    ticks1 = 4;
-//  }
-//  else if ( div > 6 ) {
-//    max1 = min1 + 8.0 * fact;
-//    min1 = min1 - fact;
-//    ticks1 = 6;
-//  }
-//  else if ( div > 5 ) {
-//    max1 = min1 + 6.0 * fact;
-//    ticks1 = 6;
-//  }
-//  else if ( div > 4 ) {
-//    max1 = min1 + 5.0 * fact;
-//    ticks1 = 5;
-//  }
-//  else if ( div > 3 ) {
-//    max1 = min1 + 4.0 * fact;
-//    ticks1 = 4;
-//  }
-//  else if ( div > 2 ) {
-//    max1 = min1 + 3.0 * fact;
-//    ticks1 = 3;
-//  }
-//  else if ( div > 1 ) {
-//    max1 = min1 + 2.0 * fact;
-//    ticks1 = 2;
-//  }
-//  else {  
-//    max1 = min1 + 1.0 * fact;
-//    ticks1 = 5;
-//  }
-//
-//  std::cout << "final min1 = " << min1 << std::endl;
-//  std::cout << "final max1 = " << max1 << std::endl;
-//  std::cout << "final ticks1 = " << ticks1 << std::endl;
-//
-//  ticks1++;
-//
-//  double inc = ( max1 - min1 ) / (ticks1-1);
-//  double val = min1;
-//  for ( int i=0; i<ticks1; i++ ) {
-//    std::cout << val << "   ";
-//    val += inc;
-//  }
-//  std::cout << std::endl;
-//    
-//
-//  newMin = min1;
-//  newMax = max1;
-//  newTicks = ticks1;
-//  
-//}

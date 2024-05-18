@@ -79,6 +79,8 @@ add_executable(viewer main.cpp
         Uff58bExport.h
         CsvExport.cpp
         CsvExport.h
+        RoiSelector.cpp
+        RoiSelector.h
 )
 
 include_directories(/usr/include/c++/10

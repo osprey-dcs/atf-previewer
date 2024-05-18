@@ -33,87 +33,6 @@ ViewerGraphBase::ViewerGraphBase( int _id, DataType _dataType, QWidget *_parent 
   parent1 = _parent;
   dataType = _dataType;
 
-//  qls = new QtCharts::QLineSeries();
-//
-//  QPen pen( QRgb( 0x000000 ));
-//  pen.setWidth( 1 );
-//  qls->setPen( pen );
-//
-//  chart = QSharedPointer<ViewerChart>( new ViewerChart() );
-//  QMargins m( 0, 0, 0, 0 );
-//  chart->setMargins( m );
-//  chart->legend()->hide();
-//  chart->setParent( dynamic_cast<QObject*>(this) );
-//  chart->addSeries( qls );
-//
-//  this->setRenderHint( QPainter::Antialiasing );
-//  this->setChart( chart.data() );
-//
-//  w = 200;
-//  h = 100;
-//  this->setMinimumSize( w, h );
-//  this->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
-//
-//  this->setRubberBand( QtCharts::QChartView::RectangleRubberBand );
-//
-//  this->curX = this->curY = 0;
-//  this->popupMenu = QSharedPointer<QMenu>( new QMenu() );
-//  
-//  prevViewAction = QSharedPointer<QAction>( new QAction( "&Previous" ) );
-//  prevViewAction->setEnabled( false );
-//  this->popupMenu->addAction( prevViewAction.data() );
-//
-//  this->popupMenu->addSeparator();
-//
-//  zoomInAction = QSharedPointer<QAction>( new QAction( "Zoom In" ) );
-//  this->popupMenu->addAction( zoomInAction.data() );
-//  
-//  zoomOutAction = QSharedPointer<QAction>( new QAction( "Zoom Out" ) );
-//  this->popupMenu->addAction( zoomOutAction.data() );
-//  
-//  zoomXInAction = QSharedPointer<QAction>( new QAction( "Zoom In X" ) );
-//  this->popupMenu->addAction( zoomXInAction.data() );
-//  
-//  zoomXOutAction = QSharedPointer<QAction>( new QAction( "Zoom Out X" ) );
-//  this->popupMenu->addAction( zoomXOutAction.data() );
-//  
-//  zoomYInAction = QSharedPointer<QAction>( new QAction( "Zoom In Y" ) );
-//  this->popupMenu->addAction( zoomYInAction.data() );
-//  
-//  zoomYOutAction = QSharedPointer<QAction>( new QAction( "Zoom Out Y" ) );
-//  this->popupMenu->addAction( zoomYOutAction.data() );
-//  
-//  panRightAction = QSharedPointer<QAction>( new QAction( "Pan Right" ) );
-//  this->popupMenu->addAction( panRightAction.data() );
-//  
-//  panLeftAction = QSharedPointer<QAction>( new QAction( "Pan Left" ) );
-//  this->popupMenu->addAction( panLeftAction.data() );
-//  
-//  panUpAction = QSharedPointer<QAction>( new QAction(   "Pan Up" ) );
-//  this->popupMenu->addAction( panUpAction.data() );
-//  
-//  panDownAction = QSharedPointer<QAction>( new QAction( "Pan Down" ) );
-//  this->popupMenu->addAction( panDownAction.data() );
-//  
-//  this->popupMenu->addSeparator();
-//
-//  resetAction = QSharedPointer<QAction>( new QAction( "&Reset" ) );
-//  this->popupMenu->addAction( resetAction.data() );
-//
-//  connect( this->popupMenu.data(), SIGNAL( triggered( QAction * ) ),
-//           this, SLOT( performAction( QAction * ) ) );
-//  
-//  isEmpty = true;
-//  curSigIndex = -1;
-//
-//  qrb = this->findChild<QRubberBand *>();
-//  if ( !qrb ) {
-//    std::cout << "cannot find qrb" << std::endl;
-//  }
-//  else {
-//    qrb->installEventFilter( this );
-//  }
-
 }
 
 ViewerGraphBase::~ViewerGraphBase( ) {
@@ -141,6 +60,10 @@ void ViewerGraphBase::setAxesLimits( double x0, double y0,
 }
 
 void ViewerGraphBase::getPlotSize( double& w, double &h ) {
+
+}
+
+void ViewerGraphBase::getPlotPos( double& x0, double& y0, double& x1, double& y1 ) {
 
 }
 

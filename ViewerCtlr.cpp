@@ -119,7 +119,9 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
   this->curTimeMaximum = 0;
 
   this->lockTimeScale = false;
-  
+
+  roiX0 = roiX1 = 0.0;
+
   // Main window dimension change requires replotting all signals
   // (I might not need this)
   this->connect( mainw.data(), SIGNAL( dimensionChange( double, double, double, double ) ),
@@ -144,7 +146,7 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
       this->connect( vga->sigName.data(), SIGNAL( activated1( int, int, QWidget * ) ),
                      this, SLOT( sigNameChange1( int, int, QWidget * ) ) );
       
-      this->connect( w->graph.data(), SIGNAL( fullScale( int, int, QString& ) ),
+      this->connect( vga->graph.data(), SIGNAL( fullScale( int, int, QString& ) ),
                      this, SLOT( haveFullScale( int, int, QString& ) ) );
 
       this->connect( vga, SIGNAL( enableLockTimeScale( bool ) ),
@@ -177,11 +179,18 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
                    this, SLOT( selectionRange( int, double, double ) ) );
 
     if ( isTimeSeries( w ) ) {
+      
       ViewerGraphArea *vga = qobject_cast<ViewerGraphArea *>( w );
+      
       this->connect( vga->calcFft.data(), SIGNAL( pressed1( QWidget * ) ),
                      this, SLOT( haveDoCalcFft( QWidget * ) ) );
+      
       this->connect( vga->slider.data(), SIGNAL( valueChanged1( QWidget *, int ) ),
-                   this, SLOT( sliderValue( QWidget *, int ) ) );
+                     this, SLOT( sliderValue( QWidget *, int ) ) );
+
+      this->connect( vga, SIGNAL( vgaRoiSelectScale ( QWidget *, int, QString&, double, double ) ),
+                     this, SLOT( haveVgaRoiSelectScale ( QWidget *, int, QString&, double, double ) ) );
+      
     }
 
     // Plot area change is the result of window resize
@@ -508,7 +517,7 @@ void ViewerCtlr::process(void ) {
           
         // stop locking scales between initial signal display
         if ( ( request == HaveFullScaleRequest ) || ( !lockTimeScale ) ) this->haveCurTimeRange = false;
-        
+
         enableFftButton( grArea );
         lastDataRequestGraphArea = grArea;
 
@@ -561,7 +570,7 @@ void ViewerCtlr::process(void ) {
         QString qsdiscard, egudiscard;
         stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
         if ( stat ) {
-          std::cout << "getSigInfoBySigIndex failed" << std::endl;
+          std::cout << "getSigInfoBySigIndex failure" << std::endl;
         }
 
         //  file name, sig index, x scale width in pixels, start time in sec,
@@ -719,7 +728,7 @@ void ViewerCtlr::process(void ) {
           QString qsdiscard, egudiscard;
           stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
-            std::cout << "getSigInfoBySigIndex failed" << std::endl;
+            std::cout << "getSigInfoBySigIndex failure" << std::endl;
           }
         
           //  file name, sig index, x scale width in pixels, start time in sec,
@@ -848,7 +857,7 @@ void ViewerCtlr::process(void ) {
           QString qsdiscard, egudiscard;
           stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
-            std::cout << "getSigInfoBySigIndex failed" << std::endl;
+            std::cout << "getSigInfoBySigIndex failure" << std::endl;
           }
           
           //  file name, sig index, x scale width in pixels, start time in sec,
@@ -975,7 +984,7 @@ void ViewerCtlr::process(void ) {
           QString qsdiscard, egudiscard;
           stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
-            std::cout << "getSigInfoBySigIndex failed" << std::endl;
+            std::cout << "getSigInfoBySigIndex failure" << std::endl;
           }
           
           //  file name, sig index, x scale width in pixels, start time in sec,
@@ -1133,7 +1142,7 @@ void ViewerCtlr::process(void ) {
           QString qsdiscard, egudiscard;
           stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
-            std::cout << "getSigInfoBySigIndex failed" << std::endl;
+            std::cout << "getSigInfoBySigIndex failure" << std::endl;
           }
           
           //  file name, sig index, x scale width in pixels, start time in sec,
@@ -1162,6 +1171,89 @@ void ViewerCtlr::process(void ) {
           
           }
 
+        }
+
+        mainWindow->setWhat( "Idle" );
+        
+      }
+      else if ( ( request == ViewerCtlr::HaveRoiSelectScaleRequest ) && this->readyForData ) {
+
+        //std::cout << "ViewerCtlr::HaveRoiSelectScaleRequest" << std::endl;
+
+        enableFftButton( grArea );
+        lastDataRequestGraphArea = grArea;
+
+        double  x0, x1, y0, y1;
+        grArea->graph->getAxesLimits( x0, y0, x1, y1 );
+
+        x0 = this->roiX0;
+        x1 = this->roiX1;
+        
+        binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
+
+        double minTime, maxTime;
+        int st = bd->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
+        if ( !st ) {
+          x0 = std::fmax( x0, minTime );
+          x1 = std::fmin( x1, maxTime );
+        }
+        else {
+          std::cout << "Error " << st << " from getDataFullTimeRange\n";
+        }
+
+        this->haveCurTimeRange = true;
+        this->curTimeMinimum = x0;
+        this->curTimeMaximum = x1;
+
+        // get num of pixels in x
+        QSizeF size = grArea->graph->chart->size();
+
+        // save reqFileName before appending extension
+        grArea->setCurInfo( reqFileName, sigIndex );
+
+        binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
+
+        // Viewer graph object, setSeries function,  manages qls
+        QtCharts::QLineSeries *qls = new QtCharts::QLineSeries();
+        double miny, maxy;
+        double dataTimeIncrementInSec = 1.0 / sampleRate;
+
+        numFft = 0ul;
+        numPts = 0ul;
+        haveDataForFft = false;
+        
+        mainWindow->setWhat( "Reading file..." );
+    
+        QString qsdiscard, egudiscard;
+        stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
+        if ( stat ) {
+          std::cout << "getSigInfoBySigIndex failure" << std::endl;
+        }
+          
+        //  file name, sig index, x scale width in pixels, start time in sec,
+        //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
+        stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
+                                        dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
+        if ( !stat ) {
+          
+          mainWindow->setNumPoints( numPts );
+          
+          // Viewer graph object manages qls
+          grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1, y0, y1 );
+
+          if ( numFft ) {
+            haveDataForFft = true;
+          }
+
+          setSlider( grArea );
+
+        }
+        else {
+          
+          mainWindow->setNumPoints( 0ul );
+          delete qls; qls = nullptr;
+          std::cout << "genLineSeries failure" << std::endl;
+          
         }
 
         mainWindow->setWhat( "Idle" );
@@ -1220,7 +1312,7 @@ void ViewerCtlr::process(void ) {
           QString qsdiscard, egudiscard;
           stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
-            std::cout << "getSigInfoBySigIndex failed" << std::endl;
+            std::cout << "getSigInfoBySigIndex failure" << std::endl;
           }
           
           //  file name, sig index, x scale width in pixels, start time in sec,
@@ -1352,7 +1444,7 @@ void ViewerCtlr::process(void ) {
           QString qsdiscard, egudiscard;
           stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
-            std::cout << "getSigInfoBySigIndex failed" << std::endl;
+            std::cout << "getSigInfoBySigIndex failure" << std::endl;
           }
           
           //  file name, sig index, x scale width in pixels, start time in sec,
@@ -1676,7 +1768,7 @@ int ViewerCtlr::csvExport ( void ) {
     if ( !result ) {
       fbExport.close();
       closeAll( fbInput, numSignals-1 );
-      std::cout << "Open file " << binFile.toStdString() << " failed"  << std::endl;
+      std::cout << "Open file " << binFile.toStdString() << " failure"  << std::endl;
       return -1;
     }
     //std::cout << "input file " << binFile.toStdString() << " is open\n";
@@ -2087,6 +2179,33 @@ void ViewerCtlr::nonSlotHaveScale ( ViewerGraphAreaBase *vga, int curSigIndex, Q
     int request = ViewerCtlr::HaveNonSlotScaleRequest;
     dataRequestList.push_back( std::make_tuple( request, vga, curSigIndex, curFileName ) );
     
+  }
+
+}
+
+void ViewerCtlr::haveVgaRoiSelectScale ( QWidget *_vga, int curSigIndex, QString& curFileName,
+  double leftX, double rightX ) {
+
+  roiX0 = leftX;
+  roiX1 = rightX;
+
+  ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>( _vga );
+  ViewerGraphBase *vg = vga->graph.data();
+
+  //std::cout << "vga roi select scale - id = " << vga->id << ", cur sig index = " << curSigIndex <<
+  //  ", cur file = " << curFileName.toStdString() << std::endl;
+  //std::cout << "leftX = " << leftX << ", rightX = " << rightX << std::endl;
+
+  double  x0, x1, y0, y1;
+  
+  vg->getAxesLimits( x0, y0, x1, y1 );
+  vg->views.pushView( x0, y0, x1, y1 );
+  vg->prevViewAction->setEnabled( true );
+
+  if ( ( curSigIndex >= 0 ) && ( curSigIndex <= Cnst::MaxSigIndex ) ) {
+    prevSigIndex[vga->id] = curSigIndex;
+    int request = ViewerCtlr::HaveRoiSelectScaleRequest;
+    dataRequestList.push_back( std::make_tuple( request, vga, curSigIndex, curFileName ) );
   }
 
 }

@@ -49,6 +49,7 @@ public:
   void setAxesLimits( double x0, double y0,
                       double x1, double y1, bool adjScales = true );
   void getPlotSize( double& w, double& h );
+  void getPlotPos( double& x0, double& y0, double& x1, double& y1 );
   void setSeries ( QtCharts::QLineSeries *qls, int sigIndex, QString curFileName,
                    double minX, double maxX, double minY, double maxY, bool adjScales = true );
   void setSeries ( QtCharts::QLineSeries *qls, int sigIndex, QString curFileName,
@@ -59,37 +60,6 @@ public:
   void clear();
   bool eventFilter( QObject *watched, QEvent *event ) override;
   void getBetterAxesParams ( double, double, int, double&, double&, int&, bool adjScales = true  );
-
-  //int id, x, y, w, h;
-  //int rubberBandWidth;
-  //ScaleType scaleType;
-  //DataType dataType;
-  //bool shiftState, ctrlState;
-  //QWidget *parent1;
-  //QString yTitle;
-  //QSharedPointer<ViewerChart> chart;
-  //QSharedPointer<QtCharts::QAbstractAxis> axisX;
-  //QSharedPointer<QtCharts::QAbstractAxis> axisY;
-  //QtCharts::QLineSeries *qls; // I manage this memory
-  //int curX, curY;
-  //QSharedPointer<QMenu> popupMenu;
-  //QSharedPointer<QAction> resetAction;
-  //QSharedPointer<QAction> prevViewAction;
-  //QSharedPointer<QAction> zoomInAction;
-  //QSharedPointer<QAction> zoomOutAction;
-  //QSharedPointer<QAction> zoomXInAction;
-  //QSharedPointer<QAction> zoomXOutAction;
-  //QSharedPointer<QAction> zoomYInAction;
-  //QSharedPointer<QAction> zoomYOutAction;
-  //QSharedPointer<QAction> panLeftAction;
-  //QSharedPointer<QAction> panRightAction;
-  //QSharedPointer<QAction> panUpAction;
-  //QSharedPointer<QAction> panDownAction;
-  //bool isEmpty;
-  //int curSigIndex;
-  //QString curFileName;
-  //QRubberBand *qrb;
-  //ViewStack views;
 
 signals:
   void horizontalPan( int id, int curSigIndex, QString& curFileName,
@@ -104,6 +74,11 @@ signals:
   void rubberBandRange( int id, double xmin, double xmax );
   void prevView( int id, int curSigIndex, QString& curFileName );
   void mousePos( int id, double mouseX, double mouseY );
+  void scaleToSelection( void );
+  void leftInc ( int dir );
+  void leftBigInc ( int dir );
+  void rightInc ( int dir );
+  void rightBigInc ( int dir );
 
 private slots:
   void performAction( QAction *a );

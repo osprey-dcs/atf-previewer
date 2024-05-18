@@ -84,19 +84,31 @@ class ViewerGraphArea : public ViewerGraphAreaBase {
     double selectionXMinValue;
     QSharedPointer<QLabel> selectionXMax;
     double selectionXMaxValue;
+    QSharedPointer<QLabel> selectionDeltaX;
+    double selectionDeltaXValue;
     int curSigIndex;
     QString curFileName;
     QSharedPointer<ViewerCtlrPushButton> calcFft;
     QSharedPointer<QPushButton> lockTimeScale;
     bool lockTimeScaleState;
+    QSharedPointer<QPushButton> useRoiIndicators;
+    bool useRoiIndicatorsState;
+    QSharedPointer<RoiSelector> roiSelect;
     int curSliderValue;
 
 public slots:
   void performAction ( bool flag );
-
+  void roiSelectorChange( int id, int left, int right );
+  void doLeftInc( int dir );
+  void doLeftBigInc( int dir );
+  void doRightInc( int dir );
+  void doRightBigInc( int dir );
+  void doScaleToSelection( void );
+  
 signals:
   void enableLockTimeScale ( bool );
-
+  void vgaRoiSelectScale ( QWidget *vga, int, QString&, double, double );
+  
 };
 
 

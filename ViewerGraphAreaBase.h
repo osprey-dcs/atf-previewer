@@ -47,6 +47,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <QSharedPointer>
 
 #include "ViewerGraph.h"
+#include "RoiSelector.h"
 
 class ViewerGraphAreaBase : public QWidget {
 
@@ -75,6 +76,7 @@ class ViewerGraphAreaBase : public QWidget {
     QSharedPointer<QVBoxLayout> vlayout;
     QSharedPointer<QHBoxLayout> hlayout;
     QSharedPointer<ViewerGraphBase> graph;
+    QSharedPointer<RoiSelector> roiSelect;
 
     int curSigIndex;
     QString curFileName;

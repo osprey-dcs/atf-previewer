@@ -79,6 +79,7 @@ public:
   static const int HaveFullScaleRequest = 9;
   static const int HaveUff58bExportRequest = 10;
   static const int HaveCsvExportRequest = 11;
+  static const int HaveRoiSelectScaleRequest = 12;
 
   //                   request  widget               signal   filename
   //                                                 index
@@ -116,6 +117,8 @@ public:
 
   double nonSlotHavScaleX0, nonSlotHavScaleX1;
 
+  double roiX0, roiX1;
+
   ViewerCtlr ( QSharedPointer<ViewerMainWin> mainWin );
   virtual ~ViewerCtlr ();
   ViewerCtlr ( const ViewerCtlr& ) = delete;
@@ -136,7 +139,7 @@ public:
 
   int uff58bExport( void );
   int csvExport( void );
-                                                                                                    
+
 public slots:
   void dimension ( double, double, double, double );
   void sigNameChange ( int index );
@@ -150,6 +153,7 @@ public slots:
   void haveScale ( int, int, QString&, double, double, double, double );
   void haveReset ( int, int, QString& );
   void haveRubberBandScale( int, int, QString& );
+  void haveVgaRoiSelectScale ( QWidget *vga, int, QString&, double, double );
   void havePrevViewRequest( int, int, QString& );
   void haveDoCalcFft ( QWidget * );
   void mousePosition ( int, double, double );

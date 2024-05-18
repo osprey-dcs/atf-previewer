@@ -55,6 +55,12 @@ public:
   virtual ~ViewerChart();
   void paint( QPainter *p );
   void paintEvent( QPaintEvent *event );
+  double x0;
+  double y0;
+  double x1;
+  double y1;
+  double w;
+  double h;
 };
 
 

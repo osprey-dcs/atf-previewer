@@ -87,6 +87,7 @@ public:
   virtual void setAxesLimits( double x0, double y0,
                               double x1, double y1, bool adjScales = true );
   virtual void getPlotSize( double& w, double& h );
+  virtual void getPlotPos( double& x0, double& y0, double& x1, double& y1 );
   virtual void setSeries ( QtCharts::QLineSeries *qls, int sigIndex, QString curFileName,
                            double minX, double maxX, double minY, double maxY, bool adjScales = true );
   virtual void setSeries ( QtCharts::QLineSeries *qls, int sigIndex, QString curFileName,
@@ -110,6 +111,7 @@ public:
   QSharedPointer<QtCharts::QAbstractAxis> axisY;
   QtCharts::QLineSeries *qls; // I manage this memory
   int curX, curY;
+  double lastXMin, lastXMax, lastYMin, lastYMax;
   QSharedPointer<QMenu> popupMenu;
   QSharedPointer<QAction> resetAction;
   QSharedPointer<QAction> prevViewAction;

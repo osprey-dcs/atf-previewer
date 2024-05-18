@@ -25,7 +25,13 @@ ShortcutDialog::ShortcutDialog( QWidget *w, QWidget *parent ) {
       "Ctrl Left Click on graph area",
       "",
       "",
-      "Right click on graph area"
+      "Right click on graph area",
+      "",
+      "Left/Right Arrow",
+      "Shift Left/Right Arrow",
+      "Ctrl Left/Right Arrow",
+      "Ctrl Shift Left/Right Arrow",
+      "Enter"
     };
   
   std::vector<QString> rightStr
@@ -42,7 +48,13 @@ ShortcutDialog::ShortcutDialog( QWidget *w, QWidget *parent ) {
       "Show mouse position",
       "(and (x,y) at max peak for FFT)",
       "",
-      "Open menu"
+      "Open menu",
+      "",
+      "Move left selection indicator left/right",
+      "Move rightt selection indicator left/right",
+      "Coarse move left selection indicator left/right",
+      "Coarse move rightt selection indicator left/right",
+      "Rescale using selection indicators"
     };
 
   for ( int i=0; i<leftStr.size(); i++ ) {
