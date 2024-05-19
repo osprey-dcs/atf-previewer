@@ -19,11 +19,32 @@
 #include <QString>
 
 #include "FileConverter.h"
+#include "DspErr.h"
 
 class PsnFileConverter : public FileConverter {
 
 public:
 
+  static const int NumErrs = 8;
+  static const int ESuccess = 0;
+  static const int EInFileOpen = 1;
+  static const int EOutFileOpen = 2;
+  static const int EStatFileOpen = 3;
+  static const int EInternal = 4;
+  static const int EReadFailure = 5;
+  static const int EWriteFailure = 6;
+  static const int ESequence = 7;
+  inline static const std::string errMsgs[NumErrs] {
+    { "Success" },
+    { "Input file open failure" },
+    { "Output file open failure" },
+    { "Status file open failure" },
+    { "Unexpected quantity, internal error failure" },
+    { "File read failure" },
+    { "File write failure" },
+    { "Sequence number failure" }
+  };
+  
   static constexpr unsigned int dataFileVersion[] { 1,0,0 };
   
   static constexpr unsigned int statusFileVersion[] { 1,0,0 };
@@ -63,14 +84,14 @@ private:
                                  const QString& binDataFileDir, const QString& simpleName, 
                                  bool verbose=false );
   int writeOutputFiles ( std::list<int>& chanList, int numValues, unsigned int array[Cnst::MaxSignals+1][Cnst::Max4PerWord] );
-  void closeOutputFiles ( std::list<int>& chanList );
+  int closeOutputFiles ( std::list<int>& chanList );
 
   QString buildStatusOutputFileName( int chassisIndex, const QString& binDataFileDir,
                                       const QString& simpleName );
   int createAndOpenStatusOutputFile ( int chassisIndex, const QString& binDataFileDir, 
                                       const QString& simpleName, bool verbose=false );
   int writeStatusOutputFile ( int numValues, unsigned int array[Cnst::MaxStatus][NumStatusFields] );
-  void closeStatusOutputFile ( void );
+  int closeStatusOutputFile ( void );
   int getRawBinFileChanList( const QString& rawBinFileName, std::list<int>& chanList );
 
   #pragma pack(push, 1)
@@ -123,7 +144,25 @@ private:
   BinHdrPsnbType binHeaderPsnb;
   BinHdrGenericType binHeaderGeneric;
 
-};
+  bool firstSeqNum = true;
+  unsigned long prevSeqNum;
 
+  int mostRecentError {0};
+  int errLine {0};
+  std::string errFile;
+  int errInfo ( int err, int line=0, std::string file="" ) {
+    mostRecentError = err;
+    errLine = line;
+    errFile = file;
+    return err;
+  }
+  void dspErrMsg ( int err ) {
+    DspErr::dspErrMsg( errLine, errFile, NumErrs, err, errMsgs );
+  }
+  void dspErrMsg ( void ) {
+    DspErr::dspErrMsg( errLine, errFile, NumErrs, mostRecentError, errMsgs );
+  }
+  
+};
 
 #endif //FILEREFORMATTER_PSNFILECONVERTER_H

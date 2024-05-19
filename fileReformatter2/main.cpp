@@ -14,8 +14,9 @@
 #include "FileConverterFac.h"
 #include "FileUtil.h"
 #include "Cnst.h"
+#include "DspErr.h"
 
-static const char *version = "0.0.2";
+static const char *version = "0.0.3";
 
 static struct option long_options[] = {
   { "version", no_argument,       0, 0 },
@@ -109,23 +110,23 @@ int main ( int argc, char **argv ) {
   std::shared_ptr<BinFileType> bft = std::shared_ptr<BinFileType>( new BinFileType() );
   st = bft->getRawBinFileType( inputRawDataFile, inputRawDataFileType );
   if ( st ) {
-    std::cout << "Error " << st << " from getRawBinFileType" << std::endl;
-    return -1;
+    bft->dspErrMsg( st );
+    return st;
   }
   if ( verboseSet ) std::cout << "inputRawDataFileType = " << inputRawDataFileType.toStdString() << std::endl;
 
   FileConverterFac fcf;
   std::shared_ptr<FileConverter> fc = fcf.getFileConverter( inputRawDataFileType );
   if ( !fc ) {
-    std::cout << "Error from getFileConverter - no type found" << std::endl;
-    return -1;
+    fcf.dspErrMsg();
+    return fcf.mostRecentError;
   }
 
   std::list<int> chanList;
   st = fc->getRawBinFileChanList( inputRawDataFile, chanList );
   if ( st ) {
-    std::cout << "Error " << st << " from getRawBinFileType" << std::endl;
-    return -1;
+    fc->dspErrMsg( st );
+    return st;
   }
 
   if ( verboseSet ) {
@@ -149,14 +150,14 @@ int main ( int argc, char **argv ) {
   st = fc->convert ( chassisNum, chanList, startingChanIndex, dh.get(), inputRawDataFile, outFileDir,
                      simpleName, verboseSet );
   if ( st ) {
-    std::cout << "Error " << st << " from convert" << std::endl;
+    fc->dspErrMsg( st );
     return st;
   }
 
   st = dh->writeNewHeaderFile( chassisNum, fileMap,
                                configJsonFile, outputJsonFile, verboseSet );
   if ( st ) {
-    std::cout << "Error " << st << " from writeNewHearderFile" << std::endl;
+    dh->dspErrMsg( st );
     return st;
   }
 

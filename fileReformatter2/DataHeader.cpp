@@ -55,10 +55,10 @@ int DataHeader::getDouble(const QString &s, double& d ) {
   }
   else {
     d = 0.0;
-    return -1;
+    return ERRINFO(ETypeD);
   }
 
-  return 0;
+  return ESuccess;
 
 }
 
@@ -66,7 +66,7 @@ int DataHeader::setDouble(const QString &s, const double& d ) {
 
   jo[s] = d;
 
-  return 0;
+  return ESuccess;
 
 }
 
@@ -95,10 +95,10 @@ int DataHeader::getString(const QString &s, QString& qs ) {
   }
   else {
     qs = "";
-    return -1;
+    return ERRINFO(ETypeS);
   }
 
-  return 0;
+  return ESuccess;
 
 }
 
@@ -112,10 +112,10 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     }
     else {
       ss = "";
-      return -1;
+      return ERRINFO(ETypeS);
     }
 
-    return 0;
+    return ESuccess;
 
   }
 
@@ -123,7 +123,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
 
     jo[s] = ss;
 
-    return 0;
+    return ESuccess;
 
   }
 
@@ -177,7 +177,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
 
     QFile inf( inFile );
     bool result = inf.open( QIODevice::ReadOnly );
-    if ( !result ) return -1;
+    if ( !result ) return  ERRINFO(EInFileOpen);
     QString contents = inf.readAll();
     inf.close();
 
@@ -234,11 +234,10 @@ int DataHeader::getString(const QString &s, QString& qs ) {
                                                         // be discarded below
           jobj1New[qsKey] = (QJsonValue) QString( outputDatafileName );
 
-          if ( verbose ) std::cout << "rec chassis num = " << recChassisNum << std::endl;
-          if ( verbose ) std::cout << "rec sig num = " << recSigNum << ", outputDatafileName = " <<
-           outputDatafileName.toStdString() << std::endl;
-          
           if ( doCopy( recChassisNum, recSigNum, chassisNum, fileMap ) ) {
+            if ( verbose ) std::cout << "rec chassis num = " << recChassisNum << std::endl;
+            if ( verbose ) std::cout << "rec sig num = " << recSigNum << ", outputDatafileName = " <<
+              outputDatafileName.toStdString() << std::endl;
             jvaNew.append( jobj1New );
           }
           
@@ -265,11 +264,10 @@ int DataHeader::getString(const QString &s, QString& qs ) {
         outf.close();
     }
     else {
-      std::cout << "Viewer header file could not be opened" << std::endl;
-      return -1;
+      return ERRINFO(EOutFileOpen);
     }
     
-    return 0;
+    return ESuccess;
 
   }
 
@@ -284,11 +282,10 @@ int DataHeader::getString(const QString &s, QString& qs ) {
         outf.close();
     }
     else {
-      std::cout << "Viewer header file could not be opened" << std::endl;
-      return -1;
+      return ERRINFO(EOutFileOpen);
     }
 
-    return 0;
+    return ESuccess;
 
   }
 
@@ -296,7 +293,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
 
     QFile inf( filename );
     bool result = inf.open( QIODevice::ReadOnly );
-    if ( !result ) return -1;
+    if ( !result ) return ERRINFO(EInFileOpen);
     QString contents = inf.readAll();
     inf.close();
 
@@ -387,7 +384,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
 
     qDebug() << "";*/
 
-    return 0;
+    return ESuccess;
 
   }
 
@@ -410,23 +407,15 @@ int DataHeader::getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu
       slope  = std::get<SLOPE>( it->second );
       intercept = std::get<INTERCEPT>( it->second );
 
-      return 0;
+      return ESuccess;
 
     }
 
   }
 
-  return -1;
+  return  ERRINFO(ESigIndex);
 
 }
-
-//const std::list<QString>& DataHeader::getNameList() {
-//  return sigNameList;
-//}
-
-//const std::map<QString,std::tuple<QString, double, double, double, double, QString, QString, QString, double, QString, double>>& DataHeader::getNameMap() {
-//  return sigs;
-//};
 
 const DataHeader::DataHeaderListType& DataHeader::getNameList() {
   return sigNameList;

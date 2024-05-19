@@ -35,7 +35,7 @@ int FileConverter::convert ( int chassisIndex, std::list<int>& chanList, int sta
   // and N binary signal file buffers of MAXRECS entries for moving data into for writing the binary
   // signal files.
 
-  return FileConverter::E_FAIL;
+  return -1;
 
 }
 
@@ -56,7 +56,7 @@ QString FileConverter::buildStatusOutputFileName( int chassisIndex, const QStrin
 
 int FileConverter::getRawBinFileChanList( const QString& rawBinFileName, std::list<int>& chanList ) {
 
-  return 0;
+  return ESuccess;
   
 }
 

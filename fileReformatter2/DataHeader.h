@@ -30,10 +30,28 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include <QString>
 
+#include "DspErr.h"
+
 class DataHeader {
 
   public:
 
+    static const int NumErrs = 6;
+    static const int ESuccess = 0;
+    static const int EInFileOpen = 1;
+    static const int ETypeD = 2;
+    static const int ETypeS = 3;
+    static const int EOutFileOpen = 4;
+    static const int ESigIndex = 5;
+    inline static const std::string errMsgs[NumErrs] {
+      { "Success" },
+      { "Input file open failure" },
+      { "Type mismatch, expected double" },
+      { "Type mismatch, expected string" },
+      { "Output file open failure" },
+      { "Unknown signal index failure" }
+    };
+  
     typedef std::map<QString,std::tuple<QString, double, double, double,
                                         double, QString, QString, double, double, double, double,
                                         double, double, double, QString>> DataHeaderMapType;
@@ -89,7 +107,7 @@ class DataHeader {
     int getString(const QString &s, QString& ss );
     int getString(const QString &s, std::string& ss );
     int setString(const QString &s, const QString& ss );
-  int writeNewHeaderFile ( int chassisNum, std::map<int,QString>& fileMap, const QString& inFile,
+    int writeNewHeaderFile ( int chassisNum, std::map<int,QString>& fileMap, const QString& inFile,
                              const QString& outFile, bool verbose=false );
     int update( QString filename );
     int readContents ( QString filename );
@@ -101,6 +119,22 @@ class DataHeader {
     const DataHeaderMapType& getNameMap();
   
     const DataHeaderIndexMapType& getIndexMap();
+  
+    int mostRecentError {0};
+    int errLine {0};
+    std::string errFile;
+    int errInfo ( int err, int line=0, std::string file="" ) {
+      mostRecentError = err;
+      errLine = line;
+      errFile = file;
+      return err;
+    }
+    void dspErrMsg ( int err ) {
+      DspErr::dspErrMsg( errLine, errFile, NumErrs, err, errMsgs );
+    }
+    void dspErrMsg ( void ) {
+      DspErr::dspErrMsg( errLine, errFile, NumErrs, mostRecentError, errMsgs );
+    }
   
   };
 

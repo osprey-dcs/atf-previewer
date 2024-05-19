@@ -11,6 +11,7 @@ std::shared_ptr<FileConverter> FileConverterFac::getFileConverter ( const QStrin
   if (fileType == "PSN") {
     return std::shared_ptr<FileConverter>(new PsnFileConverter());
   } else {
+    int dummy = errInfo( 1, __LINE__, __FILE__ );
     return nullptr;
   }
 

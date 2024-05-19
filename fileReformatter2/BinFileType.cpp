@@ -15,7 +15,7 @@ int BinFileType::getRawBinFileType( const QString& rawBinFileName, QString& rawB
 
   auto result1 = fb.open( rawBinFileName.toStdString(), std::ios::in | std::ios::binary );
   if ( !result1 ) {
-    return -1;
+    return ERRINFO(EFileOpen);
   }
 
   // read file type
@@ -35,6 +35,6 @@ int BinFileType::getRawBinFileType( const QString& rawBinFileName, QString& rawB
   rawBinFileType += buf[1];
   rawBinFileType += buf[2];
 
-  return 0;
+  return ESuccess;
 
 }

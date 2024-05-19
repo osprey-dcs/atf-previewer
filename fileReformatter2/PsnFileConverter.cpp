@@ -49,25 +49,24 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
   std::filebuf fb;
   int stat;
   QString headerType;
-  
+  firstSeqNum = true;
+
   auto result = fb.open( rawDataFile.toStdString(), std::ios::in | std::ios::binary );
   if ( !result ) {
-    std::cout << "Input file open failure " << std::endl;
-    return -1;
+    return ERRINFO( 1 );
   }
 
   stat = createAndOpenOutputFiles( chanList, startingSigIndex, binDataFileDir, simpleName, verbose );
   if ( stat ) {
     fb.close();
-    std::cout << "Output files open failure " << std::endl;
-    return -1;
+    return ERRINFO( stat );
   }
 
   stat = createAndOpenStatusOutputFile( chassisIndex, binDataFileDir, simpleName, verbose );
   if ( stat ) {
     fb.close();
-    std::cout << "Status file open failure " << std::endl;
-    return -1;
+    dspErrMsg( stat );
+    return ERRINFO( stat );
   }
   
   unsigned int bodyLen;
@@ -90,22 +89,30 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
     stat = readBinHeader( fb, loc, numBytesRead, headerType, complete );
     if ( complete ) {
       if ( ivalue ) { // there is unwritten data
-        writeOutputFiles( chanList, ivalue, buf4BytesPerWord );
+        int st = writeOutputFiles( chanList, ivalue, buf4BytesPerWord );
+        if ( st ) {
+          dspErrMsg( st );
+          return ERRINFO(st);
+        }
       }
       if ( istatus ) { // there is unwritten data
-        writeStatusOutputFile( istatus, statusArray );
+        int st = writeStatusOutputFile( istatus, statusArray );
+        if ( st ) {
+          dspErrMsg( st );
+          return ERRINFO(st);
+        }
       }
       fb.close();
       closeOutputFiles( chanList );
       closeStatusOutputFile();
-      return 0;
+      return ESuccess;
     }
-    if ( stat < 0 ) {
+    if ( stat ) {
       fb.close();
       closeOutputFiles( chanList );
       closeStatusOutputFile();
-      std::cout << "Error " << stat << " from readBinHeader" << std::endl;
-      return stat;
+      dspErrMsg( stat );
+      return ERRINFO( stat );
     }
 
     bool skip = false;
@@ -130,6 +137,17 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
       hi = 0;
       hihi = 0;
 
+      if ( !firstSeqNum ) {
+        if ( seq != prevSeqNum+1 ) {
+          return ERRINFO(ESequence);
+        }
+        prevSeqNum = seq;
+      }
+      else {
+        firstSeqNum = false;
+        prevSeqNum = seq;
+      }
+
       loc += sizeof(BinHdrPsnaType);
       dataLen = bodyLen - 24;
 
@@ -145,6 +163,18 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
       seqLow = bswap_32( binHeaderPsnb.seqLow );
       seq = seqHigh;
       seq = ( seq << 32 ) | seqLow;
+
+      if ( !firstSeqNum ) {
+        if ( seq != prevSeqNum+1 ) {
+          return ERRINFO(ESequence);
+        }
+        prevSeqNum = seq;
+      }
+      else {
+        firstSeqNum = false;
+        prevSeqNum = seq;
+      }
+
       seconds = bswap_32( binHeaderPsnb.seconds );
       nanoseconds = bswap_32( binHeaderPsnb.nanoseconds );
       lo = bswap_32( binHeaderPsnb.lo );
@@ -174,34 +204,43 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
       loc += sizeof(BinHdrGenericType);
       dataLen = bodyLen - 24;
       skip = true;
-      
+
     }
 
     if ( !skip ) {
 
       if ( dataLen >= Cnst::Max3PerWord ) {
         std::cout << "unexpected dataLen value: " << dataLen << std::endl;
+        return ERRINFO(EInternal);
       }
     
       stat = readBinData( fb, loc, dataLen, buf3BytesPerWord, numBytesRead, complete );
       if ( complete ) {
         if ( ivalue ) {  // unwritten data exists
-          writeOutputFiles( chanList, ivalue, buf4BytesPerWord );
+          int st = writeOutputFiles( chanList, ivalue, buf4BytesPerWord );
+          if ( st ) {
+            dspErrMsg( st );
+            return ERRINFO(st);
+          }
         }
         if ( istatus ) { // there is unwritten data
-          writeStatusOutputFile( istatus, statusArray );
+          int st = writeStatusOutputFile( istatus, statusArray );
+          if ( st ) {
+            dspErrMsg( st );
+            return ERRINFO(st);
+          }
         }
         fb.close();
         closeOutputFiles( chanList );
         closeStatusOutputFile();
-        return 0;
+        return ESuccess;
       }
       if ( stat < 0 ) {
         fb.close();
         closeOutputFiles( chanList );
         closeStatusOutputFile();
-        std::cout << "Error " << stat << " from readBinHeader" << std::endl;
-        return stat;
+        dspErrMsg( stat );
+        return ERRINFO( stat );
       }
 
       int i=0, iout = 0, numOps = dataLen / 4, numRemaining = ( numOps % 3 );
@@ -211,7 +250,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
 
       if ( numOps > Cnst::Max3PerWord ) {
         std::cout << "Unexpected value for numOps: " << numOps << std::endl;
-        numOps = Cnst::Max3PerWord;
+        return  ERRINFO(EInternal);
       }
 
       unsigned int v1, v2, v3, v4, tmp1, tmp2, tmp3;
@@ -224,6 +263,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
 
         if ( i+2 >= Cnst::Max3PerWord ) {
           std::cout << "Unexpected value for 3 word index: " << i+2 << std::endl;
+          return ERRINFO(EInternal);
         }
 
         v1 = tmp1 >> 8;
@@ -241,11 +281,13 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
 
         if ( isignal > Cnst::MaxSignals ) {
           std::cout << "Unexpected value for isignal: " << isignal << ", ivalue = " << ivalue << std::endl;
+          return ERRINFO(EInternal);
         }
 
         if ( ivalue >= Cnst::Max4PerWord ) {
           std::cout << "Unexpected value for isignal: " << isignal << ", ivalue = " << ivalue << std::endl;
-        }
+           return ERRINFO(EInternal);
+       }
 
         buf4BytesPerWord[isignal][ivalue]   = v1;
         buf4BytesPerWord[isignal+1][ivalue] = v2;
@@ -255,6 +297,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
         isignal += 4;
         if ( isignal > Cnst::MaxSignals ) {
           std::cout << "Unexpected value for isignal: " << isignal << ", ivalue = " << ivalue << std::endl;
+          return ERRINFO(EInternal);
         }
         if ( isignal >= Cnst::MaxSignals ) {
           isignal = 0;
@@ -293,7 +336,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
 
   // Execution cannot get here
 
-  return PsnFileConverter::E_SUCCESS;
+  return ESuccess;
 
 }
 
@@ -302,25 +345,11 @@ int PsnFileConverter::readHeaderType( std::filebuf& fb, unsigned long loc, QStri
   unsigned long numBytessRead;
   unsigned char buf[4];
   
-  try {
-    auto result = fb.pubseekoff( loc, std::ios::beg, std::ios::in );
-  }
-  catch ( const std::exception& e) {
-    std::cout << "readHeaderType - pubseekoff: " << e.what() << std::endl;
-  }
+  auto result = fb.pubseekoff( loc, std::ios::beg, std::ios::in );
 
-  try {
-    numBytessRead = fb.sgetn( ( (char *) buf ), sizeof(buf) );
-    if ( numBytessRead != sizeof(buf) ) { // eof
-      eof = true;
-    }
-    else if ( numBytessRead < sizeof(buf) ) { // incomplete read - treat as end of file
-      eof = true;
-      std::cout << "eof - readHeaderType - numBytessRead is " << numBytessRead << std::endl;
-    }
-  } catch (const std::exception& e) { // unknown failure - treat as end of file
+  numBytessRead = fb.sgetn( ( (char *) buf ), sizeof(buf) );
+  if ( numBytessRead != sizeof(buf) ) { // eof
     eof = true;
-    std::cout << "readHeaderType - sgetn: " << e.what() << std::endl;
   }
 
   headerType = buf[0];
@@ -328,7 +357,7 @@ int PsnFileConverter::readHeaderType( std::filebuf& fb, unsigned long loc, QStri
   headerType += buf[2];
   headerType += buf[3];
 
-  return 0;
+  return ESuccess;
 
 }
 
@@ -340,44 +369,29 @@ int PsnFileConverter::readBinHeader( std::filebuf& fb, unsigned long loc, unsign
 
   complete = false;
 
-  try {
-    auto result = fb.pubseekoff( loc, std::ios::beg, std::ios::in );
-  }
-  catch ( const std::exception& e) {
-    std::cout << "readBinHeader - pubseekoff: " << e.what() << std::endl;
-  }
+  auto result = fb.pubseekoff( loc, std::ios::beg, std::ios::in );
 
   if ( headerType == "PSNA" ) {
 
-    try {
-      numBytessRead = fb.sgetn( ( (char *) &binHeaderPsna ), sizeof(BinHdrPsnaType ) );
-      if ( numBytessRead == 0 ) { // eof
-        complete = true;
-      }
-      else if ( numBytessRead < sizeof(BinHdrPsnaType ) ) { // incomplete read - treat as end of file
-        complete = true;
-        std::cout << "eof - readBinHeader - numBytessRead is " << numBytessRead << std::endl;
-      }
-    } catch (const std::exception& e) { // unknown failure - treat as end of file
+    numBytessRead = fb.sgetn( ( (char *) &binHeaderPsna ), sizeof(BinHdrPsnaType ) );
+    if ( numBytessRead == 0 ) {
       complete = true;
-      std::cout << "readBinHeader - sgetn: " << e.what() << std::endl;
+    }
+    else if ( numBytessRead != sizeof(BinHdrPsnaType ) ) { // incomplete read - treat as end of file
+      std::cout << "eof - readBinHeader - numBytessRead is " << numBytessRead << std::endl;
+      return ERRINFO(EReadFailure);
     }
 
   }
   else if ( headerType == "PSNB" ) {
 
-    try {
-      numBytessRead = fb.sgetn( ( (char *) &binHeaderPsnb ), sizeof(BinHdrPsnbType ) );
-      if ( numBytessRead == 0 ) { // eof
-        complete = true;
-      }
-      else if ( numBytessRead < sizeof(BinHdrPsnbType ) ) { // incomplete read - treat as end of file
-        complete = true;
-        std::cout << "eof - readBinHeader - numBytessRead is " << numBytessRead << std::endl;
-      }
-    } catch (const std::exception& e) { // unknown failure - treat as end of file
+    numBytessRead = fb.sgetn( ( (char *) &binHeaderPsnb ), sizeof(BinHdrPsnbType ) );
+    if ( numBytessRead == 0 ) {
       complete = true;
-      std::cout << "readBinHeader - sgetn: " << e.what() << std::endl;
+    }
+    else if ( numBytessRead != sizeof(BinHdrPsnbType ) ) { // incomplete read - treat as end of file
+      std::cout << "eof - readBinHeader - numBytessRead is " << numBytessRead << std::endl;
+      return ERRINFO(EReadFailure);
     }
 
   }
@@ -385,27 +399,22 @@ int PsnFileConverter::readBinHeader( std::filebuf& fb, unsigned long loc, unsign
 
     headerType = "Generic";
 
-    try {
-      numBytessRead = fb.sgetn( ( (char *) &binHeaderGeneric ), sizeof(BinHdrGenericType ) );
-      if ( numBytessRead == 0 ) { // eof
-        complete = true;
-      }
-      else if ( numBytessRead < sizeof(BinHdrGenericType ) ) { // incomplete read - treat as end of file
-        complete = true;
-        std::cout << "eof - readBinHeader - numBytessRead is " << numBytessRead << std::endl;
-      }
-    } catch (const std::exception& e) { // unknown failure - treat as end of file
+    numBytessRead = fb.sgetn( ( (char *) &binHeaderGeneric ), sizeof(BinHdrGenericType ) );
+    if ( numBytessRead == 0 ) {
       complete = true;
-      std::cout << "readBinHeader - sgetn: " << e.what() << std::endl;
+    }
+    else if ( numBytessRead != sizeof(BinHdrGenericType ) ) { // incomplete read - treat as end of file
+      std::cout << "eof - readBinHeader - numBytessRead is " << numBytessRead << std::endl;
+      return ERRINFO(EReadFailure);
     }
 
   }
 
   if ( complete ) {
-    return E_SUCCESS;
+    return ESuccess;
   }
 
-  return PsnFileConverter::E_SUCCESS;
+  return ESuccess;
 
 }
 
@@ -414,32 +423,22 @@ int PsnFileConverter::readBinData(std::filebuf& fb, unsigned long loc, unsigned 
 
   complete = false;
   
-  try {
-    auto result2 = fb.pubseekoff( loc, std::ios::beg, std::ios::in );
-  }
-  catch ( const std::exception& e) {
-    std::cout << "readBinData - pubseekoff: " << e.what() << std::endl;
-  }
+  auto result2 = fb.pubseekoff( loc, std::ios::beg, std::ios::in );
 
-  try {
-    numBytessRead = fb.sgetn( ( (char *) buf ), dataLen );
-    if ( numBytessRead == 0 ) { // eof
-      complete = true;
-    }
-    else if ( numBytessRead < dataLen ) { // incomplete read - treat as end of file
-      complete = true;
-      std::cout << "eof - readBinData - numBytessRead is " << numBytessRead << std::endl;
-    }
-  } catch (const std::exception& e) { // unknown failure - treat as end of file
+  numBytessRead = fb.sgetn( ( (char *) buf ), dataLen );
+  if ( numBytessRead == 0 ) { // eof
     complete = true;
-    std::cout << "readBinData - sgetn: " << e.what() << std::endl;
+  }
+  else if ( numBytessRead != dataLen ) { // incomplete read - treat as end of file
+    std::cout << "eof - readBinData - numBytessRead is " << numBytessRead << std::endl;
+    return ERRINFO(EReadFailure);
   }
 
   if ( complete ) {
-    return E_SUCCESS;
+    return ESuccess;
   }
   
-  return PsnFileConverter::E_SUCCESS;
+  return ESuccess;
 
 }
 
@@ -482,19 +481,25 @@ int PsnFileConverter::createAndOpenOutputFiles( std::list<int>& chanList, int st
     
     auto result = fb[i].open( fname.toStdString(), std::ios::out | std::ios::binary );
     if ( !result ) {
-      return -1;
+      return ERRINFO(EOutFileOpen);
     }
 
     // write version and zero the size (in bytes) field
     auto num = fb[i].sputn( (char *) dataFileVersion, sizeof(dataFileVersion) );
+    if ( num != sizeof(dataFileVersion) ) {
+      return ERRINFO(EWriteFailure);
+    }
 
     num = fb[i].sputn( (char *) &sizeInBytes, sizeof(sizeInBytes) );
+    if ( num != sizeof(sizeInBytes) ) {
+      return ERRINFO(EWriteFailure);
+    }
 
     fileLoc[i] = 20;
 
   }
 
-  return 0;
+  return ESuccess;
 
 }
 
@@ -505,23 +510,26 @@ int PsnFileConverter::writeOutputFiles( std::list<int>& chanList, int numValues,
 
   //for ( int i=0; i<Cnst::MaxSignals; i++ ) {
   for ( int i : chanList ) {
-     
-     auto num = fb[i].sputn( (char *) &array[i][0], sizeInBytes );
-     if ( num <= 0 ) {
-       return -1;
-     }
 
-     fileLoc[i] += sizeInBytes;
+    auto num = fb[i].sputn( (char *) &array[i][0], sizeInBytes );
+    if ( num == 0 ) {
+      return ESuccess;
+    }
+    else if ( num != sizeInBytes ) {
+      return ERRINFO(EWriteFailure);
+    }
+
+    fileLoc[i] += sizeInBytes;
      
   }
 
   //sizeOfOneFile += sizeInBytes;
  
- return 0;
+ return ESuccess;
 
 }
 
-void PsnFileConverter::closeOutputFiles ( std::list<int>& chanList ) {
+int PsnFileConverter::closeOutputFiles ( std::list<int>& chanList ) {
 
   // write number of data bytes (i.e. don't include the 20 header bytes) to the
   // 64bit unsigned quantity at location 12 and then close file
@@ -532,18 +540,18 @@ void PsnFileConverter::closeOutputFiles ( std::list<int>& chanList ) {
     fileLoc[i] -= 20;
     
     // set pointer
-    try {
-      auto result2 = fb[i].pubseekoff( 12, std::ios::beg, std::ios::out );
-    }
-    catch ( const std::exception& e) {
-      std::cout << "readBinData - pubseekoff: " << e.what() << std::endl;
-    }
+    auto result2 = fb[i].pubseekoff( 12, std::ios::beg, std::ios::out );
 
     auto num = fb[i].sputn( (char *) &fileLoc[i], sizeof(fileLoc[i]) );
+    if ( num != sizeof(fileLoc[i]) ) {
+      return ERRINFO(EWriteFailure);
+    }
     
     fb[i].close();
     
   }
+
+  return ESuccess;
 
 }
 
@@ -582,17 +590,23 @@ int PsnFileConverter::createAndOpenStatusOutputFile ( int chassisIndex, const QS
 
   auto result = statusFb.open( fname.toStdString(), std::ios::out | std::ios::binary );
   if ( !result ) {
-    return -1;
+    return ERRINFO(EStatFileOpen);
   }
 
   // write version and zero the size (in bytes) field
   auto num = statusFb.sputn( (char *) statusFileVersion, sizeof(statusFileVersion) );
+  if ( num != sizeof(statusFileVersion) ) {
+    return ERRINFO(EWriteFailure);
+  }
 
   num = statusFb.sputn( (char *) &sizeInBytes, sizeof(sizeInBytes) );
+  if ( num != sizeof(sizeInBytes) ) {
+    return ERRINFO(EWriteFailure);
+  }
 
   statusFileLoc = 20;
 
-  return 0;
+  return ESuccess;
 
 }
 
@@ -602,17 +616,20 @@ int PsnFileConverter::writeStatusOutputFile ( int numValues, unsigned int
   unsigned long sizeInBytes = numValues * sizeof(unsigned int) * PsnFileConverter::NumStatusFields;
 
   auto num = statusFb.sputn( (char *) array, sizeInBytes );
-  if ( num <= 0 ) {
-    return -1;
+  if ( num == 0 ) {
+    return ESuccess;
+  }
+  else if ( num != sizeInBytes ) {
+    return ERRINFO(EWriteFailure);
   }
 
   statusFileLoc += sizeInBytes;
  
- return 0;
+ return ESuccess;
 
 }
 
-void PsnFileConverter::closeStatusOutputFile ( void ) {
+int PsnFileConverter::closeStatusOutputFile ( void ) {
 
   // write number of data bytes (i.e. don't include the 20 header bytes) to the
   // 64bit unsigned quantity at location 12 and then close file
@@ -620,52 +637,44 @@ void PsnFileConverter::closeStatusOutputFile ( void ) {
   statusFileLoc -= 20;
     
   // set pointer
-  try {
-    auto result2 = statusFb.pubseekoff( 12, std::ios::beg, std::ios::out );
-  }
-  catch ( const std::exception& e) {
-    std::cout << "closeStatusOutputFile - pubseekoff: " << e.what() << std::endl;
-  }
+  auto result2 = statusFb.pubseekoff( 12, std::ios::beg, std::ios::out );
 
   auto num = statusFb.sputn( (char *) &statusFileLoc, sizeof(statusFileLoc) );
+  if ( num != sizeof(statusFileLoc) ) {
+    return ERRINFO(EWriteFailure);
+  }
     
   statusFb.close();
+
+  return ESuccess;
 
 }
 
 void PsnFileConverter::show(void ) {
-  std::cout << "Class PsnaFileConverter" << std::endl;
+  std::cout << "Class PsnFileConverter" << std::endl;
 }
 
 int PsnFileConverter::getRawBinFileChanList( const QString& rawBinFileName, std::list<int>& chanList ) {
 
-  std::cout << "PsnFileConverter::getRawBinFileChanList\n";
-  
   unsigned int buf;
   std::filebuf fb;
 
   auto result1 = fb.open( rawBinFileName.toStdString(), std::ios::in | std::ios::binary );
   if ( !result1 ) {
-    std::cout << "getRawBinFileChanList - open failed for " << rawBinFileName.toStdString() << std::endl;
-    return -1;
+    return ERRINFO(EInFileOpen);
   }
 
   unsigned long loc = 5 * sizeof(int);
   // read chan mask (active adc channels)
   auto result2 = fb.pubseekoff( loc, std::ios::beg, std::ios::in );
-  if ( result2 < 0 ) {
-    std::cout << "result2 is " << result2 << std::endl;
-  }
   
-  auto result3 = fb.sgetn( reinterpret_cast<char *>( &buf ), sizeof(buf) );
-  if ( result3 < sizeof(buf) ) {
-    std::cout << "result3 is " << result3 << std::endl;
+  auto num = fb.sgetn( reinterpret_cast<char *>( &buf ), sizeof(buf) );
+  if ( num != sizeof(buf) ) {
+    return ERRINFO(EReadFailure);
   }
   buf = bswap_32( buf );
 
   fb.close();
-
-  std::cout << "buf = " << buf << std::endl;
 
   chanList.clear();
   unsigned int bit = 1;
@@ -677,6 +686,6 @@ int PsnFileConverter::getRawBinFileChanList( const QString& rawBinFileName, std:
     bit = bit << 1;
   }
 
-  return 0;
+  return ESuccess;
 
 }
