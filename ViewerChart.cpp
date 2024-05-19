@@ -23,17 +23,11 @@ If not, see <https://www.gnu.org/licenses/>.
 
 ViewerChart::ViewerChart() {
 
-  std::cout << "ViewerChart::ViewerChart" << std::endl;
-
   x0 = pos().x();
   y0 = pos().y();
 
-  std::cout << "x0 = " << x0 << ", y0 = " << y0 << std::endl;
-
   w = size().width();
   h = size().height();
-
-  std::cout << "w = " << w << ", h = " << h << std::endl;
 
   QRectF r = plotArea();
 
@@ -41,8 +35,6 @@ ViewerChart::ViewerChart() {
   y0 = r.y();
   w = r.size().width();
   h = r.size().height();
-  std::cout << "x0 = " << x0 << ", y0 = " << y0 << std::endl;
-  std::cout << "w = " << w << ", h = " << h << std::endl;
 
 }
 

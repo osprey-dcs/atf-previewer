@@ -1976,7 +1976,7 @@ int ViewerCtlr::uff58bExport ( void ) {
     st = uff58b->set80CharRec( 4, "input csv file" );
     st = uff58b->set80CharRec( 5, simpleName );
 
-    int funcType = 0; // general or unknown - (0 to 27 possible values)
+    int funcType = 1; // general or unknown - (0 to 27 possible values)
     int dataCategory = std::get<DataHeader::TYPE>( indexMap[sigIndex] ); // (21 possible values)
     int funcIdNum = sigIndex; // signal number
     int versionOrSeq = 0;
