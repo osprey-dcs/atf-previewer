@@ -19,8 +19,8 @@ int BinFileType::getRawBinFileType( const QString& rawBinFileName, QString& rawB
   // read file type
   fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
   
-  result = fb.sgetn( (char *) buf, sizeof(buf) );
-  if ( result < sizeof(buf) ) {
+  int num = fb.sgetn( (char *) buf, sizeof(buf) );
+  if ( num < sizeof(buf) ) {
     return ERRINFO(EFileRead);
   }
 
