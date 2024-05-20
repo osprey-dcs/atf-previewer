@@ -1162,6 +1162,13 @@ void ViewerCtlr::process(void ) {
 
             setSlider( grArea );
             
+            // clear associated fft graph
+            ViewerGraphAreaBase *companVga = this->companionVga( grArea );
+            if ( companVga ) {
+              companVga->setInitialState();
+              companVga->clear();
+            }
+            
           }
           else {
           
@@ -1246,6 +1253,13 @@ void ViewerCtlr::process(void ) {
           }
 
           setSlider( grArea );
+
+          // clear associated fft graph
+          ViewerGraphAreaBase *companVga = this->companionVga( grArea );
+          if ( companVga ) {
+            companVga->setInitialState();
+            companVga->clear();
+          }
 
         }
         else {
