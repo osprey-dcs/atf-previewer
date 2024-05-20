@@ -2,15 +2,13 @@
 // Created by jws3 on 5/1/24.
 //
 
-#include <byteswap.h>
 #include "BinFileType.h"
-#include "errno.h"
 
-BinFileType::BinFileType() {}
+BinFileType::BinFileType() = default;
 
 int BinFileType::getRawBinFileType( const QString& rawBinFileName, QString& rawBinFileType ) {
 
-  unsigned char buf[3];
+  char buf[3];
   std::filebuf fb;
 
   auto result1 = fb.open( rawBinFileName.toStdString(), std::ios::in | std::ios::binary );

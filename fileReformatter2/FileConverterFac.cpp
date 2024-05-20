@@ -3,15 +3,15 @@
 //
 #include "FileConverterFac.h"
 
-FileConverterFac::FileConverterFac () {
-}
+FileConverterFac::FileConverterFac () = default;
 
 std::shared_ptr<FileConverter> FileConverterFac::getFileConverter ( const QString& fileType ) {
 
   if (fileType == "PSN") {
     return std::shared_ptr<FileConverter>(new PsnFileConverter());
-  } else {
-    int dummy = errInfo( 1, __LINE__, __FILE__ );
+  }
+  else {
+    int dummy = ERRINFO( 1 );
     return nullptr;
   }
 
@@ -23,6 +23,7 @@ FileConverter *FileConverterFac::getFileConverterPtr ( const QString& fileType )
     return  new PsnFileConverter();
   }
   else {
+    int dummy = ERRINFO( 1 );
     return nullptr;
   }
 

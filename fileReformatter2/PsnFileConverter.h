@@ -137,6 +137,7 @@ private:
     unsigned int dummy3;
     unsigned int dummy4;
   } BinHdrGenericType, *BinHdrGenericPtr;
+  #pragma pack(pop)
 
   //unsigned long sizeOfOneFile;
 

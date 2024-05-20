@@ -109,16 +109,16 @@ class DataHeader {
     int setString(const QString &s, const QString& ss );
     int writeNewHeaderFile ( int chassisNum, std::map<int,QString>& fileMap, const QString& inFile,
                              const QString& outFile, bool verbose=false );
-    int update( QString filename );
-    int readContents ( QString filename );
+    int update( const QString& filename );
+    int readContents ( const QString& filename );
     int getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu,
                                double& slope, double& intercept );
 
-    const DataHeaderListType& getNameList();
+    const DataHeaderListType& getNameList() const;
 
-    const DataHeaderMapType& getNameMap();
+    const DataHeaderMapType& getNameMap() const;
   
-    const DataHeaderIndexMapType& getIndexMap();
+    const DataHeaderIndexMapType& getIndexMap() const;
   
     int mostRecentError {0};
     int errLine {0};

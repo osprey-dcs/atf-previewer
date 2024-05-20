@@ -12,7 +12,6 @@ FileConverter::FileConverter ( ) {
 
   statusFileLoc = 0;
 
-
 }
 
 int FileConverter::convert ( int chassisIndex, std::list<int>& chanList, int startingSigIndex, const DataHeader *dh, const QString &rawDataFile,

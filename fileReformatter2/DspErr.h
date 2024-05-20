@@ -15,7 +15,7 @@ class DspErr {
 
   public:
   static int mostRecentError;
-  static void dspErrMsg ( int line, std::string file, int n, int err, const std::string msgs[] );
+  static void dspErrMsg ( int line, const std::string& file, int n, int err, const std::string msgs[] );
   static void dspErrMsg ( int line, std::string file, int n, const std::string msgs[] );
 
 };

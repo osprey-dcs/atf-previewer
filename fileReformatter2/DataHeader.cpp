@@ -26,17 +26,10 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <QFile>
 #include <iostream>
 #include <string>
-#include <QDebug>
 
 #include "DataHeader.h"
-#include "DataHeaderFac.h"
 
-DataHeader::DataHeader() {
-
-  //int ok = readContents();
-  //std::cout << "after readContents, ok = " << ok << std::endl;
-
-}
+DataHeader::DataHeader() = default;
 
 DataHeader::~DataHeader() {
 
@@ -222,8 +215,6 @@ int DataHeader::getString(const QString &s, QString& qs ) {
           
           QJsonObject::iterator it = jobj1.begin();
           while ( it != jobj1.end() ) {
-            
-            QString qsk = it.key();
 
             jobj1New[it.key()] = it.value();
             it++;
@@ -271,7 +262,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
 
   }
 
-  int DataHeader::update( QString filename ) {
+  int DataHeader::update( const QString& filename ) {
 
     jd.setObject(jo);
 
@@ -289,7 +280,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
 
   }
 
-  int DataHeader::readContents ( QString filename ) {
+  int DataHeader::readContents ( const QString& filename ) {
 
     QFile inf( filename );
     bool result = inf.open( QIODevice::ReadOnly );
@@ -396,16 +387,16 @@ int DataHeader::getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu
   slope = 1.0;
   intercept = 0.0;
   
-  for ( auto it = sigs.begin(); it != sigs.end(); it++ ) {
+  for (auto & sig : sigs) {
 
-    QString qs = it->first;
+    QString qs = sig.first;
     
-    if ( sigIndex == ( std::get<SIGINDEX>( it->second ) ) ) {
+    if ( sigIndex == ( std::get<SIGINDEX>( sig.second ) ) ) {
 
       name = qs;
-      egu = std::get<EGU>( it->second );
-      slope  = std::get<SLOPE>( it->second );
-      intercept = std::get<INTERCEPT>( it->second );
+      egu = std::get<EGU>( sig.second );
+      slope  = std::get<SLOPE>( sig.second );
+      intercept = std::get<INTERCEPT>( sig.second );
 
       return ESuccess;
 
@@ -417,14 +408,14 @@ int DataHeader::getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu
 
 }
 
-const DataHeader::DataHeaderListType& DataHeader::getNameList() {
+const DataHeader::DataHeaderListType& DataHeader::getNameList() const {
   return sigNameList;
 }
 
-const DataHeader::DataHeaderMapType& DataHeader::getNameMap() {
+const DataHeader::DataHeaderMapType& DataHeader::getNameMap() const {
   return sigs;
-};
+}
 
-const DataHeader::DataHeaderIndexMapType& DataHeader::getIndexMap() {
+const DataHeader::DataHeaderIndexMapType& DataHeader::getIndexMap() const {
   return sigsByIndex;
-};
+}

@@ -4,7 +4,7 @@
 
 #include "DspErr.h"
 
-void DspErr::dspErrMsg ( int line, std::string file, int n, int err, const std::string msgs[] ) {
+void DspErr::dspErrMsg ( int line, const std::string& file, int n, int err, const std::string msgs[] ) {
 
   std::string str;
 
@@ -15,10 +15,10 @@ void DspErr::dspErrMsg ( int line, std::string file, int n, int err, const std::
     str = msgs[err];
   }
 
-  if ( ( file == "" ) && ( line = 0 ) ) {
+  if ( ( file.empty() ) && ( line == 0 ) ) {
     std::cout << str << " in " << __FILE__ << std::endl;
   }
-  else if ( file == "" ) {
+  else if ( file.empty() ) {
     std::cout << str << std::endl;
   }
 

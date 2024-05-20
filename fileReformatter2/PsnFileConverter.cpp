@@ -2,10 +2,6 @@
 // Created by jws3 on 5/1/24.
 //
 
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include <sstream>
 #include <iomanip>
 #include <byteswap.h>
@@ -243,7 +239,9 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
         return ERRINFO( stat );
       }
 
-      int i=0, iout = 0, numOps = dataLen / 4, numRemaining = ( numOps % 3 );
+      unsigned long numOps = dataLen / 4;
+      unsigned long numRemaining = ( numOps % 3 );
+      int i, iout = 0;
       if ( numRemaining ) {
         numOps -= numRemaining;
       }
@@ -332,7 +330,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
 
     loc += dataLen;
   
-  } while ( 1 );
+  } while ( true );
 
   // Execution cannot get here
 
@@ -345,7 +343,7 @@ int PsnFileConverter::readHeaderType( std::filebuf& fb, unsigned long loc, QStri
   unsigned long numBytessRead;
   unsigned char buf[4];
   
-  auto result = fb.pubseekoff( loc, std::ios::beg, std::ios::in );
+  fb.pubseekoff( loc, std::ios::beg, std::ios::in );
 
   numBytessRead = fb.sgetn( ( (char *) buf ), sizeof(buf) );
   if ( numBytessRead != sizeof(buf) ) { // eof
@@ -366,10 +364,14 @@ int PsnFileConverter::readBinHeader( std::filebuf& fb, unsigned long loc, unsign
 
   bool eof = false;
   int stat = readHeaderType( fb, loc, headerType, eof );
+  if ( stat ) {
+    dspErrMsg( stat );
+    return ERRINFO( stat );
+  }
 
   complete = false;
 
-  auto result = fb.pubseekoff( loc, std::ios::beg, std::ios::in );
+  fb.pubseekoff( loc, std::ios::beg, std::ios::in );
 
   if ( headerType == "PSNA" ) {
 
@@ -423,7 +425,7 @@ int PsnFileConverter::readBinData(std::filebuf& fb, unsigned long loc, unsigned 
 
   complete = false;
   
-  auto result2 = fb.pubseekoff( loc, std::ios::beg, std::ios::in );
+  fb.pubseekoff( loc, std::ios::beg, std::ios::in );
 
   numBytessRead = fb.sgetn( ( (char *) buf ), dataLen );
   if ( numBytessRead == 0 ) { // eof
@@ -539,8 +541,7 @@ int PsnFileConverter::closeOutputFiles ( std::list<int>& chanList ) {
     
     fileLoc[i] -= 20;
     
-    // set pointer
-    auto result2 = fb[i].pubseekoff( 12, std::ios::beg, std::ios::out );
+    fb[i].pubseekoff( 12, std::ios::beg, std::ios::out );
 
     auto num = fb[i].sputn( (char *) &fileLoc[i], sizeof(fileLoc[i]) );
     if ( num != sizeof(fileLoc[i]) ) {
@@ -635,9 +636,8 @@ int PsnFileConverter::closeStatusOutputFile ( void ) {
   // 64bit unsigned quantity at location 12 and then close file
 
   statusFileLoc -= 20;
-    
-  // set pointer
-  auto result2 = statusFb.pubseekoff( 12, std::ios::beg, std::ios::out );
+
+  statusFb.pubseekoff( 12, std::ios::beg, std::ios::out );
 
   auto num = statusFb.sputn( (char *) &statusFileLoc, sizeof(statusFileLoc) );
   if ( num != sizeof(statusFileLoc) ) {
@@ -666,7 +666,7 @@ int PsnFileConverter::getRawBinFileChanList( const QString& rawBinFileName, std:
 
   unsigned long loc = 5 * sizeof(int);
   // read chan mask (active adc channels)
-  auto result2 = fb.pubseekoff( loc, std::ios::beg, std::ios::in );
+  fb.pubseekoff( loc, std::ios::beg, std::ios::in );
   
   auto num = fb.sgetn( reinterpret_cast<char *>( &buf ), sizeof(buf) );
   if ( num != sizeof(buf) ) {

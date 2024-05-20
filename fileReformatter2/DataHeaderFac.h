@@ -30,7 +30,7 @@ static std::shared_ptr<DataHeader> dh = nullptr;
 
   public:
     DataHeaderFac();
-    std::shared_ptr<DataHeader> createDataHeader();
+    static std::shared_ptr<DataHeader> createDataHeader();
 
   };
 

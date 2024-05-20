@@ -34,7 +34,7 @@ public:
   virtual void dspErrMsg ( void ) {}
 
   std::filebuf fb[Cnst::MaxSignals+1];
-  unsigned long fileLoc[Cnst::MaxSignals+1];
+  unsigned long fileLoc[Cnst::MaxSignals+1]{};
 
   std::filebuf statusFb;
   unsigned long statusFileLoc;

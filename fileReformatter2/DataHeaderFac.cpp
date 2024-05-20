@@ -20,9 +20,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "DataHeader.h"
 #include "DataHeaderFac.h"
 
-//namespace osp {
-
-  DataHeaderFac::DataHeaderFac ( ) { }
+  DataHeaderFac::DataHeaderFac ( ) = default;
 
   std::shared_ptr<DataHeader> DataHeaderFac::createDataHeader () {
 
@@ -34,4 +32,3 @@ If not, see <https://www.gnu.org/licenses/>.
 
   }
 
-//}

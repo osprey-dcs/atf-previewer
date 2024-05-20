@@ -4,9 +4,11 @@
 
 #include "FileUtil.h"
 
-FileUtil::FileUtil() {}
+#include <utility>
 
-bool FileUtil::hasExtension( QString str ) {
+FileUtil::FileUtil() = default;
+
+bool FileUtil::hasExtension( const QString& str ) {
 
   /* Search backwards for a ".". If we find "/" first, then there is no extension.
    * If we find a "." before finding a "/" and the "." is not the first character,
@@ -34,7 +36,7 @@ QString FileUtil::getHeaderFileName (
    * If name does not include an extension, append the default one.
    */
 
-  QString path = "";
+  QString path;
 
   QString rootDir1 = rootDir.trimmed();
   if ( !( rootDir1.endsWith( "/" ) ) ) {
@@ -65,7 +67,7 @@ QString FileUtil::getHeaderFileName (
 
 }
 
-QString FileUtil::extractFileName( QString str ) {
+QString FileUtil::extractFileName( const QString& str ) {
 
   QString tmp = str;
 
@@ -104,7 +106,8 @@ QString FileUtil::extractFileName( QString str ) {
 
 QString FileUtil::extractFileNameAndExt( QString str ) {
 
-  QString tmp = str;
+  QString tmp;
+  tmp = std::move(str);
 
   int dirEnd = 0;
   for ( int i=tmp.length()-1; i>=0; i-- ) {
@@ -124,7 +127,8 @@ QString FileUtil::extractFileNameAndExt( QString str ) {
 
 QString FileUtil::extractDir( QString str ) {
 
-  QString tmp = str;
+  QString tmp;
+  tmp = std::move(str);
 
   int dirEnd = -1;
   for ( int i=tmp.length()-1; i>=0; i-- ) {
@@ -151,13 +155,9 @@ QString FileUtil::getBinDir( const QString& binRoot, const QString& subDir ) {
 
 }
 
+// Unused at the moment
 QString FileUtil::makeBinFileName( DataHeader *dh, const QString& hdrName, int sigIndex ) {
 
-  //QString binDir = FileUtil::getBinDir( Cnst::BinRoot.c_str(), dh->getString( "AcquisitionStartDate2" ) );
-  //QString binFile = binDir + FileUtil::extractFileName( hdrName ) + "-Sig" +
-  //  QString::number( sigIndex ) + ".dat";
-
-  //return binFile;
   return "";
 
 }

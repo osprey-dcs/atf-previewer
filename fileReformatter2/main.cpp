@@ -1,5 +1,5 @@
 #include <getopt.h>
-#include <string.h>
+#include <cstring>
 
 #include <iostream>
 #include <list>
@@ -13,17 +13,15 @@
 #include "BinFileType.h"
 #include "FileConverterFac.h"
 #include "FileUtil.h"
-#include "Cnst.h"
-#include "DspErr.h"
 
-static const char *version = "0.0.3";
+static const char *version = "0.0.4";
 
 static struct option long_options[] = {
   { "version", no_argument,       0, 0 },
   { "verbose", no_argument,       0, 0 },
   { "chassis", required_argument, 0, 0 },
   { "output", required_argument,  0, 0 },
-  { 0,         0,                 0, 0 }
+  { nullptr,  0,                  0, 0 }
 };
 
 int main ( int argc, char **argv ) {
@@ -43,7 +41,7 @@ int main ( int argc, char **argv ) {
     if (options == -1) {
       break;
     }
-    if (long_options[option_index].name == "chassis") {
+    if ( !strcmp( long_options[option_index].name, "chassis" ) ) {
       chassisSet = true;
       if ( optarg ) {
         chassisArg = strdup( optarg );
@@ -51,7 +49,7 @@ int main ( int argc, char **argv ) {
       else {
         chassisArg = strdup( "unknown" );
       }
-    } else if (long_options[option_index].name == "output") {
+    } else if ( !strcmp( long_options[option_index].name, "output" ) ) {
       outputSet = true;
       if ( optarg ) {
         outputArg = strdup( optarg );
@@ -60,10 +58,10 @@ int main ( int argc, char **argv ) {
         outputArg = strdup( "unknown" );
       }
     }
-    else if (long_options[option_index].name == "verbose") {
+    else if ( !strcmp( long_options[option_index].name, "verbose" ) ) {
       verboseSet = true;
     }
-    else if (long_options[option_index].name == "version") {
+    else if ( !strcmp( long_options[option_index].name, "version" ) ) {
       versionSet = true;
     }
   }
@@ -106,6 +104,7 @@ int main ( int argc, char **argv ) {
   std::shared_ptr<DataHeader> dh = std::make_shared<DataHeader>();
 
   int st;
+
   QString inputRawDataFileType;
   std::shared_ptr<BinFileType> bft = std::shared_ptr<BinFileType>( new BinFileType() );
   st = bft->getRawBinFileType( inputRawDataFile, inputRawDataFileType );
@@ -145,7 +144,7 @@ int main ( int argc, char **argv ) {
     fileMap[sigIndex] = fname;
     if ( verboseSet ) std::cout << "fileMap[" << sigIndex << "] = " << fname.toStdString() << std::endl;
   }
-  
+
   int startingChanIndex = ( chassisNum - 1 ) * 32 + 1;
   st = fc->convert ( chassisNum, chanList, startingChanIndex, dh.get(), inputRawDataFile, outFileDir,
                      simpleName, verboseSet );
@@ -163,9 +162,7 @@ int main ( int argc, char **argv ) {
 
   return 0;
 
-
   QCoreApplication a(argc, argv);
-  qDebug() << "Hello World";
   return QCoreApplication::exec();
 
 }
