@@ -11,20 +11,17 @@ int BinFileType::getRawBinFileType( const QString& rawBinFileName, QString& rawB
   char buf[3];
   std::filebuf fb;
 
-  auto result1 = fb.open( rawBinFileName.toStdString(), std::ios::in | std::ios::binary );
-  if ( !result1 ) {
+  auto result = fb.open( rawBinFileName.toStdString(), std::ios::in | std::ios::binary );
+  if ( !result ) {
     return ERRINFO(EFileOpen);
   }
 
   // read file type
-  auto result2 = fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
-  if ( result2 < 0 ) {
-    std::cout << "result2 is " << result2 << std::endl;
-  }
+  fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
   
-  auto result3 = fb.sgetn( (char *) buf, sizeof(buf) );
-  if ( result3 < sizeof(buf) ) {
-    std::cout << "result3 is " << result3 << std::endl;
+  result = fb.sgetn( (char *) buf, sizeof(buf) );
+  if ( result < sizeof(buf) ) {
+    return ERRINFO(EFileRead);
   }
 
   fb.close();

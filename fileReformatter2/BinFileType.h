@@ -24,12 +24,14 @@ class BinFileType {
 
 public:
 
-  static const int NumErrs = 2;
+  static const int NumErrs = 3;
   static const int ESuccess = 0;
   static const int EFileOpen = 1;
+  static const int EFileRead = 2;
   inline static const std::string errMsgs[NumErrs] {
     { "Success" },
-    { "File open failure" }
+    { "File open failure" },
+    { "File read failure" }
   };
 
   BinFileType();
