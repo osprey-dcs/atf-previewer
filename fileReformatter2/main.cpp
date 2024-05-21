@@ -14,7 +14,7 @@
 #include "FileConverterFac.h"
 #include "FileUtil.h"
 
-static const char *version = "0.0.5";
+static const char *version = "0.0.6";
 
 static struct option long_options[] = {
   { "version", no_argument,       0, 0 },
@@ -92,7 +92,7 @@ int main ( int argc, char **argv ) {
   QString outputJsonFile( outputArg );
   QString simpleName = FileUtil::extractFileName( outputJsonFile );
   QString outFileDir = FileUtil::extractDir( outputJsonFile );
-  QString outBinFileRoot = outFileDir + simpleName;
+  QString outBinFileRoot = simpleName;
 
   if ( verboseSet ) {
     std::cout << "         output hdr file = " << outputJsonFile.toStdString() << std::endl;
@@ -140,7 +140,8 @@ int main ( int argc, char **argv ) {
   std::map<int,QString> fileMap;
   for ( int ch : chanList ) {
     int sigIndex = ( chassisNum - 1 ) * 32 + ch;
-    QString fname = fc->buildOutputFileName( sigIndex, outFileDir, simpleName );
+    // no outfiledir for the file name that gets written to the new header file
+    QString fname = fc->buildOutputFileName( sigIndex, "", simpleName );
     fileMap[sigIndex] = fname;
     if ( verboseSet ) std::cout << "fileMap[" << sigIndex << "] = " << fname.toStdString() << std::endl;
   }
@@ -153,8 +154,7 @@ int main ( int argc, char **argv ) {
     return st;
   }
 
-  st = dh->writeNewHeaderFile( chassisNum, fileMap,
-                               configJsonFile, outputJsonFile, verboseSet );
+  st = dh->writeNewHeaderFile( chassisNum, fileMap, configJsonFile, outputJsonFile, verboseSet );
   if ( st ) {
     dh->dspErrMsg( st );
     return st;
