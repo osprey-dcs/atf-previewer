@@ -350,6 +350,7 @@ int BinData::genLineSeries ( QString filename,
 
   auto result = fb.open( filename.toStdString(), std::ios::in | std::ios::binary );
   if ( !result ) {
+    qWarning()<<__func__<<"Unable to open:"<<filename;
     return -1;
   }
 
