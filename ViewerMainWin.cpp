@@ -39,6 +39,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <QDebug>
 
 #include "ViewerMainWin.h"
+#include "Tunable.h"
 
 static QColor qcolorBlack( "black" );
 static QColor qcolorWhite( "white" );
@@ -60,8 +61,10 @@ ViewerMainWin::ViewerMainWin ( QApplication *_app, double _x, double _y, double 
   this->move( _x, _y );
   this->app = _app;
 
-  fileSelect = new QFileDialog( nullptr, "Open File", QString(Cnst::HdrRoot.c_str()),
-                                QString(Cnst::Filter.c_str()) );
+  QString hdrRoot = Tunable::getString( "atfViewerHdrRoot", Cnst::HdrRoot );
+  QString filter = Tunable::getString( "atfViewerFilter", Cnst::Filter );
+
+  fileSelect = new QFileDialog( nullptr, "Open File", hdrRoot, filter );
 
   // config layouts and child widgets
 

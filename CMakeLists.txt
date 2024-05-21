@@ -81,6 +81,8 @@ add_executable(viewer main.cpp
         CsvExport.h
         RoiSelector.cpp
         RoiSelector.h
+        Tunable.cpp
+        Tunable.h
 )
 
 include_directories(/usr/include/c++/10

@@ -136,21 +136,20 @@ QString FileUtil::getBinDir( const QString& binRoot, const QString& subDir ) {
 
 QString FileUtil::makeBinFileName( DataHeader *dh, const QString& hdrName, int sigIndex ) {
 
-  //QString binDir = FileUtil::getBinDir( Cnst::BinRoot.c_str(), dh->getString( "AcquisitionStartDate2" ) );
-  //QString binFile = binDir + FileUtil::extractFileName( hdrName ) + "-Sig" +
-  //  QString::number( sigIndex ) + ".dat";
+  // binary file path is directory of header file + DATA_FILENAME element of tuple retrieved by sigIndex
+
+  QString binDir = FileUtil::extractDir( hdrName );
 
   DataHeader::DataHeaderIndexMapType indexMap = dh->getIndexMap();
-  QString binFile = std::get<DataHeader::DATA_FILENAME>( indexMap[sigIndex] );
-  
-  //std::stringstream strm;
-  //strm << FileUtil::extractDir( hdrName ).toStdString() <<
-  //  FileUtil::extractFileName( hdrName ).toStdString() << "-Chan" <<
-  //  std::setw(4) << std::setfill( '0' ) << sigIndex << "." << Cnst::BinExtension;
+  QString binName = std::get<DataHeader::DATA_FILENAME>( indexMap[sigIndex] );
 
-  //QString binFile( strm.str().c_str() );
-
-  //std::cout << "FileUtil::makeBinFileName, binFile = " << binFile.toStdString() << std::endl;
+  QString binFile;
+  if ( binName.isEmpty() ) {
+    binFile = "";
+  }
+  else {
+    binFile = binDir + binName;
+  }
 
   return binFile;
 

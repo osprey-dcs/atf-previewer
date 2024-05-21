@@ -33,9 +33,6 @@ If not, see <https://www.gnu.org/licenses/>.
 
 DataHeader::DataHeader() {
 
-  //int ok = readContents();
-  //std::cout << "after readContents, ok = " << ok << std::endl;
-
 }
 
 DataHeader::~DataHeader() {
@@ -366,26 +363,6 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     }
     
     sigNameList.sort();
-
-    // uesr of this class does the following:
-    /*DataHeaderFac dhf;
-      DataHeader *dh = dhf.createDataHeader();
-      int stat = dh->readContents( "/home/osprey/viewer/data/test2.hdr" );*/
-    /*for( auto const& [key,val] : sigs ) {
-      qDebug() << "key = " << key << " : ";
-      qDebug() << "  Egu       = " << std::get<EGU>(val);
-      qDebug() << "  Slope     = " << std::get<SLOPE>(val);
-      qDebug() << "  Intercept = " << std::get<INTERCEPT>(val);
-      qDebug() << "  SigIndex  = " << std::get<SIGINDEX>(val);
-    }
-
-    qDebug() << "";
-
-    for ( auto& nm : sigNameList ) {
-      qDebug() << nm;
-    }
-
-    qDebug() << "";*/
 
     return 0;
 

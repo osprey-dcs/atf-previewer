@@ -86,6 +86,7 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
 
   this->mainWindow = mainw;
   this->haveFile = false;
+  this->hdrFileName = "";
   this->fileName = "";
   this->haveHeader = false;
   this->readyForData = false;
@@ -256,9 +257,7 @@ static bool once = true;
 
 int ViewerCtlr::processHeaderFile (void ) {
 
-  QString hdrFile = this->fileName + ".hdr";
-
-  int stat = this->dh->readContents( hdrFile );
+  int stat = this->dh->readContents( this->hdrFileName );
   if ( stat ) return stat;
 
   QString str;
@@ -1658,7 +1657,7 @@ void ViewerCtlr::fileSelected1(const QString& file ) {
 
   if ( count > 1 ) {
     
-    this->fileName = file;
+    this->fileName = this->hdrFileName = file;
     this->fileName.replace( count, l-count+1, "" );
     this->haveFile = true;
     for ( ViewerGraphAreaBase *w : this->mainWindow->getVgaList() ) {
@@ -2312,8 +2311,11 @@ void ViewerCtlr::selectionRange ( int vgaId, double xMin, double xMax ) {
   if ( xMin < 0.0 ) xMin = 0.0;
 
   if ( haveDataForFft ) {
+    int curSigIndex;
+    QString curFileName;
+    vga->getCurInfo( curFileName, curSigIndex );
     double minT=0, maxT=0;
-    QString binFile = FileUtil::makeBinFileName( dh.get(), this->fileName, 0 );
+    QString binFile = FileUtil::makeBinFileName( dh.get(), curFileName, curSigIndex );
     int st = bd->getDataFullTimeRange( binFile, sampleRate, minT, maxT );
     if ( !st ) {
       if ( xMax > maxT ) xMax = maxT;

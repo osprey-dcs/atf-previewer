@@ -91,6 +91,7 @@ public:
   double x, y, w, h;
   QRectF plotAreaDimensions[Cnst::NumGraphs];
   bool haveFile;
+  QString hdrFileName;
   QString fileName;
   QString simpleFileName;
   bool haveHeader;
