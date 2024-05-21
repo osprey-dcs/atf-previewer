@@ -80,7 +80,7 @@ static bool isFFT( int id ) {
 
 }
 
-ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
+ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw, const QString& file ) {
 
   this->up = upfac.createUserPrefs();
 
@@ -201,6 +201,10 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) {
 
   }
 
+  if ( !file.isEmpty() ) {
+    fileToOpen = file;
+  }
+
 }
 
 ViewerCtlr::~ViewerCtlr() {
@@ -308,7 +312,7 @@ int ViewerCtlr::processHeaderFile (void ) {
   else {
     std::cout << "Failed to get sample rate" << std::endl;
   }
-
+  
   // populate combo boxes for the first row graphs
   auto nameList = this->dh->getNameList();
   auto nameMap = this->dh->getNameMap();
@@ -342,6 +346,9 @@ void ViewerCtlr::process(void ) {
 
   if ( once ) {
     once = false;
+    if ( !fileToOpen.isEmpty() ) {
+      fileSelected1( fileToOpen );
+    }
   }
 
   // wait until plot area dimension are all non-zero (or max 10 seconds)

@@ -48,6 +48,26 @@ int main(int argc, char *argv[]) {
 
   QApplication app(argc, argv);
 
+  bool doOpenFile = false;
+  QString fileToOpen;
+  QFile testFile;
+
+  // argv[1] can be a file to open
+  if ( argc == 2 ) {
+    fileToOpen = argv[1];
+    testFile.setFileName( fileToOpen );
+    if ( testFile.exists() ) {
+      if ( testFile.open( QIODevice::ReadOnly ) ) {
+        doOpenFile = true;
+      }
+    }
+    testFile.close();
+    if ( !doOpenFile ) {
+      std::cout << "Cannot access file: " << fileToOpen.toStdString() << std::endl;
+      fileToOpen.clear();
+    }
+  }
+
   auto const sg = QGuiApplication::screens()[0]->availableGeometry();
   //std::cout << "w = " << sg.width() << ", h = " << sg.height() << std::endl;
 
@@ -67,7 +87,7 @@ int main(int argc, char *argv[]) {
   mainWin->config();
   mainWin->show();
 
-  QSharedPointer<ViewerCtlr> mainCtlr = QSharedPointer<ViewerCtlr>( new ViewerCtlr( mainWin ) );
+  QSharedPointer<ViewerCtlr> mainCtlr = QSharedPointer<ViewerCtlr>( new ViewerCtlr( mainWin, fileToOpen ) );
 
   int count = 0, maxMs = 250;
   int delay = 1000000 * Cnst::EventProcessPeriod;

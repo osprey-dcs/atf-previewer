@@ -21,6 +21,8 @@ If not, see <https://www.gnu.org/licenses/>.
 
 Combo::Combo( QWidget *w ) {
 
+  this->setEditable( false );
+
   callbackW = w;
 
   //std::cout << "Combo - call connect" << std::endl;

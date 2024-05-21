@@ -115,12 +115,13 @@ public:
   double curTimeMaximum;
   bool haveCurTimeRange;
   bool lockTimeScale;
+  QString fileToOpen;
 
   double nonSlotHavScaleX0, nonSlotHavScaleX1;
 
   double roiX0, roiX1;
 
-  ViewerCtlr ( QSharedPointer<ViewerMainWin> mainWin );
+  ViewerCtlr ( QSharedPointer<ViewerMainWin> mainWin, const QString& file );
   virtual ~ViewerCtlr ();
   ViewerCtlr ( const ViewerCtlr& ) = delete;
   ViewerCtlr ( ViewerCtlr& ) = delete;

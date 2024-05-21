@@ -168,17 +168,17 @@ ViewerMainWin::ViewerMainWin ( QApplication *_app, double _x, double _y, double 
   this->setCentralWidget( centralWidget );
 
   auto fileMenu = menuBar()->addMenu(tr("&File"));
-  openAction = new QAction( "Open" );
+  openAction = new QAction( "&Open" );
   openAction->setData( "open" );
   fileMenu->addAction( openAction );
 
-  exportAction = new QAction( "Export" );
+  exportAction = new QAction( "&Export" );
   exportAction->setData( "export" );
   fileMenu->addAction( exportAction );
 
   exportDialog = new ExportDialog( this, Qt::Window );
 
-  exitAction = new QAction( "Exit" );
+  exitAction = new QAction( "E&xit" );
   exitAction->setData( "exit" );
   fileMenu->addAction( exitAction );
 

@@ -42,7 +42,7 @@ ViewerGraphArea::ViewerGraphArea( int _id, QWidget *_parent ) : ViewerGraphAreaB
   selectionDeltaX = QSharedPointer<QLabel>( new QLabel( " " ) );
   sigLabel = QSharedPointer<QLabel>( new QLabel( "Signal" ) );
   sigName = QSharedPointer<Combo>( new Combo( this ) );
-  sigName->setEditable( true );
+  sigName->setEditable( false );
   sigName->clear();
   curSigIndex = 0;
   curFileName = "";
