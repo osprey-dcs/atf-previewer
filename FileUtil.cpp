@@ -5,6 +5,9 @@
 #include <sstream>
 #include <iomanip>
 
+#include <QFileInfo>
+#include <QDir>
+
 #include "FileUtil.h"
 
 FileUtil::FileUtil() {}
@@ -136,22 +139,15 @@ QString FileUtil::getBinDir( const QString& binRoot, const QString& subDir ) {
 
 QString FileUtil::makeBinFileName( DataHeader *dh, const QString& hdrName, int sigIndex ) {
 
-  //QString binDir = FileUtil::getBinDir( Cnst::BinRoot.c_str(), dh->getString( "AcquisitionStartDate2" ) );
-  //QString binFile = binDir + FileUtil::extractFileName( hdrName ) + "-Sig" +
-  //  QString::number( sigIndex ) + ".dat";
+  const auto& indexMap(dh->getIndexMap());
+  auto it(indexMap.find(sigIndex));
+  if(it!=indexMap.end()) {
+    QFileInfo binName(QFileInfo(hdrName).dir(), std::get<DataHeader::DATA_FILENAME>(it->second));
+    qDebug()<<__func__<<"header"<<hdrName<<"sig"<<sigIndex<<binName.filePath();
+    return binName.filePath();
 
-  DataHeader::DataHeaderIndexMapType indexMap = dh->getIndexMap();
-  QString binFile = std::get<DataHeader::DATA_FILENAME>( indexMap[sigIndex] );
-  
-  //std::stringstream strm;
-  //strm << FileUtil::extractDir( hdrName ).toStdString() <<
-  //  FileUtil::extractFileName( hdrName ).toStdString() << "-Chan" <<
-  //  std::setw(4) << std::setfill( '0' ) << sigIndex << "." << Cnst::BinExtension;
-
-  //QString binFile( strm.str().c_str() );
-
-  //std::cout << "FileUtil::makeBinFileName, binFile = " << binFile.toStdString() << std::endl;
-
-  return binFile;
-
+  } else {
+    qWarning()<<__func__<<"No meta for signal"<<sigIndex;
+    return QString();
+  }
 }
