@@ -1910,7 +1910,7 @@ int ViewerCtlr::csvExport ( void ) {
 
 
 int ViewerCtlr::uff58bExport ( void ) {
-
+  qWarning()<<__func__<<"enter";
   if ( !haveHeader ) {
     std::cout << "No header file is open\n";
     return -1;
@@ -1938,6 +1938,7 @@ int ViewerCtlr::uff58bExport ( void ) {
   QString exportFileName = mainWindow->exportDialog->exportFileName;
   auto result = fbExport.open( exportFileName.toStdString(), std::ios::out | std::ios::binary );
   if ( !result ) {
+    qWarning()<<__func__<<"Unable to open for writing"<<exportFileName;
     return -1;
   }
 
@@ -2042,16 +2043,18 @@ int ViewerCtlr::uff58bExport ( void ) {
     //std::fbin = open input bin file
     result = fbInput.open( binFile.toStdString(), std::ios::in | std::ios::binary );
     if ( !result ) {
+      qWarning()<<__func__<<"Unable to open for reading"<<binFile;
       fbExport.close();
       return -1;
     }
 
-    std::cout << "processing input file: " << binFile.toStdString() << " ...";
+    qWarning() << __func__ << "processing input file: " << binFile << " ...";
 
     st = uff58b->writeHeader( fbExport );
     if ( st ) {
       fbInput.close();
       fbExport.close();
+      qWarning()<<__func__<<"Unable to write header";
       return -1;
     }
 

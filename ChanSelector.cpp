@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+#include <QDebug>
+
 #include "ChanSelector.h"
 #include "Cnst.h"
 
@@ -18,6 +20,7 @@ ChanSelector::~ChanSelector() {
 }
 
 int ChanSelector::setText( QString s ) {
+  qWarning()<<__func__<<"expr"<<s;
 
   const int FindStartDigit = 1;
   const int FindDigitOrCommaOrDashOrEnd = 2;
@@ -196,7 +199,7 @@ int ChanSelector::setText( QString s ) {
   }
 
   if ( error ) {
-    //std::cout << "error = " << error << std::endl;
+    qWarning() << __func__ << "error = " << error;
     return error;
   }
 
@@ -205,6 +208,7 @@ int ChanSelector::setText( QString s ) {
   }
 
   chans.sort();
+  qWarning()<<__func__<<"selected"<<chans;
 
   return 0;
 
