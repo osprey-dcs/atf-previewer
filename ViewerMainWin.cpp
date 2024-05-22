@@ -170,10 +170,12 @@ ViewerMainWin::ViewerMainWin ( QApplication *_app, double _x, double _y, double 
   auto fileMenu = menuBar()->addMenu(tr("&File"));
   openAction = new QAction( "&Open" );
   openAction->setData( "open" );
+  openAction->setShortcut(Qt::CTRL | Qt::Key_O);
   fileMenu->addAction( openAction );
 
   exportAction = new QAction( "&Export" );
   exportAction->setData( "export" );
+  exportAction->setShortcut(Qt::CTRL | Qt::Key_X);
   fileMenu->addAction( exportAction );
 
   exportDialog = new ExportDialog( this, Qt::Window );
