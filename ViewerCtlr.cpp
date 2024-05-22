@@ -1708,13 +1708,13 @@ int ViewerCtlr::csvExport ( void ) {
   //std::cout << "hdrFile = " << hdrFile.toStdString() << std::endl;
 
   // create csv object
-  CsvExport *csv = new CsvExport( hdrFile );
+  std::unique_ptr<CsvExport> csv{new CsvExport( hdrFile )};
 
   // get map of channel/signal properties by signal index
   DataHeader::DataHeaderIndexMapType indexMap = dh->getIndexMap();
 
   // get list of channels/signals to export
-  ChanSelector *chans = new ChanSelector();
+  std::unique_ptr<ChanSelector> chans{new ChanSelector()};
   chans->setText( mainWindow->exportDialog->chanSelect );
   std::list<int> sigNumList = chans->getList();
 
@@ -1924,15 +1924,15 @@ int ViewerCtlr::uff58bExport ( void ) {
   QString hdrFile = this->fileName + "." + Cnst::HdrExtension.c_str();
 
   // create uff58b object
-  Uff58bExport *uff58b = new Uff58bExport( hdrFile );
+  std::unique_ptr<Uff58bExport> uff58b{new Uff58bExport( hdrFile )};
 
   // get map of channel/signal properties by signal index
   DataHeader::DataHeaderIndexMapType indexMap = dh->getIndexMap();
 
   // get list of channels/signals to export
-  ChanSelector *chans = new ChanSelector();
+  std::unique_ptr<ChanSelector> chans{new ChanSelector()};
   chans->setText( mainWindow->exportDialog->chanSelect );
-  std::list<int> sigNumList = chans->getList();
+  const auto& sigNumList = chans->getList();
 
   // open export bin file
   QString exportFileName = mainWindow->exportDialog->exportFileName;
