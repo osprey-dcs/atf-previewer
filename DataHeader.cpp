@@ -195,6 +195,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     jobjNew["AcquisitionEndDate2"] = jobj["AcquisitionEndDate2"];
     jobjNew["Role1Name"] = jobj["Role1Name"];
     jobjNew["SampleRate"] = jobj["SampleRate"];
+    jobjNew["IDLine5"] = jobj["IDLine5"];
 
     QJsonValue jv;
     jv = jobj["Signals"];
@@ -330,7 +331,8 @@ int DataHeader::getString(const QString &s, QString& qs ) {
              jv1["Coupling"].toDouble(),
              qjo["Chassis"].toDouble(),
              qjo["Channel"].toDouble(),
-             jv1["OutDataFile"].toString() );
+             jv1["OutDataFile"].toString(),
+             jv1["IDLine5"].toString() );
 
              sigs[jv1["Name"].toString()] = tp;
              sigNameList.push_back( jv1["Name"].toString() );
@@ -352,7 +354,8 @@ int DataHeader::getString(const QString &s, QString& qs ) {
              jv1["Coupling"].toDouble(),
              qjo["Chassis"].toDouble(),
              qjo["Channel"].toDouble(),
-             jv1["OutDataFile"].toString() );
+             jv1["OutDataFile"].toString(),
+             jv1["IDLine5"].toString() );
 
              sigsByIndex[jv1["SigNum"].toDouble()] = tp1;
 
@@ -396,14 +399,6 @@ int DataHeader::getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu
   return -1;
 
 }
-
-//const std::list<QString>& DataHeader::getNameList() {
-//  return sigNameList;
-//}
-
-//const std::map<QString,std::tuple<QString, double, double, double, double, QString, QString, QString, double, QString, double>>& DataHeader::getNameMap() {
-//  return sigs;
-//};
 
 const DataHeader::DataHeaderListType& DataHeader::getNameList() {
   return sigNameList;

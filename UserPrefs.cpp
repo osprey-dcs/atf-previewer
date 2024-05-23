@@ -17,17 +17,25 @@ If not, see <https://www.gnu.org/licenses/>.
 // Created by jws3 on 4/2/24.
 //
 
-#include "UserPrefs.h"
+#include <iostream>
+#include <string>
+#include <cstdlib>
+
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QFile>
-#include <iostream>
-#include <string>
 
-  UserPrefs::UserPrefs() {
+#include "UserPrefs.h"
+
+UserPrefs::UserPrefs() {
 
     QJsonDocument jd;
     QJsonObject jo;
+
+    filename = getenv( "HOME" );
+    filename += "/";
+    filename += ss.c_str();
+
     int ok = readContents();
     //std::cout << "after readContents, ok = " << ok << std::endl;
 
@@ -97,7 +105,8 @@ If not, see <https://www.gnu.org/licenses/>.
         outf.close();
     }
     else {
-      std::cout << "Viewer property file could not be opened" << std::endl;
+      std::cout << "Viewer property file could not be opened for update" << std::endl;
+      return -1;
     }
 
     return 0;
@@ -106,10 +115,18 @@ If not, see <https://www.gnu.org/licenses/>.
 
   int UserPrefs::readContents () {
 
+    QString contents;
+
     QFile inf( QString( UserPrefs::filename ) );
     bool result = inf.open( QIODevice::ReadOnly );
-    QString contents = inf.readAll();
-    inf.close();
+    if ( result ) {
+      contents = inf.readAll();
+      inf.close();
+    }
+    else {
+      std::cout << "Viewer property file could not be opened for read" << std::endl;
+      return -1;
+    }
 
     jd = QJsonDocument::fromJson(contents.toUtf8());
     jo = jd.object();
@@ -117,6 +134,3 @@ If not, see <https://www.gnu.org/licenses/>.
     return 0;
 
   }
-
-// need to build this name elsewhere
-QString UserPrefs::filename = "/home/jws3/.viewerProps.json";

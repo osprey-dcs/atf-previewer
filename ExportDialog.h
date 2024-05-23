@@ -17,6 +17,7 @@
 #include <QMenu>
 #include <QTextEdit>
 #include <QString>
+#include <QFileDialog>
 
 #include "UserPrefsFac.h"
 #include "Cnst.h"
@@ -37,8 +38,7 @@ public:
   QWidget *refWidget;
   QGridLayout *gl;
 
-  QLabel *fileNameLabel;
-  QLineEdit *fileNameLineEdit;
+  QFileDialog *fileSelect;
   QString exportFileName;
   QLabel *descLabel;
   QLineEdit *descLineEdit;
@@ -75,11 +75,12 @@ signals:
 
 private slots:
   void performAction( bool );
-  void okButtonClicked( bool );
   void cancelButtonClicked( bool );
   void textUpdated( const QString &s );
   void textUpdated( void );
-
+  void openFileSelect( bool );
+  void exportFileSelected( const QString& file );
+  
 };
 
 

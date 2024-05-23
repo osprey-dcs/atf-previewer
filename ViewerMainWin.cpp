@@ -65,6 +65,9 @@ ViewerMainWin::ViewerMainWin ( QApplication *_app, double _x, double _y, double 
   QString filter = Tunable::getString( "atfViewerFilter", Cnst::Filter );
 
   fileSelect = new QFileDialog( nullptr, "Open File", hdrRoot, filter );
+  fileSelect->setNameFilters( { "Header files ( *.hdr *.json )",
+                               "All files ( *.* )" } );
+                               
 
   // config layouts and child widgets
 

@@ -32,10 +32,12 @@ If not, see <https://www.gnu.org/licenses/>.
 
   public:
 
+    inline static const std::string ss {".viewerProps.json"};
+
     QJsonDocument jd;
     QJsonObject jo;
 
-   static QString filename;
+    QString filename;
 
     UserPrefs();
 

@@ -24,15 +24,6 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   gl->addLayout( hl1, 1, 1, Qt::AlignLeft );
   gl->addLayout( hl2, 1, 2, Qt::AlignLeft );
 
-  fileNameLabel = new QLabel( "Out File Name");
-  hl1->addWidget( fileNameLabel, 0 );
-
-  fileNameLineEdit = new QLineEdit( this );
-  fileNameLineEdit->setMaxLength( 78 );
-  hl2->addWidget( fileNameLineEdit, 9 );
-
-  hl2->addStretch( 12 );
-
   // ----------------------------------------------
 
   hl1 = new QHBoxLayout();
@@ -93,7 +84,7 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   csvAction = new QAction( "&CSV");
   exportFormatMenu->addAction( csvAction );
   exportFormatMenuButton->setMenu( exportFormatMenu );
-  exportFormatLabel = new QLabel( "..." );
+  exportFormatLabel = new QLabel( "UFF58b" );
 
   hl1->addWidget( exportFormatMenuButton );
   hl2->addWidget( exportFormatLabel );
@@ -107,14 +98,14 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   gl->addLayout( hl1, 6, 1, Qt::AlignLeft );
   gl->addLayout( hl2, 6, 2, Qt::AlignLeft );
 
-  exportRangeMenuButton = new QPushButton( "Export Range" );
+  exportRangeMenuButton = new QPushButton( "Time Range" );
   exportRangeMenu = new QMenu( exportRangeMenuButton );
-  fromSelectionAction = new QAction( "&From Selection");
+  fromSelectionAction = new QAction( "&From Start/End");
   exportRangeMenu->addAction( fromSelectionAction );
-  allAction = new QAction( "&All Data");
+  allAction = new QAction( "&All Time");
   exportRangeMenu->addAction( allAction );
   exportRangeMenuButton->setMenu( exportRangeMenu );
-  exportRangeLabel = new QLabel( "..." );
+  exportRangeLabel = new QLabel( "All Time" );
 
   hl1->addWidget( exportRangeMenuButton );
   hl2->addWidget( exportRangeLabel );
@@ -150,11 +141,17 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   hl2->addWidget( cancel, 0 );
   hl2->addStretch( 9 );
 
+  fileSelect = new QFileDialog( nullptr, "Select File", "", "" );
+  fileSelect->setAcceptMode( QFileDialog::AcceptSave );
+  fileSelect->setLabelText(QFileDialog::Accept, "Export" );
+  fileSelect->setFileMode( QFileDialog::AnyFile );
+  fileSelect->setDefaultSuffix( "uff58b" );
+  fileSelect->setNameFilters( { "Export files ( *.csv *.uff58b )",
+                                "All files ( *.* )" } );
+
   // init fields from user prefs
-  
+
   // if item doesn't exist, give it a default value
-  if ( up->getString( "ExportFileName", exportFileName ) ) exportFileName = "";
-  fileNameLineEdit->setText( exportFileName );
 
   if ( up->getString( "Description", description ) ) description = "";
   descLineEdit->setText( description );
@@ -167,19 +164,16 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   endTimeLineEdit->setText( endTime );
   endTimeValInSec = endTime.toDouble();
 
-  if ( up->getString( "ExportFormat", exportFormat ) ) exportFormat = "";
+  if ( up->getString( "ExportFormat", exportFormat ) ) exportFormat = "UFF58b";
   exportFormatLabel->setText( exportFormat );
 
-  if ( up->getString( "ExportRange", exportRange ) ) exportRange = "";
+  if ( up->getString( "ExportRange", exportRange ) ) exportRange = "All Time";
   exportRangeLabel->setText( exportRange );
   
   if ( up->getString( "chanSelect", chanSelect ) ) chanSelect = "";
   chanSelectTextEdit->setPlainText( chanSelect );
 
   // connect to signals  
-
-  connect( fileNameLineEdit, SIGNAL( textChanged( const QString & ) ),
-           this, SLOT( textUpdated( const QString & ) ) );
 
   connect( descLineEdit, SIGNAL( textChanged( const QString & ) ),
            this, SLOT( textUpdated( const QString & ) ) );
@@ -205,11 +199,17 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   connect( chanSelectTextEdit, SIGNAL( textChanged( void ) ),
            this, SLOT( textUpdated( void ) ) );
 
-  connect( ok, SIGNAL( clicked( bool ) ),
-           this, SLOT( okButtonClicked( bool ) ) );
+  //connect( ok, SIGNAL( clicked( bool ) ),
+  //         this, SLOT( okButtonClicked( bool ) ) );
 
   connect( cancel, SIGNAL( clicked( bool ) ),
            this, SLOT( cancelButtonClicked( bool ) ) );
+
+  connect( ok, SIGNAL( clicked( bool ) ),
+           this, SLOT( openFileSelect( bool ) ) );
+  
+  connect( fileSelect, SIGNAL( fileSelected( const QString& ) ),
+           this, SLOT( exportFileSelected( const QString& ) ) );
 
 }
 
@@ -243,12 +243,8 @@ void ExportDialog::performAction( bool checked ) {
     up->setString( "ExportFormat", "CSV" );
     up->update();
 
-    //std::cout << "fileName is " << fileNameLineEdit->text().toStdString() << std::endl;
-    QString name = FileUtil::extractFileName( fileNameLineEdit->text() );
-    QString dir = FileUtil::extractDir( fileNameLineEdit->text() );
-    QString newFile = dir + name + "." + Cnst::csvExtension.c_str();
-    fileNameLineEdit->setText( newFile );
-    fileNameLineEdit->update();
+    fileSelect->setDefaultSuffix( "csv" );
+    fileSelect->update();
     
   }
   else if ( action == uff58bAction ) {
@@ -257,63 +253,43 @@ void ExportDialog::performAction( bool checked ) {
     up->setString( "ExportFormat", "UFF58b" );
     up->update();
 
-    //std::cout << "fileName is " << fileNameLineEdit->text().toStdString() << std::endl;
-    QString name = FileUtil::extractFileName( fileNameLineEdit->text() );
-    QString dir = FileUtil::extractDir( fileNameLineEdit->text() );
-    QString newFile = dir + name + "." + Cnst::uff58aExtension.c_str();
-    fileNameLineEdit->setText( newFile );
-    fileNameLineEdit->update();
-    
-  }
+    fileSelect->setDefaultSuffix( "uff58b" );
+    fileSelect->update();
 
+  }
   else if ( action == fromSelectionAction ) {
     
-    exportRangeLabel->setText( "From Selection" );
-    up->setString( "ExportRange", "From Selection" );
+    exportRangeLabel->setText( "From Start/End" );
+    up->setString( "ExportRange", "From Start/End" );
     up->update();
 
-    exportRange = "From Selection";
+    exportRange = "From Start/End";
     
   }
 
   else if ( action == allAction ) {
     
-    exportRangeLabel->setText( "All Data" );
-    up->setString( "ExportRange", "All Data" );
+    exportRangeLabel->setText( "All Time" );
+    up->setString( "ExportRange", "All Time" );
     up->update();
 
-    exportRange = "All Data";
+    exportRange = "All Time";
     
   }
 
 }
  
-void ExportDialog::okButtonClicked( bool ) {
-
-  if ( exportFormatLabel->text() == "CSV" ) {
-    emit csvExport();
-  }
-  else if ( exportFormatLabel->text() == "UFF58b" ) {
-    emit uff58bExport();
-  }
-  close();
-
-}
- 
 void ExportDialog::cancelButtonClicked( bool ) {
 
+  up->update();
+  
   close();
 
 }
  
 void ExportDialog::textUpdated( const QString &s ) {
 
-  if ( sender() == fileNameLineEdit ) {
-    exportFileName = s;
-    up->setString( "ExportFileName", exportFileName );
-    up->update();
-  }
-  else if ( sender() == descLineEdit ) {
+  if ( sender() == descLineEdit ) {
     description = s;
     up->setString( "Description", description );
     up->update();
@@ -344,3 +320,27 @@ void ExportDialog::textUpdated( void ) {
 
 }
  
+void ExportDialog::openFileSelect( bool ) {
+
+  fileSelect->move( 100, 50 );
+  fileSelect->show();
+
+}
+
+void ExportDialog::exportFileSelected( const QString& file ) {
+
+  exportFileName = file;
+
+  if ( exportFormatLabel->text() == "CSV" ) {
+    emit csvExport();
+  }
+  else if ( exportFormatLabel->text() == "UFF58b" ) {
+    emit uff58bExport();
+  }
+  
+  up->update();
+  
+  close();
+
+}
+

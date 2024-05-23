@@ -36,11 +36,11 @@ class DataHeader {
 
     typedef std::map<QString,std::tuple<QString, double, double, double,
                                         double, QString, QString, double, double, double, double,
-                                        double, double, double, QString>> DataHeaderMapType;
+                                        double, double, double, QString, QString>> DataHeaderMapType;
 
     typedef std::map<double,std::tuple<QString, double, double, QString,
                                        double, QString, QString, double, double, double, double,
-                                       double, double, double, QString>> DataHeaderIndexMapType;
+                                       double, double, double, QString, QString>> DataHeaderIndexMapType;
   
     typedef std::list<QString> DataHeaderListType;
 
@@ -60,7 +60,8 @@ class DataHeader {
     static const int ADDRESS_CHASSIS {12};
     static const int ADDRESS_CHANNEL {13};
     static const int DATA_FILENAME {14};
-  
+    static const int IDLINE5 {15};
+
     QJsonDocument jd;
     QJsonObject jo;
     //                            0        1       2          3        4       5        6        7         8        9        10        11        12            13            14

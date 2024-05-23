@@ -38,7 +38,7 @@ class Cnst {
   inline static const std::string BinExtension {"j"};
 
   inline static const std::string csvExtension {"csv"};
-  inline static const std::string uff58aExtension {"uff58a"};
+  inline static const std::string uff58bExtension {"uff58b"};
 
   // normal file reads
   inline static const std::string BinDataName {"File"};

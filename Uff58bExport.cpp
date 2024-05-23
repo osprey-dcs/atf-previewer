@@ -25,7 +25,7 @@ int Uff58bExport::set58bHeader(unsigned long numBytes) {
   int endian = LITTLE;
   short sval = 1;
   char *cval = reinterpret_cast<char *>( &sval );
-  if ( *cval == 1 ) endian = BIG;
+  if ( *cval != 1 ) endian = BIG;
 
   int floatFormat = IEEE_754;
 
@@ -42,7 +42,7 @@ int Uff58bExport::set58bHeader(unsigned long numBytes) {
     std::setw(6) << std::right << 0 <<
     std::setw(12) << std::right << 0 <<
     std::setw(12) << std::right << 0 <<
-    lf << cr;
+    lf;
 
   uff58bIdLine = strm.str().c_str();
 
@@ -56,6 +56,10 @@ int Uff58bExport::set58bHeader(unsigned long numBytes) {
 
 int Uff58bExport::set80CharRec ( int recNum, QString line ) {
 
+  if ( line.isEmpty() ) {
+    line = "NONE";
+  }
+
   if ( recNum < 1 ) recNum == 1;
   if ( recNum > 5 ) recNum = 5;
 
@@ -65,7 +69,7 @@ int Uff58bExport::set80CharRec ( int recNum, QString line ) {
   char cr = 13;
 
   std::stringstream strm;
-  strm << std::setw(78) << std::left << std::setfill( ' ' ) << line.toStdString() << lf << cr;
+  strm << std::setw(78) << std::left << std::setfill( ' ' ) << line.toStdString() << lf;
 
   headerLines1thru11[recNum] = strm.str().c_str();
   
@@ -81,6 +85,9 @@ int Uff58bExport::setDofIdentification( int funcType, int funcIdNum,
   int versNum, int ldCaseIdNum, QString rspEntityName, int rspNode, int rspDir,
   QString refEntityName, int refNode, int refDir ) {
 
+  if ( rspEntityName.isEmpty() ) rspEntityName = "NONE";
+  if ( refEntityName.isEmpty() ) refEntityName = "NONE";
+  
   char lf = 10;
   char cr = 13;
 
@@ -97,7 +104,7 @@ int Uff58bExport::setDofIdentification( int funcType, int funcIdNum,
     std::setw(10) << std::left << std::setfill( ' ' ) << refEntityName.toStdString() <<
     std::setw(10) << std::right << refNode <<
     std::setw(4) << std::right << refDir <<
-    lf << cr;
+    lf;
 
   int recNum = 6 - 1;
   headerLines1thru11[recNum] = strm.str().c_str();
@@ -123,7 +130,7 @@ int Uff58bExport::setDataForm( int dataType, int numEle, int xSpacing,
     std::setw(13) << std::setprecision(7) << std::right << xMin <<
     std::setw(13) << std::setprecision(7) << std::right << xInc <<
     std::setw(13) << std::setprecision(7) << std::right << zAxisVal <<
-    "         " << lf << cr;
+    "         " << lf;
 
   int recNum = 7 - 1;
   headerLines1thru11[recNum] = strm.str().c_str();
@@ -144,6 +151,9 @@ int Uff58bExport::setDataCharacteristics( int recNum, int dataType, int lengthUn
   if ( recNum > 11 ) recNum = 11;
 
   recNum -= 1;
+
+  if ( axisLabel.isEmpty() ) axisLabel = "NONE";
+  if ( axisUnitsLabel.isEmpty() ) axisUnitsLabel = "NONE";
   
   char lf = 10;
   char cr = 13;
@@ -157,7 +167,7 @@ int Uff58bExport::setDataCharacteristics( int recNum, int dataType, int lengthUn
     std::setw(20) << std::left << std::setfill( ' ' ) << axisLabel.toStdString() <<
     " " <<
     std::setw(20) << std::left << std::setfill( ' ' ) << axisUnitsLabel.toStdString() <<
-    "           " << lf << cr;
+    "           " << lf;
 
   headerLines1thru11[recNum] = strm.str().c_str();
   
@@ -177,11 +187,11 @@ int Uff58bExport::writeSpacer( std::filebuf &fb ) {
   char lf = 10;
   char cr = 13;
 
-  strm << std::setw(6) << std::right << -1 << cr << lf;
+  strm << std::setw(6) << std::right << -1 << lf;
 
   s = strm.str();
   
-  int n = writeBinary( fb, s.c_str(), 8 );
+  int n = writeBinary( fb, s.c_str(), 7 );
   //std::cout << "Uff58bExport::writeSpacer - n = " << n << std::endl;
 
   return 0;
