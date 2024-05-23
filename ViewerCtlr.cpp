@@ -431,7 +431,6 @@ void ViewerCtlr::process(void ) {
         this->mainWindow->setWhat( "UFF58b Export..." );
         stat = uff58bExport();
         if ( stat ) {
-          exportFail.showMessage(QString("Export fails (%1)").arg(stat));
           std::cout << "Error " << stat << " from uff58bExport" << std::endl;
         }
         this->mainWindow->setWorking( QString("Ready") );
@@ -444,7 +443,6 @@ void ViewerCtlr::process(void ) {
         this->mainWindow->setWhat( "CSV Export..." );
         stat = csvExport();
         if ( stat ) {
-          exportFail.showMessage(QString("Export fails (%1)").arg(stat));
           std::cout << "Error " << stat << " from csvExport" << std::endl;
         }
         this->mainWindow->setWorking( QString("Ready") );
@@ -1794,7 +1792,7 @@ int ViewerCtlr::csvExport ( void ) {
         st = bd->getRecordRangeForTime( binFile, sampleRate, minT, maxT,
                                         minByte, maxByte );
 
-        recRange = maxByte - minByte + 1;
+        recRange = maxByte - minByte;
 
       }
       else {
@@ -1802,19 +1800,19 @@ int ViewerCtlr::csvExport ( void ) {
         unsigned long maxEle;
         bd->getMaxElements ( binFile, 0, maxEle );
         minByte = 0;
-        maxByte = maxEle * sizeof(int) - 1;
-        recRange = maxByte - minByte + 1;
+        maxByte = maxEle * sizeof(int);
+        recRange = maxByte - minByte;
 
       }
 
       minT = minByte / sizeof(int) / sampleRate;
 
-      //std::cout << "minT = " << minT << std::endl;
-      //std::cout << "maxT = " <<  maxT << std::endl;
-      //std::cout << "minByte = " <<  minByte << std::endl;
-      //std::cout << "maxByte = " <<  maxByte << std::endl;
-      //std::cout << "recRange (ele) = " << recRange/sizeof(int) << std::endl;
-      //std::cout << "numSignals = " << numSignals << std::endl;
+      std::cout << "minT = " << minT << std::endl;
+      std::cout << "maxT = " <<  maxT << std::endl;
+      std::cout << "minByte = " <<  minByte << std::endl;
+      std::cout << "maxByte = " <<  maxByte << std::endl;
+      std::cout << "recRange (ele) = " << recRange/sizeof(int) << std::endl;
+      std::cout << "numSignals = " << numSignals << std::endl;
 
     }
     
@@ -2013,10 +2011,6 @@ int ViewerCtlr::uff58bExport ( void ) {
 
     // get binary file name from fileName and signal + extension
     QString binFile = FileUtil::makeBinFileName( dh.get(), fileName, sigIndex );
-    if(binFile.isEmpty()) {
-      qWarning()<<"skip"<<sigIndex;
-      continue;
-    }
 
     // build a string containing just the binary file name without the directory
     QString simpleName = FileUtil::extractFileName( binFile );
@@ -2041,12 +2035,11 @@ int ViewerCtlr::uff58bExport ( void ) {
       unsigned long maxEle;
       bd->getMaxElements ( binFile, 0, maxEle );
       minByte = 0;
-      maxByte = maxEle * sizeof(int) - 1;
+      maxByte = maxEle * sizeof(int);
 
     }
 
     double timeInc = 1.0 / sampleRate;
-    //unsigned long recRange = maxByte - minByte + 1;
     unsigned long recRange = maxByte - minByte;
     minT = minByte / sizeof(int) / sampleRate;
 

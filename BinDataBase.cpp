@@ -80,7 +80,7 @@ int BinDataBase::getRecordRangeForTime( QString fileName, double sampleRate, dou
   int st = this->getMaxElements( fileName, 0, maxElements );
   if ( st ) return st;
 
-  unsigned long maxBytes = maxElements * sizeof(int) - 1;
+  unsigned long maxBytes = maxElements * sizeof(int);
 
   min = sampleRate * minTime * sizeof(int);
   if ( min % 4 ) min -= min % 4;
