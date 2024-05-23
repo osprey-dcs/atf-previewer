@@ -39,6 +39,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <QDebug>
 #include <QThread>
 #include <QSharedPointer>
+#include <QErrorMessage>
 
 #include "Cnst.h"
 #include "ViewerMainWin.h"
@@ -116,6 +117,7 @@ public:
   bool haveCurTimeRange;
   bool lockTimeScale;
   QString fileToOpen;
+  QErrorMessage exportFail;
 
   double nonSlotHavScaleX0, nonSlotHavScaleX1;
 
