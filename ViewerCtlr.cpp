@@ -2013,6 +2013,10 @@ int ViewerCtlr::uff58bExport ( void ) {
 
     // get binary file name from fileName and signal + extension
     QString binFile = FileUtil::makeBinFileName( dh.get(), fileName, sigIndex );
+    if(binFile.isEmpty()) {
+      qWarning()<<"skip"<<sigIndex;
+      continue;
+    }
 
     // build a string containing just the binary file name without the directory
     QString simpleName = FileUtil::extractFileName( binFile );
