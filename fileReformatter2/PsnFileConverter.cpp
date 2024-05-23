@@ -34,11 +34,11 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
   //sizeOfOneFile = 0;
 
   unsigned int buf3BytesPerWord[Cnst::Max3PerWord];
-  unsigned int buf4BytesPerWord[Cnst::MaxSignals][Cnst::Max4PerWord];
+  unsigned int buf4BytesPerWord[Cnst::MaxSignals+1][Cnst::Max4PerWord];
   unsigned int statusArray[Cnst::MaxStatus][PsnFileConverter::NumStatusFields];
   unsigned int numBytesRead;
   unsigned long dataLen, loc = 0;
-  int isignal = 0;
+  int isignal = 1;
   int ivalue = 0;
   int istatus = 0;
   bool complete = false;
@@ -181,7 +181,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
       loc += sizeof(BinHdrPsnbType);
 
       dataLen = bodyLen - 40;
-      
+
     }
     else { // for this to work, body len of any unknown record type must always exclude 24 bytes of the header
       
@@ -240,11 +240,11 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
       }
 
       unsigned long numOps = dataLen / 4;
-      unsigned long numRemaining = ( numOps % 3 );
+      unsigned long numRemaining = ( dataLen % 4 );
       int i, iout = 0;
-      if ( numRemaining ) {
-        numOps -= numRemaining;
-      }
+      //if ( numRemaining ) {
+      //  numOps -= numRemaining;
+      //}
 
       if ( numOps > Cnst::Max3PerWord ) {
         std::cout << "Unexpected value for numOps: " << numOps << std::endl;
@@ -285,7 +285,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
         if ( ivalue >= Cnst::Max4PerWord ) {
           std::cout << "Unexpected value for isignal: " << isignal << ", ivalue = " << ivalue << std::endl;
            return ERRINFO(EInternal);
-       }
+        }
 
         buf4BytesPerWord[isignal][ivalue]   = v1;
         buf4BytesPerWord[isignal+1][ivalue] = v2;
@@ -293,12 +293,12 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
         buf4BytesPerWord[isignal+3][ivalue] = v4;
 
         isignal += 4;
-        if ( isignal > Cnst::MaxSignals ) {
+        if ( isignal > Cnst::MaxSignals+1 ) {
           std::cout << "Unexpected value for isignal: " << isignal << ", ivalue = " << ivalue << std::endl;
           return ERRINFO(EInternal);
         }
         if ( isignal >= Cnst::MaxSignals ) {
-          isignal = 0;
+          isignal = 1;
           ivalue++;
         }
         if ( ivalue >= Cnst::MaxValIndex ) {
@@ -424,7 +424,7 @@ int PsnFileConverter::readBinData(std::filebuf& fb, unsigned long loc, unsigned 
                                   unsigned int *buf, unsigned int& numBytessRead, bool& complete ) {
 
   complete = false;
-  
+
   fb.pubseekoff( loc, std::ios::beg, std::ios::in );
 
   numBytessRead = fb.sgetn( ( (char *) buf ), dataLen );
@@ -432,7 +432,6 @@ int PsnFileConverter::readBinData(std::filebuf& fb, unsigned long loc, unsigned 
     complete = true;
   }
   else if ( numBytessRead != dataLen ) { // incomplete read - treat as end of file
-    std::cout << "eof - readBinData - numBytessRead is " << numBytessRead << std::endl;
     return ERRINFO(EReadFailure);
   }
 

@@ -70,7 +70,7 @@ public:
   
   void show( void );
 
-  std::filebuf rawDataFileBuf, binDataFileBuf[Cnst::MaxRecs], statusFileBuf;
+  std::filebuf rawDataFileBuf, binDataFileBuf[Cnst::MaxRecs+1], statusFileBuf;
 
 private:
 
