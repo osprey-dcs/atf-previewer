@@ -1709,13 +1709,13 @@ int ViewerCtlr::csvExport ( void ) {
   //std::cout << "hdrFile = " << hdrFile.toStdString() << std::endl;
 
   // create csv object
-  CsvExport *csv = new CsvExport( hdrFile );
+  std::unique_ptr<CsvExport> csv{new CsvExport( hdrFile )};
 
   // get map of channel/signal properties by signal index
   DataHeader::DataHeaderIndexMapType indexMap = dh->getIndexMap();
 
   // get list of channels/signals to export
-  ChanSelector *chans = new ChanSelector();
+  std::unique_ptr<ChanSelector> chans{new ChanSelector()};
   chans->setText( mainWindow->exportDialog->chanSelect );
   std::list<int> sigNumList = chans->getList();
 
@@ -1942,7 +1942,7 @@ int ViewerCtlr::csvExport ( void ) {
 }
 
 int ViewerCtlr::uff58bExport ( void ) {
-
+  qWarning()<<__func__<<"enter";
   if ( !haveHeader ) {
     std::cout << "No header file is open\n";
     return -1;
@@ -1956,15 +1956,15 @@ int ViewerCtlr::uff58bExport ( void ) {
   QString hdrFile = this->fileName + "." + Cnst::HdrExtension.c_str();
 
   // create uff58b object
-  Uff58bExport *uff58b = new Uff58bExport( hdrFile );
+  std::unique_ptr<Uff58bExport> uff58b{new Uff58bExport( hdrFile )};
 
   // get map of channel/signal properties by signal index
   DataHeader::DataHeaderIndexMapType indexMap = dh->getIndexMap();
 
   // get list of channels/signals to export
-  ChanSelector *chans = new ChanSelector();
+  std::unique_ptr<ChanSelector> chans{new ChanSelector()};
   chans->setText( mainWindow->exportDialog->chanSelect );
-  std::list<int> sigNumList = chans->getList();
+  const auto& sigNumList = chans->getList();
 
   // make sure we have at least one valid signal number in the list
 
@@ -2000,6 +2000,7 @@ int ViewerCtlr::uff58bExport ( void ) {
   QString exportFileName = mainWindow->exportDialog->exportFileName;
   auto result = fbExport.open( exportFileName.toStdString(), std::ios::out | std::ios::binary );
   if ( !result ) {
+    qWarning()<<__func__<<"Unable to open for writing"<<exportFileName;
     return -1;
   }
 
@@ -2106,16 +2107,18 @@ int ViewerCtlr::uff58bExport ( void ) {
     //std::fbin = open input bin file
     result = fbInput.open( binFile.toStdString(), std::ios::in | std::ios::binary );
     if ( !result ) {
+      qWarning()<<__func__<<"Unable to open for reading"<<binFile;
       fbExport.close();
       return -1;
     }
 
-    std::cout << "processing input file: " << binFile.toStdString() << " ...";
+    qWarning() << __func__ << "processing input file: " << binFile << " ...";
 
     st = uff58b->writeHeader( fbExport );
     if ( st ) {
       fbInput.close();
       fbExport.close();
+      qWarning()<<__func__<<"Unable to write header";
       return -1;
     }
 
