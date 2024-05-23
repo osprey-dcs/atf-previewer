@@ -431,6 +431,7 @@ void ViewerCtlr::process(void ) {
         this->mainWindow->setWhat( "UFF58b Export..." );
         stat = uff58bExport();
         if ( stat ) {
+          exportFail.showMessage(QString("Export fails (%1)").arg(stat));
           std::cout << "Error " << stat << " from uff58bExport" << std::endl;
         }
         this->mainWindow->setWorking( QString("Ready") );
@@ -443,6 +444,7 @@ void ViewerCtlr::process(void ) {
         this->mainWindow->setWhat( "CSV Export..." );
         stat = csvExport();
         if ( stat ) {
+          exportFail.showMessage(QString("Export fails (%1)").arg(stat));
           std::cout << "Error " << stat << " from csvExport" << std::endl;
         }
         this->mainWindow->setWorking( QString("Ready") );
