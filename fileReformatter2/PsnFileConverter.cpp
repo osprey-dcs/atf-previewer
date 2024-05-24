@@ -251,29 +251,32 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
         return  ERRINFO(EInternal);
       }
 
-      unsigned int v1, v2, v3, v4, tmp1, tmp2, tmp3;
 
       for ( i=0; i<numOps; i+=3 ) {
-
-        tmp1 = bswap_32( buf3BytesPerWord[i] );
-        tmp2 = bswap_32( buf3BytesPerWord[i+1] );
-        tmp3 = bswap_32( buf3BytesPerWord[i+2] );
+        unsigned int v1, v2, v3, v4, tmp1, tmp2, tmp3;
+        // unravaling signed 24-bit integers
+        // each group of 4 u24 is packed into 3x4 bytes
 
         if ( i+2 >= Cnst::Max3PerWord ) {
           std::cout << "Unexpected value for 3 word index: " << i+2 << std::endl;
           return ERRINFO(EInternal);
         }
 
-        v1 = tmp1 >> 8;
+
+        tmp1 = bswap_32( buf3BytesPerWord[i] );   // AAAB
+        tmp2 = bswap_32( buf3BytesPerWord[i+1] ); // BBCC
+        tmp3 = bswap_32( buf3BytesPerWord[i+2] ); // CDDD
+
+        v1 = tmp1 >> 8; // AAAx -> 0AAA
         if ( v1 & 0x800000 ) v1 |= 0xff000000;
         iout++;
-        v2 = ( ( tmp1 & 0xff ) << 16 ) | ( tmp2 >> 16 );
+        v2 = ( ( tmp1 & 0xff ) << 16 ) | ( tmp2 >> 16 ); // xxxB, BBxx -> 0BBB
         if ( v2 & 0x800000 ) v2 |= 0xff000000;
         iout++;
+        v3 = ( ( tmp2 & 0xffff ) << 8 ) | ( tmp3 >> 24 ); // xxCC, Cxxx -> 0CCC
         if ( v3 & 0x800000 ) v3 |= 0xff000000;
-        v3 = ( ( tmp2 & 0xffff ) << 8 ) | ( tmp3 >> 24 );
         iout++;
-        v4 = tmp3 & 0xffffff;
+        v4 = tmp3 & 0xffffff; // xDDD -> 0DDD
         if ( v4 & 0x800000 ) v4 |= 0xff000000;
         iout++;
 
