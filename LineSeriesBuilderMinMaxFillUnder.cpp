@@ -40,49 +40,34 @@ LineSeriesBuilderMinMaxFillUnder::~LineSeriesBuilderMinMaxFillUnder () {
   
 }
 
-const std::string LineSeriesBuilderMinMaxFillUnder::getErrMsg ( int st ) {
-  if ( ( st < 0 ) || ( st > ErrLast ) ) {
-    return "Unknown error code";
-  }
-  else {
-    return LineSeriesBuilderMinMaxFillUnder::ErrMsg[st];
-  }
-}
-
 int LineSeriesBuilderMinMaxFillUnder::setXPixelWidth ( int w ) {
-
-  int stat;
  
   if ( w != 0 ) {
-    stat = ESuccess;
     this->xPixelWidth = static_cast<double>( w );
     //std::cout << "this->xPixelWidth = " << this->xPixelWidth << std::endl;
   }
   else {
-    stat = EVal;
+    return ERRINFO(EVal,"");
   }
 
-  return stat;
+  return ESuccess;
 
 }
 
 int LineSeriesBuilderMinMaxFillUnder::setXAxisLimits ( double min, double max ) {
   
-  int stat;
-  
   double r = max - min;
   xMin = min;
   xMax = max;
   if ( r != 0 ) {
-    stat = ESuccess;
     this->xRange = r;
     //std::cout << "r = " << r << std::endl;
   }
   else {
-    stat = ERange;
+    return ERRINFO(ERange,"");
   }
   
-  return stat;
+  return ESuccess;
 
 }
 
@@ -108,8 +93,6 @@ void LineSeriesBuilderMinMaxFillUnder::startNewSeries ( bool clearLineSeries ) {
 // x must be strictly increasing
 int LineSeriesBuilderMinMaxFillUnder::addPoint ( double x, double y ) {
 
-  int stat = ESuccess;
-
   if ( !qls ) return ENull;
   if ( xPixelWidth == 0 ) return EVal;
   if ( xRange == 0 ) return ERange;
@@ -128,7 +111,7 @@ int LineSeriesBuilderMinMaxFillUnder::addPoint ( double x, double y ) {
     finalMaxY = std::max( y, finalMaxY );
     finalMinY = std::min( y, finalMinY );
     if ( x < prevX ) {
-      stat = ENotIncr;
+      return ERRINFO(ENotIncr,"");
     }
   }
   prevX = x;
@@ -159,7 +142,7 @@ int LineSeriesBuilderMinMaxFillUnder::addPoint ( double x, double y ) {
     prevXWithPixRes = xWithPixRes;
   }
 
-  return stat;
+  return ESuccess;
   
 }
 

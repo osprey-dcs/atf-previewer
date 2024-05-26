@@ -9,7 +9,7 @@
 #include "ChanSelector.h"
 #include "Cnst.h"
 
-ChanSelector::ChanSelector() {
+ChanSelector::ChanSelector() : ErrHndlr( NumErrs, errMsgs ) {
 
   this->haveList = false;
 

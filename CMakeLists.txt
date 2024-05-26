@@ -42,6 +42,7 @@ add_executable(viewer main.cpp
         Combo.cpp
         Combo.h
         Cnst.h
+        LineSeriesBuilderBase.cpp
         LineSeriesBuilderBase.h
         LineSeriesBuilderMinMax.cpp
         LineSeriesBuilderMinMax.h
