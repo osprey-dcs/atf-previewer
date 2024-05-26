@@ -8,18 +8,7 @@
 
 #include "PsnFileConverter.h"
 
-//PsnFileConverter::PsnFileConverter ( ) :
-//  FileConverter ( PsnFileConverter::PsnNumErrs, PsnFileConverter::PsnErrMsgs ) {
-//}
-
 PsnFileConverter::PsnFileConverter ( ) {
-
-  errMsgs.clear();
-  numErrs = PsnNumErrs;
-  for ( int i=0; i<PsnNumErrs; i++ ) {
-    errMsgs.push_back( PsnErrMsgs[i] );
-  }
-  
 }
 
 int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int startingSigIndex,

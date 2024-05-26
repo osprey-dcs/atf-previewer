@@ -19,32 +19,11 @@
 #include <QString>
 
 #include "FileConverter.h"
-#include "ErrHndlr.h"
 
 class PsnFileConverter : public FileConverter {
 
 public:
 
-  static const int PsnNumErrs = 8;
-  static const int ESuccess = 0;
-  static const int EInFileOpen = 1;
-  static const int EOutFileOpen = 2;
-  static const int EStatFileOpen = 3;
-  static const int EInternal = 4;
-  static const int EReadFailure = 5;
-  static const int EWriteFailure = 6;
-  static const int ESequence = 7;
-  inline static const std::string PsnErrMsgs[PsnNumErrs] {
-    { "Success" },
-    { "Input file open failure: " },
-    { "Output file open failure: " },
-    { "Status file open failure: " },
-    { "Unexpected quantity, internal error failure" },
-    { "File read failure: " },
-    { "File write failure: " },
-    { "Sequence number failure" }
-  };
-  
   static constexpr unsigned int dataFileVersion[] { 1,0,0 };
   
   static constexpr unsigned int statusFileVersion[] { 1,0,0 };

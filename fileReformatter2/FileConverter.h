@@ -19,10 +19,24 @@ class FileConverter : public ErrHndlr {
 
 public:
   
-  static const int BaseNumErrs = 1;
+  static const int NumErrs = 8;
   static const int ESuccess = 0;
-  inline static const std::string BaseErrMsgs[BaseNumErrs] {
-    { "Success" }
+  static const int EInFileOpen = 1;
+  static const int EOutFileOpen = 2;
+  static const int EStatFileOpen = 3;
+  static const int EInternal = 4;
+  static const int EReadFailure = 5;
+  static const int EWriteFailure = 6;
+  static const int ESequence = 7;
+  inline static const std::string errMsgs[NumErrs] {
+    { "Success" },
+    { "Input file open failure: " },
+    { "Output file open failure: " },
+    { "Status file open failure: " },
+    { "Unexpected quantity, internal error failure" },
+    { "File read failure: " },
+    { "File write failure: " },
+    { "Sequence number failure" }
   };
 
   FileConverter();
