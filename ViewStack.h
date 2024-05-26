@@ -24,9 +24,20 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <tuple>
 #include <list>
 
-class ViewStack {
+#include "ErrHndlr.h"
+
+class ViewStack : public ErrHndlr {
 
 public:
+
+  static const int NumErrs = 2;
+  static const int ESuccess = 0;
+  static const int EUnderflow = 1;
+  inline static const std::string errMsgs[NumErrs] {
+    { "Success" },
+    { "Stack underflow" }
+  };
+
   ViewStack ();
   void pushView ( double x0, double y0, double x1, double y1 );
   int popView ( double& x0, double& y0, double& x1, double& y1 );

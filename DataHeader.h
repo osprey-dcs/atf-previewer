@@ -30,9 +30,27 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include <QString>
 
-class DataHeader {
+#include "ErrHndlr.h"
+
+class DataHeader : public ErrHndlr {
 
   public:
+
+    static const int NumErrs = 6;
+    static const int ESuccess = 0;
+    static const int EInFileOpen = 1;
+    static const int ETypeD = 2;
+    static const int ETypeS = 3;
+    static const int EOutFileOpen = 4;
+    static const int ESigIndex = 5;
+    inline static const std::string errMsgs[NumErrs] {
+      { "Success" },
+      { "Input file open failure: " },
+      { "Type mismatch, expected double" },
+      { "Type mismatch, expected string" },
+      { "Output file open failure: " },
+      { "Unknown signal index failure" }
+    };
 
     typedef std::map<QString,std::tuple<QString, double, double, double,
                                         double, QString, QString, double, double, double, double,

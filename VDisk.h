@@ -10,30 +10,29 @@
 #include <memory>
 #include <fstream>
 
-class VDisk {
+#include "ErrHndlr.h"
+
+class VDisk : public ErrHndlr {
 
 public:
+
+  static const int NumErrs = 4;
+  static const int ESuccess = 0;
+  static const int EStat = 1;
+  static const int ENoFile = 2;
+  static const int EValue = 3;
+  inline static const std::string errMsgs[NumErrs] {
+    { "Success" },
+    { "File stat failure: " },
+    { "No file specified" },
+    { "Zero file length" }
+  };
+  
   VDisk ();
   ~VDisk ( void );
-  int getUnixError ( void );
   void setMaxSize( unsigned long _maxSize );
   int setFile ( std::string fileName );
   int readN ( std::filebuf *fb, unsigned long start, unsigned long end, char *buf, bool showParams = false );
-
-  static const unsigned int NumErrs = 5;
-  static const unsigned int E_Success = 0;
-  static const unsigned int E_NoFile = 1;
-  static const unsigned int E_UnixError = 2;
-  static const unsigned int E_Value = 3;
-  static const unsigned int E_4 = 4;
-
-  inline static const std::string ErrMsg[NumErrs] {
-    "Success",
-    "Error_1",
-    "Error 2",
-    "Error 3",
-    "Error 4"
-  };
 
   static const unsigned int BlockSize = 8192;
 
@@ -54,6 +53,5 @@ private:
   int unixError;
 
 };
-
 
 #endif //UNTITLED_VDISK_H

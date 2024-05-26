@@ -80,7 +80,8 @@ static bool isFFT( int id ) {
 
 }
 
-ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw, const QString& file ) {
+ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw, const QString& file ) :
+  ErrHndlr( NumErrs, errMsgs ) {
 
   this->up = upfac.createUserPrefs();
 
@@ -262,7 +263,10 @@ static bool once = true;
 int ViewerCtlr::processHeaderFile (void ) {
 
   int stat = this->dh->readContents( this->hdrFileName );
-  if ( stat ) return stat;
+  if ( stat ) {
+    this->dh->dspErrMsg( stat );
+    return ERRINFO(EFileRead,this->hdrFileName.toStdString());
+  }
 
   QString str;
   // get acquisition ID
@@ -1694,8 +1698,8 @@ int ViewerCtlr::csvExport ( void ) {
   //std::cout << "ViewerCtlr::doCsvExport" << std::endl;
 
   if ( !haveHeader ) {
-    std::cout << "No header file is open\n";
-    return -1;
+    //std::cout << "No header file is open\n";
+    return ERRINFO(EHdr,"");
   }
 
   int st, i, ii, numSignals;
@@ -1746,10 +1750,10 @@ int ViewerCtlr::csvExport ( void ) {
   }
 
   if ( !atLeastOneSignal ) {
-    return -1;
+    return ERRINFO(ESignal,"");
   }
 
-  std::cout << "found " << numGoodSignalsFound << " signals" << std::endl;
+  //std::cout << "found " << numGoodSignalsFound << " signals" << std::endl;
 
   // open export file
   QString exportFileName = mainWindow->exportDialog->exportFileName;
@@ -1809,12 +1813,12 @@ int ViewerCtlr::csvExport ( void ) {
 
       minT = minByte / sizeof(int) / sampleRate;
 
-      std::cout << "minT = " << minT << std::endl;
-      std::cout << "maxT = " <<  maxT << std::endl;
-      std::cout << "minByte = " <<  minByte << std::endl;
-      std::cout << "maxByte = " <<  maxByte << std::endl;
-      std::cout << "recRange (ele) = " << recRange/sizeof(int) << std::endl;
-      std::cout << "numSignals = " << numSignals << std::endl;
+      //std::cout << "minT = " << minT << std::endl;
+      //std::cout << "maxT = " <<  maxT << std::endl;
+      //std::cout << "minByte = " <<  minByte << std::endl;
+      //std::cout << "maxByte = " <<  maxByte << std::endl;
+      //std::cout << "recRange (ele) = " << recRange/sizeof(int) << std::endl;
+      //std::cout << "numSignals = " << numSignals << std::endl;
 
     }
     
@@ -1823,8 +1827,8 @@ int ViewerCtlr::csvExport ( void ) {
     if ( !result2 ) {
       fbExport.close();
       closeAll( fbInput, numSignals-1 );
-      std::cout << "Open file " << binFile.toStdString() << " failure"  << std::endl;
-      return -1;
+      //std::cout << "Open file " << binFile.toStdString() << " failure"  << std::endl;
+      return ERRINFO(EFileOpen,binFile.toStdString());
     }
     //std::cout << "input file " << binFile.toStdString() << " is open\n";
 
@@ -1843,7 +1847,7 @@ int ViewerCtlr::csvExport ( void ) {
   if ( st ) {
     fbExport.close();
     closeAll( fbInput, numSignals );
-    return -1;
+    return ERRINFO(EFileWrite,"");
   }
 
   //std::cout << "export header is written\n";
@@ -1944,10 +1948,10 @@ int ViewerCtlr::csvExport ( void ) {
 }
 
 int ViewerCtlr::uff58bExport ( void ) {
-  qWarning()<<__func__<<"enter";
+  //qWarning()<<__func__<<"enter";
   if ( !haveHeader ) {
-    std::cout << "No header file is open\n";
-    return -1;
+    //std::cout << "No header file is open\n";
+    return ERRINFO(EHdr,"");
   }
 
   int st, i, ii;
@@ -1993,17 +1997,17 @@ int ViewerCtlr::uff58bExport ( void ) {
   }
 
   if ( !atLeastOneSignal ) {
-    return -1;
+    return ERRINFO(ESignal,"");
   }
 
-  std::cout << "found " << numGoodSignalsFound << " signals" << std::endl;
+  //std::cout << "found " << numGoodSignalsFound << " signals" << std::endl;
 
   // open export bin file
   QString exportFileName = mainWindow->exportDialog->exportFileName;
   auto result = fbExport.open( exportFileName.toStdString(), std::ios::out | std::ios::binary );
   if ( !result ) {
-    qWarning()<<__func__<<"Unable to open for writing"<<exportFileName;
-    return -1;
+    //qWarning()<<__func__<<"Unable to open for writing"<<exportFileName;
+    return ERRINFO(EFileOpen,exportFileName.toStdString());
   }
 
   //std::cout << "export file " << exportFileName.toStdString() << " is open\n";
@@ -2014,7 +2018,7 @@ int ViewerCtlr::uff58bExport ( void ) {
     // get binary file name from fileName and signal + extension
     QString binFile = FileUtil::makeBinFileName( dh.get(), fileName, sigIndex );
     if(binFile.isEmpty()) {
-      qWarning()<<"skip"<<sigIndex;
+      //qWarning()<<"skip"<<sigIndex;
       continue;
     }
 
@@ -2112,19 +2116,19 @@ int ViewerCtlr::uff58bExport ( void ) {
     //std::fbin = open input bin file
     result = fbInput.open( binFile.toStdString(), std::ios::in | std::ios::binary );
     if ( !result ) {
-      qWarning()<<__func__<<"Unable to open for reading"<<binFile;
+      //qWarning()<<__func__<<"Unable to open for reading"<<binFile;
       fbExport.close();
-      return -1;
+      return ERRINFO(EFileOpen,binFile.toStdString());
     }
 
-    qWarning() << __func__ << "processing input file: " << binFile << " ...";
+    //qWarning() << __func__ << "processing input file: " << binFile << " ...";
 
     st = uff58b->writeHeader( fbExport );
     if ( st ) {
       fbInput.close();
       fbExport.close();
-      qWarning()<<__func__<<"Unable to write header";
-      return -1;
+      //qWarning()<<__func__<<"Unable to write header";
+      return ERRINFO(EFileWrite,"");
     }
 
     //std::cout << "export header is written\n";
@@ -2178,7 +2182,7 @@ int ViewerCtlr::uff58bExport ( void ) {
     //std::cout << "nr = " << nr << ", nw = " << nw  << std::endl;
     
     //close input file
-    std::cout << " complete." << std::endl;
+    //std::cout << " complete." << std::endl;
     fbInput.close();
 
   }

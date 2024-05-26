@@ -20,7 +20,7 @@ ChanSelector::~ChanSelector() {
 }
 
 int ChanSelector::setText( QString s ) {
-  qWarning()<<__func__<<"expr"<<s;
+  //qWarning()<<__func__<<"expr"<<s;
 
   const int FindStartDigit = 1;
   const int FindDigitOrCommaOrDashOrEnd = 2;
@@ -199,8 +199,8 @@ int ChanSelector::setText( QString s ) {
   }
 
   if ( error ) {
-    qWarning() << __func__ << "error = " << error;
-    return error;
+    //qWarning() << __func__ << "error = " << error;
+    return ERRINFO(error,"");
   }
 
   for ( auto c : chanSet ) {
@@ -208,7 +208,7 @@ int ChanSelector::setText( QString s ) {
   }
 
   chans.sort();
-  qWarning()<<__func__<<"selected"<<chans;
+  //qWarning()<<__func__<<"selected"<<chans;
 
   return 0;
 

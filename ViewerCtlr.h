@@ -50,19 +50,35 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "BinData.h"
 #include "BinDataFac.h"
 #include "ViewerSlider.h"
-//#include "ViewStack.h"
+#include "ErrHndlr.h"
 
 extern "C" {
 #include <math.h>
 #include <fftw3.h>
 };
 
-class ViewerCtlr : public QObject {
+class ViewerCtlr : public QObject, public ErrHndlr {
 
   Q_OBJECT
 
 public:
 
+  static const int NumErrs = 6;
+  static const int ESuccess = 0;
+  static const int EFileOpen = 1;
+  static const int EFileRead = 2;
+  static const int EHdr = 3;
+  static const int ESignal = 4;
+  static const int EFileWrite = 5;
+  inline static const std::string errMsgs[NumErrs] {
+    { "Success" },
+    { "File open failure: " },
+    { "File read failure: " },
+    { "No header file is open" },
+    { "Unknown signal" },
+    { "File write failure" }
+  };
+  
   // for dataRequestList
   static const int Req = 0;
   static const int Vga = 1;

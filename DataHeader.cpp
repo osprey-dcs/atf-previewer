@@ -31,7 +31,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "DataHeader.h"
 #include "DataHeaderFac.h"
 
-DataHeader::DataHeader() {
+DataHeader::DataHeader() : ErrHndlr( NumErrs, errMsgs ) {
 
 }
 
@@ -52,7 +52,7 @@ int DataHeader::getDouble(const QString &s, double& d ) {
   }
   else {
     d = 0.0;
-    return -1;
+    return ERRINFO(ETypeD,"");
   }
 
   return 0;
@@ -92,7 +92,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
   }
   else {
     qs = "";
-    return -1;
+    return ERRINFO(ETypeS,"");
   }
 
   return 0;
@@ -109,7 +109,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     }
     else {
       ss = "";
-      return -1;
+      return ERRINFO(ETypeS,"");
     }
 
     return 0;
@@ -174,7 +174,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
 
     QFile inf( inFile );
     bool result = inf.open( QIODevice::ReadOnly );
-    if ( !result ) return -1;
+    if ( !result ) return ERRINFO(EInFileOpen,inFile.toStdString());
     QString contents = inf.readAll();
     inf.close();
 
@@ -264,7 +264,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     }
     else {
       std::cout << "Viewer header file could not be opened" << std::endl;
-      return -1;
+      return ERRINFO(EOutFileOpen,outFile.toStdString());
     }
     
     return 0;
@@ -283,7 +283,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     }
     else {
       std::cout << "Viewer header file could not be opened" << std::endl;
-      return -1;
+      return ERRINFO(EOutFileOpen,filename.toStdString());
     }
 
     return 0;
@@ -294,7 +294,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
 
     QFile inf( filename );
     bool result = inf.open( QIODevice::ReadOnly );
-    if ( !result ) return -1;
+    if ( !result ) return ERRINFO(EInFileOpen,filename.toStdString());
     QString contents = inf.readAll();
     inf.close();
 
@@ -396,7 +396,7 @@ int DataHeader::getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu
 
   }
 
-  return -1;
+  return ERRINFO(ESigIndex,"");
 
 }
 

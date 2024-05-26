@@ -13,7 +13,7 @@
 
 #include "VDisk.h"
 
-VDisk::VDisk() {
+VDisk::VDisk() : ErrHndlr( NumErrs, errMsgs ) {
 
   noFile = true;
   unixError = 0;
@@ -21,12 +21,6 @@ VDisk::VDisk() {
   fileSizeInBytes = 0;
   buf = nullptr;
   map = nullptr;
-  
-}
-
-int VDisk::getUnixError ( void ) {
-
-  return unixError;
   
 }
 
@@ -49,10 +43,7 @@ int VDisk::setFile ( std::string fileName ) {
   struct stat statBuf;
   int status;
   status = stat( fileName.c_str(), &statBuf );
-  if ( status ) {
-    unixError = errno;
-    return E_UnixError;
-  }
+  if ( status ) return ERRINFO(EStat,fileName);
   fileSizeInBytes = statBuf.st_size;
 
   //std::cout << "file len = " << fileSizeInBytes << std::endl;
@@ -74,7 +65,7 @@ int VDisk::setFile ( std::string fileName ) {
   //std::cout << "buf size = " << bufSizeInBytes << std::endl;
   //std::cout << "map size = " << mapSizeInBytes << std::endl;
 
-  return E_Success;
+  return ESuccess;
 
 }
 
@@ -86,21 +77,15 @@ VDisk::~VDisk(void) {
 
 int VDisk::readN( std::filebuf *fb, unsigned long start, unsigned long length, char *outBuf,  bool showParams ) {
 
-  //if ( showParams ) {
-  //  std::cout << "readN - start = " << start << ", length = " << length << std::endl;
-  //}
-  
   int st=0, n;
   bool memRead = true;
   bool fileRead = true;
   bool blockCheckAndFill = true;
   unsigned long end=0, startMem=0, endMem=0, startFile=0, endFile=0, block0=0, block1=0;
 
-  if ( noFile ) return E_NoFile;
+  if ( noFile ) return ERRINFO(ENoFile,"");
   
-  //std::cout << std::endl << std::endl;
-
-  if ( length < 1 ) return E_Value;
+  if ( length < 1 ) return ERRINFO(EValue,"");
   end = start + length - 1;
 
   block0 = start / BlockSize;
@@ -147,45 +132,22 @@ int VDisk::readN( std::filebuf *fb, unsigned long start, unsigned long length, c
   //  //std::cout << "? = " << ? << std::endl;
   //}
 
-  //if ( blockCheckAndFill ) {
+  for ( unsigned long i=block0; i<=block1; i++ ) {
 
-    for ( unsigned long i=block0; i<=block1; i++ ) {
-
-      if ( !map[i] ) {
-        map[i] = 1;
-
-        //char *zbuf = this->buf.get();
-        //std::cout << "zbuf addr = " << std::hex << (unsigned long) zbuf << std::dec << std::endl;
-        //zbuf = (char *) &((this->buf.get())[i*BlockSize]);
-        //std::cout << "zbuf addr 2 = " << std::hex << (unsigned long) zbuf << std::dec << std::endl;
-
-        char *cbuf = (char *) &((this->buf.get())[i*BlockSize]);
-        int n = readFile( fb, i*BlockSize, BlockSize, cbuf );
-        //std::cout << "read " << n << " bytes from file to fill block" << i << std::endl;
-      }
-
-  //}
+    if ( !map[i] ) {
+      map[i] = 1;
+      char *cbuf = (char *) &((this->buf.get())[i*BlockSize]);
+      int n = readFile( fb, i*BlockSize, BlockSize, cbuf );
+    }
 
   }
 
   unsigned long outButFileReadStart = startFile;
   unsigned long outButFileReadLen = endFile - startFile + 1;
 
-
-  //std::cout << "start = " << start << std::endl;
-  //std::cout << "end = " << end << std::endl;
-  //std::cout << "memRead = " << memRead << std::endl;
-  //std::cout << "startMem = " << startMem << std::endl;
-  //std::cout << "endMem = " << endMem << std::endl;
-  //std::cout << "fileRead = " << fileRead << std::endl;
-  //std::cout << "startFile = " << startFile << std::endl;
-  //std::cout << "endFile = " << endFile << std::endl;
-
   unsigned int outBufIndex = 0;
   
   if ( memRead ) {
-
-    //std::cout << "memRead, start ele = " << startMem/4 << std::endl;
 
     unsigned long len = endMem - startMem + 1;
     memcpy( (void *) &(outBuf[outBufIndex]), (void *) &(buf[startMem]), len );
@@ -209,14 +171,9 @@ int VDisk::readN( std::filebuf *fb, unsigned long start, unsigned long length, c
 int VDisk::readFile( std::filebuf *fb, unsigned long start, unsigned long sizeInBytes,
                     char *outBuf ) {
 
-  //std::cout << "read file - start = " << start <<
-  // ", end = " << start+sizeInBytes-1 <<
-  // ", len = " << sizeInBytes << std::endl;
-
   fb->pubseekoff( start, std::ios::beg, std::ios::in );
   unsigned long n = fb->sgetn( (char *) outBuf, sizeInBytes );
 
   return n;
 
 }
-

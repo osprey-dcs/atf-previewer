@@ -24,43 +24,54 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <stdexcept>
- #include <iostream>
+#include <iostream>
 
-//namespace osp {
+#include "ErrHndlr.h"
 
-  class UserPrefs {
+class UserPrefs : public ErrHndlr {
 
-  public:
+public:
 
-    inline static const std::string ss {".viewerProps.json"};
+    static const int NumErrs = 4;
+    static const int ESuccess = 0;
+    static const int EInFileOpen = 1;
+    static const int ETypeD = 2;
+    static const int ETypeS = 3;
+    inline static const std::string errMsgs[NumErrs] {
+      { "Success" },
+      { "Input file open failure: " },
+      { "Type mismatch, expected double" },
+      { "Type mismatch, expected string" }
+    };
 
-    QJsonDocument jd;
-    QJsonObject jo;
 
-    QString filename;
+  inline static const std::string ss {".viewerProps.json"};
 
-    UserPrefs();
+  QJsonDocument jd;
+  QJsonObject jo;
 
-    UserPrefs ( UserPrefs&& ) = delete;
-    UserPrefs ( UserPrefs& ) = delete;
-    UserPrefs ( const UserPrefs& ) = delete;
+  QString filename;
 
-    UserPrefs& operator= ( UserPrefs&& ) = delete;
-    UserPrefs& operator= ( UserPrefs& ) = delete;
-    UserPrefs& operator= ( const UserPrefs& ) = delete;
+  UserPrefs();
 
-    int getDouble (const QString &s, double& d );
-    int setDouble ( const QString &s, double d );
+  UserPrefs ( UserPrefs&& ) = delete;
+  UserPrefs ( UserPrefs& ) = delete;
+  UserPrefs ( const UserPrefs& ) = delete;
 
-    int getString ( const QString &s, QString &qs );
-    int setString ( const QString &s, QString qs );
+  UserPrefs& operator= ( UserPrefs&& ) = delete;
+  UserPrefs& operator= ( UserPrefs& ) = delete;
+  UserPrefs& operator= ( const UserPrefs& ) = delete;
 
-    int update();
-    int readContents ();
+  int getDouble (const QString &s, double& d );
+  int setDouble ( const QString &s, double d );
 
-  };
+  int getString ( const QString &s, QString &qs );
+  int setString ( const QString &s, QString qs );
 
-//} // osp
+  int update();
+  int readContents ();
+
+};
 
 #endif //VIEWER_USERPREFS_H
 

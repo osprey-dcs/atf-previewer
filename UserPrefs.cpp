@@ -27,7 +27,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include "UserPrefs.h"
 
-UserPrefs::UserPrefs() {
+UserPrefs::UserPrefs() : ErrHndlr( NumErrs, errMsgs ) {
 
     QJsonDocument jd;
     QJsonObject jo;
@@ -55,7 +55,7 @@ UserPrefs::UserPrefs() {
     }
     else {
       d = 0.0;
-      return -1;
+      return ERRINFO(ETypeD,"");
     }
 
     return 0;
@@ -79,7 +79,7 @@ UserPrefs::UserPrefs() {
     }
     else {
       qs = "";
-      return -1;
+      return ERRINFO(ETypeS,"");
     }
 
     return 0;
@@ -105,8 +105,7 @@ UserPrefs::UserPrefs() {
         outf.close();
     }
     else {
-      std::cout << "Viewer property file could not be opened for update" << std::endl;
-      return -1;
+      return ERRINFO(EInFileOpen,filename.toStdString());
     }
 
     return 0;
@@ -124,8 +123,7 @@ UserPrefs::UserPrefs() {
       inf.close();
     }
     else {
-      std::cout << "Viewer property file could not be opened for read" << std::endl;
-      return -1;
+      return ERRINFO(EInFileOpen,filename.toStdString());
     }
 
     jd = QJsonDocument::fromJson(contents.toUtf8());

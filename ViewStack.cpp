@@ -19,7 +19,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include "ViewStack.h"
 
-ViewStack::ViewStack () {}
+ViewStack::ViewStack () : ErrHndlr( NumErrs, errMsgs ) {}
 
 void ViewStack::pushView ( double x0, double y0, double x1, double y1 ) {
   this->views.push_back( std::make_tuple( x0, y0, x1, y1 ) );
@@ -40,7 +40,7 @@ int ViewStack::popView ( double& x0, double& y0, double& x1, double& y1 ) {
   } else {
 
     x0 = y0 = x1 = y1 = 0;
-    return -1;
+    return ERRINFO(EUnderflow,"");
 
   }
 
