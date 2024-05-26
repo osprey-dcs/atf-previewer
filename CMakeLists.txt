@@ -83,6 +83,10 @@ add_executable(viewer main.cpp
         RoiSelector.h
         Tunable.cpp
         Tunable.h
+        DspErr.cpp
+        DspErr.h
+        ErrHndlr.cpp
+        ErrHndlr.h
 )
 
 include_directories(/usr/include/c++/10
