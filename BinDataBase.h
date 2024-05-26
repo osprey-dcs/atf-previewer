@@ -32,15 +32,34 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "LineSeriesBuilderSimpleFillUnder.h"
 #include "LineSeriesBuilderMinMaxFillUnder.h"
 #include "Cnst.h"
+#include "ErrHndlr.h"
 
 extern "C" {
 #include <math.h>
 #include <fftw3.h>
 };
 
-class BinDataBase {
+class BinDataBase : public ErrHndlr {
 
   public:
+  
+  static const int NumErrs = 7;
+  static const int ESuccess = 0;
+  static const int EFileOpen = 1;
+  static const int EFileRead = 2;
+  static const int ESampleRate = 3;
+  static const int ESampleSize = 4;
+  static const int EMax = 5;
+  static const int ERange = 6;
+  inline static const std::string errMsgs[NumErrs] {
+    { "Success" },
+    { "File open failure: " },
+    { "File read failure: " },
+    { "Illegal sample rate: " },
+    { "Data set size too small" },
+    { "Failure to read data size from file: " },
+    { "Index out of range" }
+  };
   
   using TwoDIntPtr = int(*)[5];
 

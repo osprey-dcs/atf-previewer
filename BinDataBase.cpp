@@ -31,7 +31,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include "BinDataBase.h"
 
-BinDataBase::BinDataBase() {
+BinDataBase::BinDataBase() : ErrHndlr( NumErrs, errMsgs ) {
 
   this->slsb = std::shared_ptr<LineSeriesBuilderSimple>( new LineSeriesBuilderSimple() );
   this->lsb = std::shared_ptr<LineSeriesBuilderMinMax>( new LineSeriesBuilderMinMax() );
@@ -53,12 +53,15 @@ void BinDataBase::initMaxBufSize( unsigned long max ) {
 
 int BinDataBase::getDataFullTimeRange( QString filename, double sampleRate, double& minTime, double& maxTime ) {
 
-  if ( sampleRate <= 0.0 ) return -1;
+  if ( sampleRate <= 0.0 ) return ERRINFO(ESampleRate,"");
 
   unsigned long maxElements;
 
   int st = this->getMaxElements( filename, 0, maxElements );
-  if ( st ) return st;
+  if ( st ) {
+    dspErrMsg( st );
+    return ERRINFO(st,"");
+  }
 
   minTime = 0.0;
   maxTime = maxElements / sampleRate;
@@ -73,12 +76,15 @@ int BinDataBase::getDataFullTimeRange( QString filename, double sampleRate, doub
 int BinDataBase::getRecordRangeForTime( QString fileName, double sampleRate, double minTime, double maxTime,
                                         unsigned long& min, unsigned long& max ) {
 
-  if ( sampleRate == 0.0 ) return -1;
+  if ( sampleRate == 0.0 ) return ERRINFO(ESampleRate,"");
 
   unsigned long maxElements;
 
   int st = this->getMaxElements( fileName, 0, maxElements );
-  if ( st ) return st;
+  if ( st ) {
+    dspErrMsg( st );
+    return ERRINFO(st,"");
+  }
 
   unsigned long maxBytes = maxElements * sizeof(int);
 
@@ -209,7 +215,7 @@ int BinDataBase::genFftFillUnderLineSeriesFromBuffer (
  double& maxy ) {
 
   if ( num <= 5 ) {
-    return -1;
+    return ERRINFO(ESampleSize,"");
   }
 
   //std::cout << "sampleRate = " << sampleRate << std::endl;
@@ -294,7 +300,7 @@ int BinDataBase::genFftFillUnderLineSeriesFromBufferByFreq (
   double minYVal, maxYVal, minXVal, maxXVal, freq, y;
       
   if ( num <= 5 ) {
-    return -1;
+    return ERRINFO(ESampleSize,"");
   }
 
   if ( num == 0 ) num = 1;
@@ -396,7 +402,7 @@ int BinDataBase::genFftLineSeriesFromBuffer (
  bool suppressZeros ) {
 
   if ( num <= 5 ) {
-    return -1;
+    return ERRINFO(ESampleSize,"");
   }
 
   //std::cout << "BinData::genFftLineSeriesFromBuffer" << std::endl;
@@ -512,7 +518,7 @@ int BinDataBase::genFftLineSeriesFromBufferByFreq (
   double minYVal, maxYVal, minXVal, maxXVal, freq, y;
       
   if ( num <= 5 ) {
-    return -1;
+    return ERRINFO(ESampleSize,"");
   }
 
   if ( num == 0 ) num = 1;

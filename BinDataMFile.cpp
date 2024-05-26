@@ -55,7 +55,7 @@ int BinDataMFile::getMaxElements2 ( QString filename, int sigIndex, unsigned lon
   
   auto result = fb.open( filename.toStdString(), std::ios::in | std::ios::binary );
   if ( !result ) {
-    return -1;
+    return ERRINFO(EFileOpen,filename.toStdString());
   }
 
   // read version
@@ -85,7 +85,7 @@ int BinDataMFile::getMaxElements2 ( QString filename, int sigIndex, unsigned lon
 
   fb.close();
   max = 0;
-  return -1;
+  return ERRINFO(EMax,filename.toStdString());
 
 }
 
@@ -120,7 +120,7 @@ int BinDataMFile::genLineSeries2 ( QString filename,
 
   auto result = fb.open( filename.toStdString(), std::ios::in | std::ios::binary );
   if ( !result ) {
-    return -1;
+    return ERRINFO(EFileOpen,filename.toStdString());
   }
 
   // read version
@@ -153,7 +153,7 @@ int BinDataMFile::genLineSeries2 ( QString filename,
   //std::cout << "startingpoint 1: " << startingpoint << std::endl;
   if ( startingpoint > numSigbytes/sizeof(int) ) {
     fb.close();
-    return -1;
+    return ERRINFO(ERange,"");
   }
 
   unsigned long endingpoint = round( endTimeInSec / dataTimeIncrementInSec );
@@ -312,7 +312,7 @@ int BinDataMFile::getMaxElements ( QString filename, int sigIndex, unsigned long
   
   auto result = fb.open( filename.toStdString(), std::ios::in | std::ios::binary );
   if ( !result ) {
-    return -1;
+    return ERRINFO(EMax,"");
   }
 
   // read version
@@ -363,7 +363,7 @@ int BinDataMFile::genLineSeries ( QString filename,
 
   auto result = fb.open( filename.toStdString(), std::ios::in | std::ios::binary );
   if ( !result ) {
-    return -1;
+    return ERRINFO(EFileOpen,filename.toStdString());
   }
 
   // read version
@@ -383,7 +383,7 @@ int BinDataMFile::genLineSeries ( QString filename,
   unsigned long startingpoint = round( startTimeInSec / dataTimeIncrementInSec );
   if ( startingpoint > numSigbytes/sizeof(int) ) {
     fb.close();
-    return -1;
+    return ERRINFO(ERange,"");
   }
 
   unsigned long endingpoint = round( endTimeInSec / dataTimeIncrementInSec );
