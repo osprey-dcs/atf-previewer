@@ -18,9 +18,9 @@
 #include <list>
 
 #include <QString>
-#include "DspErr.h"
+#include "ErrHndlr.h"
 
-class BinFileType {
+class BinFileType : public ErrHndlr {
 
 public:
 
@@ -30,8 +30,8 @@ public:
   static const int EFileRead = 2;
   inline static const std::string errMsgs[NumErrs] {
     { "Success" },
-    { "File open failure" },
-    { "File read failure" }
+    { "File open failure: " },
+    { "File read failure: " }
   };
 
   BinFileType();
@@ -42,22 +42,6 @@ public:
   BinFileType& operator=( BinFileType& ) = delete;
   BinFileType& operator=( const BinFileType& ) = delete;
   int getRawBinFileType( const QString& rawBinFileName, QString& rawBinFileType );
-
-  int mostRecentError {0};
-  int errLine {0};
-  std::string errFile;
-  int errInfo ( int err, int line=0, std::string file="" ) {
-    mostRecentError = err;
-    errLine = line;
-    errFile = file;
-    return err;
-  }
-  void dspErrMsg ( int err ) {
-    DspErr::dspErrMsg( errLine, errFile, NumErrs, err, errMsgs );
-  }
-  void dspErrMsg ( void ) {
-    DspErr::dspErrMsg( errLine, errFile, NumErrs, mostRecentError, errMsgs );
-  }
 
 };
 

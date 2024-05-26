@@ -29,7 +29,8 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include "DataHeader.h"
 
-DataHeader::DataHeader() = default;
+DataHeader::DataHeader() : ErrHndlr ( DataHeader::NumErrs, DataHeader::errMsgs ) {
+}
 
 DataHeader::~DataHeader() {
 
@@ -48,7 +49,7 @@ int DataHeader::getDouble(const QString &s, double& d ) {
   }
   else {
     d = 0.0;
-    return ERRINFO(ETypeD);
+    return ERRINFO(ETypeD,"");
   }
 
   return ESuccess;
@@ -88,7 +89,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
   }
   else {
     qs = "";
-    return ERRINFO(ETypeS);
+    return ERRINFO(ETypeS,"");
   }
 
   return ESuccess;
@@ -105,7 +106,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     }
     else {
       ss = "";
-      return ERRINFO(ETypeS);
+      return ERRINFO(ETypeS,"");
     }
 
     return ESuccess;
@@ -170,7 +171,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
 
     QFile inf( inFile );
     bool result = inf.open( QIODevice::ReadOnly );
-    if ( !result ) return  ERRINFO(EInFileOpen);
+    if ( !result ) return  ERRINFO(EInFileOpen,inFile.toStdString());
     QString contents = inf.readAll();
     inf.close();
 
@@ -255,7 +256,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
         outf.close();
     }
     else {
-      return ERRINFO(EOutFileOpen);
+      return ERRINFO(EOutFileOpen,outFile.toStdString());
     }
     
     return ESuccess;
@@ -273,7 +274,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
         outf.close();
     }
     else {
-      return ERRINFO(EOutFileOpen);
+      return ERRINFO(EOutFileOpen,filename.toStdString());
     }
 
     return ESuccess;
@@ -284,7 +285,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
 
     QFile inf( filename );
     bool result = inf.open( QIODevice::ReadOnly );
-    if ( !result ) return ERRINFO(EInFileOpen);
+    if ( !result ) return ERRINFO(EInFileOpen,filename.toStdString());
     QString contents = inf.readAll();
     inf.close();
 
@@ -384,7 +385,7 @@ int DataHeader::getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu
 
   }
 
-  return  ERRINFO(ESigIndex);
+  return  ERRINFO(ESigIndex,"");
 
 }
 

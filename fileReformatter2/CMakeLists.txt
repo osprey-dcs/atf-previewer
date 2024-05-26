@@ -23,7 +23,9 @@ add_executable(FileReformatter2 main.cpp
         DataHeaderFac.cpp
         DataHeaderFac.h
         DspErr.cpp
-        DspErr.h)
+        DspErr.h
+        ErrHndlr.cpp
+        ErrHndlr.h)
 target_link_libraries(FileReformatter2
         Qt5::Core
 )

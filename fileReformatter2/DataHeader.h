@@ -30,9 +30,9 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include <QString>
 
-#include "DspErr.h"
+#include "ErrHndlr.h"
 
-class DataHeader {
+class DataHeader : public ErrHndlr {
 
   public:
 
@@ -45,10 +45,10 @@ class DataHeader {
     static const int ESigIndex = 5;
     inline static const std::string errMsgs[NumErrs] {
       { "Success" },
-      { "Input file open failure" },
+      { "Input file open failure: " },
       { "Type mismatch, expected double" },
       { "Type mismatch, expected string" },
-      { "Output file open failure" },
+      { "Output file open failure: " },
       { "Unknown signal index failure" }
     };
   
@@ -119,22 +119,6 @@ class DataHeader {
     const DataHeaderMapType& getNameMap() const;
   
     const DataHeaderIndexMapType& getIndexMap() const;
-  
-    int mostRecentError {0};
-    int errLine {0};
-    std::string errFile;
-    int errInfo ( int err, int line=0, std::string file="" ) {
-      mostRecentError = err;
-      errLine = line;
-      errFile = file;
-      return err;
-    }
-    void dspErrMsg ( int err ) {
-      DspErr::dspErrMsg( errLine, errFile, NumErrs, err, errMsgs );
-    }
-    void dspErrMsg ( void ) {
-      DspErr::dspErrMsg( errLine, errFile, NumErrs, mostRecentError, errMsgs );
-    }
   
   };
 

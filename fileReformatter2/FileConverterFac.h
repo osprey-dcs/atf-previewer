@@ -10,9 +10,9 @@
 #include <QString>
 
 #include "PsnFileConverter.h"
-#include "DspErr.h"
+#include "ErrHndlr.h"
 
-class FileConverterFac {
+class FileConverterFac : public ErrHndlr {
 
 public:
 
@@ -21,28 +21,12 @@ public:
   static const int EUnknownType = 1;
   inline static const std::string errMsgs[NumErrs] {
     { "Success" },
-    { "Unknown file type" }
+    { "Unknown file type: " }
   };
   
   FileConverterFac();
   std::shared_ptr<FileConverter> getFileConverter ( const QString& fileType );
   FileConverter *getFileConverterPtr ( const QString& fileType );
-
-  int mostRecentError {0};
-  int errLine {0};
-  std::string errFile;
-  int errInfo ( int err, int line=0, std::string file="" ) {
-    mostRecentError = err;
-    errLine = line;
-    errFile = file;
-    return err;
-  }
-  void dspErrMsg ( int err ) {
-    DspErr::dspErrMsg( errLine, errFile, NumErrs, err, errMsgs );
-  }
-  void dspErrMsg ( void ) {
-    DspErr::dspErrMsg( errLine, errFile, NumErrs, mostRecentError, errMsgs );
-  }
 
 };
 

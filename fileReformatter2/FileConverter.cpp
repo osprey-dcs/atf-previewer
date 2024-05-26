@@ -4,7 +4,8 @@
 
 #include "FileConverter.h"
 
-FileConverter::FileConverter ( ) {
+FileConverter::FileConverter ( ) : ErrHndlr ( FileConverter::BaseNumErrs,
+                                              FileConverter::BaseErrMsgs ) {
 
   for ( int i=0; i<=Cnst::MaxSignals; i++ ) {
     fileLoc[i] = 0;

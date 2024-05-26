@@ -4,7 +4,8 @@
 
 #include "DspErr.h"
 
-void DspErr::dspErrMsg ( int line, const std::string& file, int n, int err, const std::string msgs[] ) {
+void DspErr::dspErrMsg ( int line, const std::string& file, int n, int err,
+                         std::vector<std::string>& msgs, const std::string& arg ) {
 
   std::string str;
 
@@ -22,6 +23,11 @@ void DspErr::dspErrMsg ( int line, const std::string& file, int n, int err, cons
     std::cout << str << std::endl;
   }
 
-  std::cout << str << " at line " << line << " in " << file << std::endl;
+  if ( arg.empty() ) {
+    std::cout << str << " at line " << line << " in " << file << std::endl;
+  }
+  else {
+    std::cout << str << arg << " at line " << line << " in " << file << std::endl;
+  }
 
 }

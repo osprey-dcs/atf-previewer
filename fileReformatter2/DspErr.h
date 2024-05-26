@@ -5,18 +5,19 @@
 #ifndef FILEREFORMATTER2_DSPERR_H
 #define FILEREFORMATTER2_DSPERR_H
 
-#define ERRINFO(err)\
-  errInfo(err,__LINE__, __FILE__)
+#define ERRINFO(err,arg) \
+  errInfo(err,arg,__LINE__, __FILE__)
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 class DspErr {
 
   public:
   static int mostRecentError;
-  static void dspErrMsg ( int line, const std::string& file, int n, int err, const std::string msgs[] );
-  static void dspErrMsg ( int line, std::string file, int n, const std::string msgs[] );
+  static void dspErrMsg ( int line, const std::string& file, int n, int err,
+                          std::vector<std::string>& msgs, const std::string& arg );
 
 };
 

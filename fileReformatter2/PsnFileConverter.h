@@ -19,13 +19,13 @@
 #include <QString>
 
 #include "FileConverter.h"
-#include "DspErr.h"
+#include "ErrHndlr.h"
 
 class PsnFileConverter : public FileConverter {
 
 public:
 
-  static const int NumErrs = 8;
+  static const int PsnNumErrs = 8;
   static const int ESuccess = 0;
   static const int EInFileOpen = 1;
   static const int EOutFileOpen = 2;
@@ -34,14 +34,14 @@ public:
   static const int EReadFailure = 5;
   static const int EWriteFailure = 6;
   static const int ESequence = 7;
-  inline static const std::string errMsgs[NumErrs] {
+  inline static const std::string PsnErrMsgs[PsnNumErrs] {
     { "Success" },
-    { "Input file open failure" },
-    { "Output file open failure" },
-    { "Status file open failure" },
+    { "Input file open failure: " },
+    { "Output file open failure: " },
+    { "Status file open failure: " },
     { "Unexpected quantity, internal error failure" },
-    { "File read failure" },
-    { "File write failure" },
+    { "File read failure: " },
+    { "File write failure: " },
     { "Sequence number failure" }
   };
   
@@ -83,7 +83,8 @@ private:
   int createAndOpenOutputFiles ( std::list<int>& chanList, int startingSigIndex,
                                  const QString& binDataFileDir, const QString& simpleName, 
                                  bool verbose=false );
-  int writeOutputFiles ( std::list<int>& chanList, int numValues, unsigned int array[Cnst::MaxSignals+1][Cnst::Max4PerWord] );
+  int writeOutputFiles ( std::list<int>& chanList, int numValues,
+                         unsigned int array[Cnst::MaxSignals+1][Cnst::Max4PerWord] );
   int closeOutputFiles ( std::list<int>& chanList );
 
   QString buildStatusOutputFileName( int chassisIndex, const QString& binDataFileDir,
@@ -148,22 +149,6 @@ private:
   bool firstSeqNum = true;
   unsigned long prevSeqNum;
 
-  int mostRecentError {0};
-  int errLine {0};
-  std::string errFile;
-  int errInfo ( int err, int line=0, std::string file="" ) {
-    mostRecentError = err;
-    errLine = line;
-    errFile = file;
-    return err;
-  }
-  void dspErrMsg ( int err ) {
-    DspErr::dspErrMsg( errLine, errFile, NumErrs, err, errMsgs );
-  }
-  void dspErrMsg ( void ) {
-    DspErr::dspErrMsg( errLine, errFile, NumErrs, mostRecentError, errMsgs );
-  }
-  
 };
 
 #endif //FILEREFORMATTER_PSNFILECONVERTER_H

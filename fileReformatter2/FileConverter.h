@@ -13,12 +13,17 @@
 
 #include "Cnst.h"
 #include "DataHeader.h"
+#include "ErrHndlr.h"
 
-class FileConverter {
+class FileConverter : public ErrHndlr {
 
 public:
-
+  
+  static const int BaseNumErrs = 1;
   static const int ESuccess = 0;
+  inline static const std::string BaseErrMsgs[BaseNumErrs] {
+    { "Success" }
+  };
 
   FileConverter();
   virtual int convert( int chassisIndex, std::list<int>& chanList, int startingSigIndex,
@@ -29,9 +34,6 @@ public:
                                       const QString& simpleName );
   virtual int getRawBinFileChanList( const QString& rawBinFileName, std::list<int>& chanList );
   virtual void show( void );
-  virtual int errInfo ( int err, int line=0, std::string file="" ) { return 0; }
-  virtual void dspErrMsg ( int err ) {}
-  virtual void dspErrMsg ( void ) {}
 
   std::filebuf fb[Cnst::MaxSignals+1];
   unsigned long fileLoc[Cnst::MaxSignals+1]{};

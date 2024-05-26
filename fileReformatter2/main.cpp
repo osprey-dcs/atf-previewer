@@ -14,7 +14,7 @@
 #include "FileConverterFac.h"
 #include "FileUtil.h"
 
-static const char *version = "0.0.7";
+static const char *version = "0.0.8";
 
 static struct option long_options[] = {
   { "version", no_argument,       0, 0 },

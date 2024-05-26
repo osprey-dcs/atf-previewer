@@ -3,7 +3,8 @@
 //
 #include "FileConverterFac.h"
 
-FileConverterFac::FileConverterFac () = default;
+FileConverterFac::FileConverterFac () : ErrHndlr ( FileConverterFac::NumErrs, FileConverterFac::errMsgs ) {
+}
 
 std::shared_ptr<FileConverter> FileConverterFac::getFileConverter ( const QString& fileType ) {
 
@@ -11,7 +12,7 @@ std::shared_ptr<FileConverter> FileConverterFac::getFileConverter ( const QStrin
     return std::shared_ptr<FileConverter>(new PsnFileConverter());
   }
   else {
-    int dummy = ERRINFO( 1 );
+    int dummy = ERRINFO(1,fileType.toStdString());
     return nullptr;
   }
 
@@ -23,7 +24,7 @@ FileConverter *FileConverterFac::getFileConverterPtr ( const QString& fileType )
     return  new PsnFileConverter();
   }
   else {
-    int dummy = ERRINFO( 1 );
+    int dummy = ERRINFO(1,fileType.toStdString());
     return nullptr;
   }
 

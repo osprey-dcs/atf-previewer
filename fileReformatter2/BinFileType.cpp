@@ -4,7 +4,10 @@
 
 #include "BinFileType.h"
 
-BinFileType::BinFileType() = default;
+BinFileType::BinFileType() : ErrHndlr ( BinFileType::NumErrs, BinFileType::errMsgs ) {
+}
+
+// : ErrHndlr ( ?::NumErrs, ?::errMsgs ) {
 
 int BinFileType::getRawBinFileType( const QString& rawBinFileName, QString& rawBinFileType ) {
 
@@ -13,7 +16,7 @@ int BinFileType::getRawBinFileType( const QString& rawBinFileName, QString& rawB
 
   auto result = fb.open( rawBinFileName.toStdString(), std::ios::in | std::ios::binary );
   if ( !result ) {
-    return ERRINFO(EFileOpen);
+    return ERRINFO(EFileOpen,rawBinFileName.toStdString());
   }
 
   // read file type
@@ -21,7 +24,7 @@ int BinFileType::getRawBinFileType( const QString& rawBinFileName, QString& rawB
   
   int num = fb.sgetn( (char *) buf, sizeof(buf) );
   if ( num < sizeof(buf) ) {
-    return ERRINFO(EFileRead);
+    return ERRINFO(EFileRead,rawBinFileName.toStdString());
   }
 
   fb.close();
