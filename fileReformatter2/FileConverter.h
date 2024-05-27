@@ -5,9 +5,11 @@
 #ifndef FILEREFORMATTER_FILECONVERTER_H
 #define FILEREFORMATTER_FILECONVERTER_H
 
-#include "memory"
+#include <memory>
 #include <fstream>
 #include <list>
+
+#include <stdint.h>
 
 #include <QString>
 
@@ -50,10 +52,10 @@ public:
   virtual void show( void );
 
   std::filebuf fb[Cnst::MaxSignals+1];
-  unsigned long fileLoc[Cnst::MaxSignals+1]{};
+  uint64_t fileLoc[Cnst::MaxSignals+1]{};
 
   std::filebuf statusFb;
-  unsigned long statusFileLoc;
+  uint64_t statusFileLoc;
 
 };
 

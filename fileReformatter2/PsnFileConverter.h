@@ -53,16 +53,16 @@ public:
 
 private:
 
-  int readBinHeader ( std::filebuf& fb, unsigned long loc, unsigned int& numBytesRead,
+  int readBinHeader (std::filebuf& fb, size_t loc, size_t &numBytesRead,
                       QString& headerType, bool& complete );
-  int readHeaderType( std::filebuf& fb, unsigned long loc, QString& headerType, bool& eof );
-  int readBinData ( std::filebuf& fb, unsigned long loc, unsigned int dataLen,
-                   unsigned int *buf, unsigned int& numBytesRead, bool& complete );
+  int readHeaderType(std::filebuf& fb, size_t loc, QString& headerType, bool& eof );
+  int readBinData (std::filebuf& fb, size_t loc, unsigned int dataLen,
+                   unsigned int *buf, size_t &numBytesRead, bool& complete );
   QString buildOutputFileName( int sigIndex, const QString& binDataFileDir, const QString& simpleName );
   int createAndOpenOutputFiles ( std::list<int>& chanList, int startingSigIndex,
                                  const QString& binDataFileDir, const QString& simpleName, 
                                  bool verbose=false );
-  int writeOutputFiles ( std::list<int>& chanList, int numValues,
+  int writeOutputFiles (std::list<int>& chanList, unsigned int numValues,
                          unsigned int array[Cnst::MaxSignals+1][Cnst::Max4PerWord] );
   int closeOutputFiles ( std::list<int>& chanList );
 
@@ -70,7 +70,7 @@ private:
                                       const QString& simpleName );
   int createAndOpenStatusOutputFile ( int chassisIndex, const QString& binDataFileDir, 
                                       const QString& simpleName, bool verbose=false );
-  int writeStatusOutputFile ( int numValues, unsigned int array[Cnst::MaxStatus][NumStatusFields] );
+  int writeStatusOutputFile ( unsigned numValues, const unsigned int array[Cnst::MaxStatus][NumStatusFields] );
   int closeStatusOutputFile ( void );
   int getRawBinFileChanList( const QString& rawBinFileName, std::list<int>& chanList );
 
@@ -119,14 +119,12 @@ private:
   } BinHdrGenericType, *BinHdrGenericPtr;
   #pragma pack(pop)
 
-  //unsigned long sizeOfOneFile;
-
   BinHdrPsnaType binHeaderPsna;
   BinHdrPsnbType binHeaderPsnb;
   BinHdrGenericType binHeaderGeneric;
 
   bool firstSeqNum = true;
-  unsigned long prevSeqNum;
+  uint64_t prevSeqNum;
 
 };
 

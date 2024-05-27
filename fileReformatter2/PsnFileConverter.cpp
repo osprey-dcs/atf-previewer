@@ -15,6 +15,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
                                 const DataHeader *dh, const QString &rawDataFile, const QString& binDataFileDir,
                                 const QString& simpleName, bool verbose ) {
 
+  (void)dh; // unused
   // first cut will be single threaded
 
   // Open rawDataFile
@@ -37,9 +38,9 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
   unsigned int buf3BytesPerWord[Cnst::Max3PerWord];
   unsigned int buf4BytesPerWord[Cnst::MaxSignals+1][Cnst::Max4PerWord];
   unsigned int statusArray[Cnst::MaxStatus][PsnFileConverter::NumStatusFields];
-  unsigned int numBytesRead;
-  unsigned long dataLen, loc = 0;
-  int isignal = 1;
+  size_t numBytesRead;
+  uint64_t dataLen, loc = 0;
+  unsigned isignal = 1;
   int ivalue = 0;
   int istatus = 0;
   bool complete = false;
@@ -80,7 +81,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
   int lolo;
   int hi;
   int hihi;
-  unsigned long seq;
+  uint64_t seq;
 
   do {
 
@@ -241,9 +242,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
         return ERRINFO(stat,this->arg);
       }
 
-      unsigned long numOps = dataLen / 4;
-      unsigned long numRemaining = ( dataLen % 4 );
-      int i, iout = 0;
+      auto numOps = dataLen / 4;
       //if ( numRemaining ) {
       //  numOps -= numRemaining;
       //}
@@ -254,7 +253,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
       }
 
 
-      for ( i=0; i<numOps; i+=3 ) {
+      for ( uint64_t i=0; i<numOps; i+=3 ) {
         unsigned int v1, v2, v3, v4, tmp1, tmp2, tmp3;
         // unravaling signed 24-bit integers
         // each group of 4 u24 is packed into 3x4 bytes
@@ -271,16 +270,12 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
 
         v1 = tmp1 >> 8; // AAAx -> 0AAA
         if ( v1 & 0x800000 ) v1 |= 0xff000000;
-        iout++;
         v2 = ( ( tmp1 & 0xff ) << 16 ) | ( tmp2 >> 16 ); // xxxB, BBxx -> 0BBB
         if ( v2 & 0x800000 ) v2 |= 0xff000000;
-        iout++;
         v3 = ( ( tmp2 & 0xffff ) << 8 ) | ( tmp3 >> 24 ); // xxCC, Cxxx -> 0CCC
         if ( v3 & 0x800000 ) v3 |= 0xff000000;
-        iout++;
         v4 = tmp3 & 0xffffff; // xDDD -> 0DDD
         if ( v4 & 0x800000 ) v4 |= 0xff000000;
-        iout++;
 
         if ( isignal > Cnst::MaxSignals ) {
           std::cout << "Unexpected value for isignal: " << isignal << ", ivalue = " << ivalue << std::endl;
@@ -343,9 +338,9 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
 
 }
 
-int PsnFileConverter::readHeaderType( std::filebuf& fb, unsigned long loc, QString& headerType, bool& eof ) {
+int PsnFileConverter::readHeaderType( std::filebuf& fb, size_t loc, QString& headerType, bool& eof ) {
 
-  unsigned long numBytessRead;
+  size_t numBytessRead;
   unsigned char buf[4];
   
   fb.pubseekoff( loc, std::ios::beg, std::ios::in );
@@ -364,7 +359,7 @@ int PsnFileConverter::readHeaderType( std::filebuf& fb, unsigned long loc, QStri
 
 }
 
-int PsnFileConverter::readBinHeader( std::filebuf& fb, unsigned long loc, unsigned int& numBytessRead,
+int PsnFileConverter::readBinHeader( std::filebuf& fb, size_t loc, size_t& numBytessRead,
                                     QString& headerType, bool& complete ) {
 
   bool eof = false;
@@ -425,8 +420,8 @@ int PsnFileConverter::readBinHeader( std::filebuf& fb, unsigned long loc, unsign
 
 }
 
-int PsnFileConverter::readBinData(std::filebuf& fb, unsigned long loc, unsigned int dataLen,
-                                  unsigned int *buf, unsigned int& numBytessRead, bool& complete ) {
+int PsnFileConverter::readBinData(std::filebuf& fb, size_t loc, unsigned int dataLen,
+                                  unsigned int *buf, size_t& numBytessRead, bool& complete ) {
 
   complete = false;
 
@@ -469,10 +464,10 @@ int PsnFileConverter::createAndOpenOutputFiles( std::list<int>& chanList, int st
                                                 bool verbose ) {
 
   QString fname;
-  unsigned long sizeInBytes = 0;
+  uint64_t sizeInBytes = 0;
 
   // init
-  for ( int i=0; i<=Cnst::MaxSignals; i++ ) {
+  for ( unsigned i=0; i<=Cnst::MaxSignals; i++ ) {
     fileLoc[i] = 0;
   }
   
@@ -509,15 +504,15 @@ int PsnFileConverter::createAndOpenOutputFiles( std::list<int>& chanList, int st
 
 }
 
-int PsnFileConverter::writeOutputFiles( std::list<int>& chanList, int numValues,
+int PsnFileConverter::writeOutputFiles( std::list<int>& chanList, unsigned numValues,
                                        unsigned int array[Cnst::MaxSignals+1][Cnst::Max4PerWord] ) {
 
-  unsigned long sizeInBytes = numValues * sizeof(unsigned int);
+  uint64_t sizeInBytes = numValues * sizeof(unsigned int);
 
   //for ( int i=0; i<Cnst::MaxSignals; i++ ) {
   for ( int i : chanList ) {
 
-    auto num = fb[i].sputn( (char *) &array[i][0], sizeInBytes );
+    size_t num = fb[i].sputn( (char *) &array[i][0], sizeInBytes );
     if ( num == 0 ) {
       return ESuccess;
     }
@@ -579,7 +574,7 @@ int PsnFileConverter::createAndOpenStatusOutputFile ( int chassisIndex, const QS
                                                       const QString& simpleName, bool verbose ) {
 
   QString fname;
-  unsigned long sizeInBytes = 0;
+  uint64_t sizeInBytes = 0;
 
   // assume directory exists
 
@@ -615,12 +610,12 @@ int PsnFileConverter::createAndOpenStatusOutputFile ( int chassisIndex, const QS
 
 }
 
-int PsnFileConverter::writeStatusOutputFile ( int numValues, unsigned int
-                                              array[Cnst::MaxStatus][PsnFileConverter::NumStatusFields] ) {
+int PsnFileConverter::writeStatusOutputFile ( unsigned numValues,
+                                              const unsigned int array[Cnst::MaxStatus][PsnFileConverter::NumStatusFields] ) {
 
-  unsigned long sizeInBytes = numValues * sizeof(unsigned int) * PsnFileConverter::NumStatusFields;
+  std::streamsize sizeInBytes = numValues * sizeof(unsigned int) * PsnFileConverter::NumStatusFields;
 
-  auto num = statusFb.sputn( (char *) array, sizeInBytes );
+  auto num = statusFb.sputn( (const char *) array, sizeInBytes );
   if ( num == 0 ) {
     return ESuccess;
   }
@@ -668,7 +663,7 @@ int PsnFileConverter::getRawBinFileChanList( const QString& rawBinFileName, std:
     return ERRINFO(EInFileOpen,rawBinFileName.toStdString());
   }
 
-  unsigned long loc = 5 * sizeof(int);
+  size_t loc = 5 * sizeof(int);
   // read chan mask (active adc channels)
   fb.pubseekoff( loc, std::ios::beg, std::ios::in );
   
