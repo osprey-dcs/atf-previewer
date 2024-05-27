@@ -20,7 +20,7 @@ int Uff58bExport::setOutFile ( const QString &qs ) {
   return 0;
 }
 
-int Uff58bExport::set58bHeader(unsigned long numBytes) {
+int Uff58bExport::set58bHeader(uint64_t numBytes) {
 
   int endian = LITTLE;
   short sval = 1;
@@ -221,7 +221,7 @@ int Uff58bExport::writeHeader( std::filebuf &fb ) {
   
 }
 
-int Uff58bExport::writeBinary( std::filebuf &fb, double *buf, unsigned long numBytes ) {
+int Uff58bExport::writeBinary( std::filebuf &fb, double *buf, uint64_t numBytes ) {
 
   // write binary file in chunks
   
@@ -231,7 +231,7 @@ int Uff58bExport::writeBinary( std::filebuf &fb, double *buf, unsigned long numB
 
 }
 
-int Uff58bExport::writeBinary( std::filebuf &fb, float *buf, unsigned long numBytes ) {
+int Uff58bExport::writeBinary( std::filebuf &fb, float *buf, uint64_t numBytes ) {
 
   int n = fb.sputn( (char *) buf, numBytes );
 
@@ -239,7 +239,7 @@ int Uff58bExport::writeBinary( std::filebuf &fb, float *buf, unsigned long numBy
 
 }
 
-int Uff58bExport::writeBinary( std::filebuf &fb, char *buf, unsigned long numBytes ) {
+int Uff58bExport::writeBinary( std::filebuf &fb, char *buf, uint64_t numBytes ) {
 
   int n = fb.sputn( (char *) buf, numBytes );
   
@@ -247,7 +247,7 @@ int Uff58bExport::writeBinary( std::filebuf &fb, char *buf, unsigned long numByt
 
 }
 
-int Uff58bExport::writeBinary( std::filebuf &fb, const char *buf, unsigned long numBytes ) {
+int Uff58bExport::writeBinary( std::filebuf &fb, const char *buf, uint64_t numBytes ) {
 
   int n = fb.sputn( (char *) buf, numBytes );
 

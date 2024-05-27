@@ -114,7 +114,7 @@ public:
 
   int setOutFile ( const QString &qs );
 
-  int set58bHeader( unsigned long numBytes );
+  int set58bHeader( uint64_t numBytes );
 
   int set80CharRec ( int rec, QString line );
 
@@ -132,13 +132,13 @@ public:
 
   int writeHeader( std::filebuf &fb );
 
-  int writeBinary( std::filebuf &fb, double *buf, unsigned long numBytes  );
+  int writeBinary( std::filebuf &fb, double *buf, uint64_t numBytes  );
   
-  int writeBinary( std::filebuf &fb, float *buf, unsigned long numBytes  );
+  int writeBinary( std::filebuf &fb, float *buf, uint64_t numBytes  );
 
-  int writeBinary( std::filebuf &fb, char *buf, unsigned long numBytes  );
+  int writeBinary( std::filebuf &fb, char *buf, uint64_t numBytes  );
 
-  int writeBinary( std::filebuf &fb, const char *buf, unsigned long numBytes  );
+  int writeBinary( std::filebuf &fb, const char *buf, uint64_t numBytes  );
 
   void getExponents( int dataType, int direction, int &lenExp, int &forceExp, int &tempExp );
 

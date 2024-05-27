@@ -43,12 +43,12 @@ int BinDataMFile::newFile( QString fileName ) {
   return vdisk.setFile ( fileName.toStdString() );
 }
 
-void BinDataMFile::initMaxBufSize( unsigned long max ) {
+void BinDataMFile::initMaxBufSize( uint64_t max ) {
   vdisk.setMaxSize( max );
 }
 
 // old test data format
-int BinDataMFile::getMaxElements2 ( QString filename, int sigIndex, unsigned long& max ) {
+int BinDataMFile::getMaxElements2 ( QString filename, int sigIndex, uint64_t& max ) {
 
   std::filebuf fb;
   const unsigned int version[] { 1, 0, 0 };
@@ -64,13 +64,13 @@ int BinDataMFile::getMaxElements2 ( QString filename, int sigIndex, unsigned lon
 
   // get number of signals
   unsigned int numSigs;
-  fb.pubseekoff( (unsigned long) sizeof( version ), std::ios::beg, std::ios::in );
+  fb.pubseekoff( (uint64_t) sizeof( version ), std::ios::beg, std::ios::in );
   fb.sgetn( (char *) (&numSigs), sizeof(numSigs) );
 
   // get num of elements for given signal index
   unsigned int headerSize = sizeof(numSigs) + sizeof(version);
-  unsigned long value;
-  unsigned long offset = headerSize + numSigs * sizeof(value);
+  uint64_t value;
+  uint64_t offset = headerSize + numSigs * sizeof(value);
   for ( unsigned int i=0; i<numSigs; i++ ) {
     fb.sgetn((char *) &value, sizeof(value));
     if ( i == sigIndex ) {
@@ -98,12 +98,12 @@ int BinDataMFile::genLineSeries2 ( QString filename,
                             double startTimeInSec,
                             double endTimeInSec,
                             double dataTimeIncrementInSec,
-                            unsigned long& numPts,
+                            uint64_t& numPts,
                             QtCharts::QLineSeries& qls,
                             double& miny,
                             double& maxy,
-                            unsigned long maxFft,
-                            unsigned long& numFft,
+                            uint64_t maxFft,
+                            uint64_t& numFft,
                             fftw_complex *fftArray ) {
     
   //std::cout << "BinDataMFile::genLineSeries" << std::endl;
@@ -129,14 +129,14 @@ int BinDataMFile::genLineSeries2 ( QString filename,
 
   // get number of signals
   unsigned int numSigs;
-  fb.pubseekoff( (unsigned long) sizeof( version ), std::ios::beg, std::ios::in );
+  fb.pubseekoff( (uint64_t) sizeof( version ), std::ios::beg, std::ios::in );
   fb.sgetn( (char *) (&numSigs), sizeof(numSigs) );
 
   unsigned int headerSize = sizeof(numSigs) + sizeof(version);
-  unsigned long numSigbytes;
-  unsigned long offset = headerSize + numSigs * sizeof(numSigbytes);
+  uint64_t numSigbytes;
+  uint64_t offset = headerSize + numSigs * sizeof(numSigbytes);
   //std::cout << "offset 1: " << offset << std::endl;
-  unsigned long value;
+  uint64_t value;
   for ( unsigned int i=0; i<numSigs; i++ ) {
     fb.sgetn((char *) &value, sizeof(value));
     //std::cout << "num data bytes for trace " << i << " = " << value << std::endl;
@@ -149,23 +149,23 @@ int BinDataMFile::genLineSeries2 ( QString filename,
     }
   }
 
-  unsigned long startingpoint = round( startTimeInSec / dataTimeIncrementInSec );
+  uint64_t startingpoint = round( startTimeInSec / dataTimeIncrementInSec );
   //std::cout << "startingpoint 1: " << startingpoint << std::endl;
   if ( startingpoint > numSigbytes/sizeof(int) ) {
     fb.close();
     return ERRINFO(ERange,"");
   }
 
-  unsigned long endingpoint = round( endTimeInSec / dataTimeIncrementInSec );
+  uint64_t endingpoint = round( endTimeInSec / dataTimeIncrementInSec );
   //std::cout << "endingpoint: 1 " << endingpoint << std::endl;
   if ( endingpoint > numSigbytes/sizeof(int) ) {
     endingpoint = numSigbytes/sizeof(int);
   }
 
-  unsigned long totalpoints = endingpoint - startingpoint + 1;
+  uint64_t totalpoints = endingpoint - startingpoint + 1;
   if ( totalpoints > numSigbytes/sizeof(int) ) totalpoints = numSigbytes/sizeof(int);
 
-  unsigned long startingOffset = startingpoint * sizeof(int);
+  uint64_t startingOffset = startingpoint * sizeof(int);
   //std::cout << "startingOffset: " <<  startingOffset<< std::endl;
   //std::cout << "offset 2: " << offset << std::endl;
 
@@ -189,10 +189,10 @@ int BinDataMFile::genLineSeries2 ( QString filename,
 
     // read data in maximum chunks of 4000 bytes (1000 ints)
     int numBytesRead, buf[1000];
-    unsigned long numReadOps = (totalpoints * sizeof(int)) / 4000;
-    unsigned long finalReadSize = (totalpoints * sizeof(int)) % 4000;
+    uint64_t numReadOps = (totalpoints * sizeof(int)) / 4000;
+    uint64_t finalReadSize = (totalpoints * sizeof(int)) % 4000;
     //std::cout << "finalReadSize 1: " << finalReadSize << std::endl;
-    unsigned long iread;
+    uint64_t iread;
     QPointF pts[4];
     double timeStep = startTimeInSec;
     numPts = 0;
@@ -239,10 +239,10 @@ int BinDataMFile::genLineSeries2 ( QString filename,
       
     // read data in maximum chunks of 4000 bytes (1000 ints)
     int numBytesRead, buf[1000];
-    unsigned long numReadOps = (totalpoints * sizeof(int)) / 4000;
-    unsigned long finalReadSize = (totalpoints * sizeof(int)) % 4000;
+    uint64_t numReadOps = (totalpoints * sizeof(int)) / 4000;
+    uint64_t finalReadSize = (totalpoints * sizeof(int)) % 4000;
     //std::cout << "finalReadSize 1: " << finalReadSize << std::endl;
-    unsigned long iread;
+    uint64_t iread;
     QPointF pts[4];
     double timeStep = startTimeInSec;
     numPts += 0;
@@ -305,7 +305,7 @@ int BinDataMFile::readTraceData2 (
 
 }
 
-int BinDataMFile::getMaxElements ( QString filename, int sigIndex, unsigned long& max ) {
+int BinDataMFile::getMaxElements ( QString filename, int sigIndex, uint64_t& max ) {
 
   std::filebuf fb;
   const unsigned int version[] { 1, 0, 0 };
@@ -321,8 +321,8 @@ int BinDataMFile::getMaxElements ( QString filename, int sigIndex, unsigned long
   //fb.sgetn( (char *) version, sizeof(version) );
 
   // get num of elements
-  unsigned long value;
-  vdisk.readN( &fb, (unsigned long) sizeof( version ), sizeof(value), (char *) &value );
+  uint64_t value;
+  vdisk.readN( &fb, (uint64_t) sizeof( version ), sizeof(value), (char *) &value );
   //fb.sgetn((char *) &value, sizeof(value));
 
   fb.close();
@@ -341,12 +341,12 @@ int BinDataMFile::genLineSeries ( QString filename,
                             double startTimeInSec,
                             double endTimeInSec,
                             double dataTimeIncrementInSec,
-                            unsigned long& numPts,
+                            uint64_t& numPts,
                             QtCharts::QLineSeries& qls,
                             double& miny,
                             double& maxy,
-                            unsigned long maxFft,
-                            unsigned long& numFft,
+                            uint64_t maxFft,
+                            uint64_t& numFft,
                             fftw_complex *fftArray ) {
     
   //std::cout << "BinDataMFile::genLineSeries" << std::endl;
@@ -372,29 +372,29 @@ int BinDataMFile::genLineSeries ( QString filename,
   //fb.sgetn( (char *) version, sizeof(version) );
 
   // read numSigbytes
-  unsigned long numSigbytes;
-  vdisk.readN( &fb, (unsigned long) sizeof( version ), sizeof(numSigbytes), (char *) &numSigbytes );
-  //fb.pubseekoff( (unsigned long) sizeof( version ), std::ios::beg, std::ios::in );
+  uint64_t numSigbytes;
+  vdisk.readN( &fb, (uint64_t) sizeof( version ), sizeof(numSigbytes), (char *) &numSigbytes );
+  //fb.pubseekoff( (uint64_t) sizeof( version ), std::ios::beg, std::ios::in );
   //fb.sgetn((char *) &numSigbytes, sizeof(numSigbytes));
 
   unsigned int headerSize = sizeof(numSigbytes) + sizeof(version);
-  unsigned long offset = headerSize;
+  uint64_t offset = headerSize;
 
-  unsigned long startingpoint = round( startTimeInSec / dataTimeIncrementInSec );
+  uint64_t startingpoint = round( startTimeInSec / dataTimeIncrementInSec );
   if ( startingpoint > numSigbytes/sizeof(int) ) {
     fb.close();
     return ERRINFO(ERange,"");
   }
 
-  unsigned long endingpoint = round( endTimeInSec / dataTimeIncrementInSec );
+  uint64_t endingpoint = round( endTimeInSec / dataTimeIncrementInSec );
   if ( endingpoint > numSigbytes/sizeof(int) ) {
     endingpoint = numSigbytes/sizeof(int);
   }
 
-  unsigned long totalpoints = endingpoint - startingpoint + 1;
+  uint64_t totalpoints = endingpoint - startingpoint + 1;
   if ( totalpoints > numSigbytes/sizeof(int) ) totalpoints = numSigbytes/sizeof(int);
 
-  unsigned long startingOffset = startingpoint * sizeof(int);
+  uint64_t startingOffset = startingpoint * sizeof(int);
   //std::cout << std::endl << std::endl;
   //std::cout << "startingOffset: " <<  startingOffset << std::endl;
   //std::cout << "offset 2: " << offset << std::endl;
@@ -419,12 +419,12 @@ int BinDataMFile::genLineSeries ( QString filename,
 
     // read data in maximum chunks of 4000 bytes (1000 ints)
     int numBytesRead, buf[1000];
-    unsigned long numReadOps = (totalpoints * sizeof(int)) / 4000;
+    uint64_t numReadOps = (totalpoints * sizeof(int)) / 4000;
     //std::cout << "Initial read: totalpoints = " << totalpoints << std::endl;
     //std::cout << "Initial read: numReadOps = " << numReadOps << std::endl;
-    unsigned long finalReadSize = (totalpoints * sizeof(int)) % 4000;
+    uint64_t finalReadSize = (totalpoints * sizeof(int)) % 4000;
     //std::cout << "finalReadSize 1: " << finalReadSize << std::endl;
-    unsigned long iread;
+    uint64_t iread;
     QPointF pts[4];
     double timeStep = startTimeInSec;
     numPts = 0;
@@ -478,10 +478,10 @@ int BinDataMFile::genLineSeries ( QString filename,
       
     // read data in maximum chunks of 4000 bytes (1000 ints)
     int numBytesRead, buf[1000];
-    unsigned long numReadOps = (totalpoints * sizeof(int)) / 4000;
-    unsigned long finalReadSize = (totalpoints * sizeof(int)) % 4000;
+    uint64_t numReadOps = (totalpoints * sizeof(int)) / 4000;
+    uint64_t finalReadSize = (totalpoints * sizeof(int)) % 4000;
     //std::cout << "finalReadSize 1: " << finalReadSize << std::endl;
-    unsigned long iread;
+    uint64_t iread;
     QPointF pts[4];
     double timeStep = startTimeInSec;
     numPts += 0;

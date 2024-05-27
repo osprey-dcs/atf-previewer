@@ -94,7 +94,7 @@ int CsvExport::writeSignalNames( std::ofstream &fb, QString *names, int numNames
 
 }
 
-int CsvExport::writeData( std::ofstream& fb, unsigned long rec, double time, double *buf, unsigned long n ) {
+int CsvExport::writeData( std::ofstream& fb, uint64_t rec, double time, double *buf, uint64_t n ) {
 
   int nr;
   std::stringstream strm;

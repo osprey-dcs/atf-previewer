@@ -287,7 +287,7 @@ void ViewerMainWin::setWhat( QString text ) {
 
 }
 
-void ViewerMainWin::setNumPoints ( unsigned long val ) {
+void ViewerMainWin::setNumPoints ( uint64_t val ) {
 
     std::stringstream strm;
     strm << std::left << val << std::left << " pts    ";
@@ -298,7 +298,7 @@ void ViewerMainWin::setNumPoints ( unsigned long val ) {
 
 }
 
-void ViewerMainWin::setNumFftPoints ( unsigned long val ) {
+void ViewerMainWin::setNumFftPoints ( uint64_t val ) {
 
     std::stringstream strm;
     strm << std::left << val << std::left << " FFT pts    ";

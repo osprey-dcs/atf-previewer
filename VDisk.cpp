@@ -24,7 +24,7 @@ VDisk::VDisk() : ErrHndlr( NumErrs, errMsgs ) {
   
 }
 
-void VDisk::setMaxSize( unsigned long _maxSize ) {
+void VDisk::setMaxSize( uint64_t _maxSize ) {
 
    maxSize = ( _maxSize / BlockSize ) * BlockSize;
 
@@ -48,11 +48,11 @@ int VDisk::setFile ( std::string fileName ) {
 
   //std::cout << "file len = " << fileSizeInBytes << std::endl;
 
-  bufSizeInBytes = static_cast<unsigned long>( std::min( maxSize, fileSizeInBytes ) );
+  bufSizeInBytes = static_cast<uint64_t>( std::min( maxSize, fileSizeInBytes ) );
   buf = std::shared_ptr<char[]>( new char[bufSizeInBytes] );
 
   //std::cout << "setFile - buf size is = " << bufSizeInBytes << std::endl;
-  //std::cout << "setFile - buf addr = " << std::hex << (unsigned long) ((char *) &buf) << std::dec << std::endl;
+  //std::cout << "setFile - buf addr = " << std::hex << (uint64_t) ((char *) &buf) << std::dec << std::endl;
 
   mapSizeInBytes = bufSizeInBytes / BlockSize;
   if ( bufSizeInBytes % BlockSize ) mapSizeInBytes += 1;
@@ -75,13 +75,13 @@ VDisk::~VDisk(void) {
 
 }
 
-int VDisk::readN( std::filebuf *fb, unsigned long start, unsigned long length, char *outBuf,  bool showParams ) {
+int VDisk::readN( std::filebuf *fb, uint64_t start, uint64_t length, char *outBuf,  bool showParams ) {
 
   int st=0, n;
   bool memRead = true;
   bool fileRead = true;
   bool blockCheckAndFill = true;
-  unsigned long end=0, startMem=0, endMem=0, startFile=0, endFile=0, block0=0, block1=0;
+  uint64_t end=0, startMem=0, endMem=0, startFile=0, endFile=0, block0=0, block1=0;
 
   if ( noFile ) return ERRINFO(ENoFile,"");
   
@@ -132,7 +132,7 @@ int VDisk::readN( std::filebuf *fb, unsigned long start, unsigned long length, c
   //  //std::cout << "? = " << ? << std::endl;
   //}
 
-  for ( unsigned long i=block0; i<=block1; i++ ) {
+  for ( uint64_t i=block0; i<=block1; i++ ) {
 
     if ( !map[i] ) {
       map[i] = 1;
@@ -142,14 +142,14 @@ int VDisk::readN( std::filebuf *fb, unsigned long start, unsigned long length, c
 
   }
 
-  unsigned long outButFileReadStart = startFile;
-  unsigned long outButFileReadLen = endFile - startFile + 1;
+  uint64_t outButFileReadStart = startFile;
+  uint64_t outButFileReadLen = endFile - startFile + 1;
 
   unsigned int outBufIndex = 0;
   
   if ( memRead ) {
 
-    unsigned long len = endMem - startMem + 1;
+    uint64_t len = endMem - startMem + 1;
     memcpy( (void *) &(outBuf[outBufIndex]), (void *) &(buf[startMem]), len );
     outButFileReadStart = endMem;
     outButFileReadLen = endFile - outButFileReadStart + 1;
@@ -168,11 +168,11 @@ int VDisk::readN( std::filebuf *fb, unsigned long start, unsigned long length, c
 
 }
 
-int VDisk::readFile( std::filebuf *fb, unsigned long start, unsigned long sizeInBytes,
+int VDisk::readFile( std::filebuf *fb, uint64_t start, uint64_t sizeInBytes,
                     char *outBuf ) {
 
   fb->pubseekoff( start, std::ios::beg, std::ios::in );
-  unsigned long n = fb->sgetn( (char *) outBuf, sizeInBytes );
+  uint64_t n = fb->sgetn( (char *) outBuf, sizeInBytes );
 
   return n;
 

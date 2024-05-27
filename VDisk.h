@@ -30,25 +30,25 @@ public:
   
   VDisk ();
   ~VDisk ( void );
-  void setMaxSize( unsigned long _maxSize );
+  void setMaxSize( uint64_t _maxSize );
   int setFile ( std::string fileName );
-  int readN ( std::filebuf *fb, unsigned long start, unsigned long end, char *buf, bool showParams = false );
+  int readN ( std::filebuf *fb, uint64_t start, uint64_t end, char *buf, bool showParams = false );
 
   static const unsigned int BlockSize = 8192;
 
-  unsigned long maxSize;
-  unsigned long fileSizeInBytes;
-  unsigned long maxBufSizeInButes;
-  unsigned long bufSizeInBytes;
-  unsigned long mapSizeInBytes;
-  unsigned long mapSizeInBlocks;
+  uint64_t maxSize;
+  uint64_t fileSizeInBytes;
+  uint64_t maxBufSizeInButes;
+  uint64_t bufSizeInBytes;
+  uint64_t mapSizeInBytes;
+  uint64_t mapSizeInBlocks;
   std::shared_ptr<char[]> map; // 0=not filled, 1=filled by file data,
                                // represents one unit of storage
   std::shared_ptr<char[]> buf;
   bool noFile;
   
 private:
-  int readFile( std::filebuf *fb, unsigned long start, unsigned long length,
+  int readFile( std::filebuf *fb, uint64_t start, uint64_t length,
                 char *outBuf );
   int unixError;
 

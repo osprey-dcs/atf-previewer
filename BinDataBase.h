@@ -79,18 +79,18 @@ class BinDataBase : public ErrHndlr {
 
   virtual int newFile( QString filename );
 
-  virtual void initMaxBufSize( unsigned long max );
+  virtual void initMaxBufSize( uint64_t max );
 
   virtual int getDataFullTimeRange( QString filename, double sampleRate, double& minTime, double& maxTime );
   
   virtual int getRecordRangeForTime( QString filename, double sampleRate, double minTime, double maxTime,
-                                     unsigned long& min, unsigned long& max );
+                                     uint64_t& min, uint64_t& max );
   
-  virtual void inputSeekToStartOfData( std::filebuf& fb, unsigned long firstDataByte );
+  virtual void inputSeekToStartOfData( std::filebuf& fb, uint64_t firstDataByte );
 
-  virtual void outputSeekToStartOfData( std::filebuf& fb, unsigned long firstDataByte );
+  virtual void outputSeekToStartOfData( std::filebuf& fb, uint64_t firstDataByte );
 
-  virtual int getMaxElements ( QString filename, int sigIndex, unsigned long& max );
+  virtual int getMaxElements ( QString filename, int sigIndex, uint64_t& max );
 
   virtual int genLineSeries ( QString filename,
                      int sigIndex,
@@ -100,17 +100,17 @@ class BinDataBase : public ErrHndlr {
                      double startTimeInSec,
                      double endTimeInSec,
                      double dataTimeIncrementInSec,
-                     unsigned long& numPts,
+                     uint64_t& numPts,
                      QtCharts::QLineSeries& qls,
                      double& miny,
                      double& maxy,
-                     unsigned long maxFft,
-                     unsigned long& numFft,
+                     uint64_t maxFft,
+                     uint64_t& numFft,
                      fftw_complex *array  );
 
   virtual int readTraceData( std::filebuf& fb, int *buf, int readSizeInbytes );
 
-  virtual int getMaxElements2 ( QString filename, int sigIndex, unsigned long& max );
+  virtual int getMaxElements2 ( QString filename, int sigIndex, uint64_t& max );
 
   virtual int genLineSeries2 ( QString filename,
                      int sigIndex,
@@ -120,12 +120,12 @@ class BinDataBase : public ErrHndlr {
                      double startTimeInSec,
                      double endTimeInSec,
                      double dataTimeIncrementInSec,
-                     unsigned long& numPts,
+                     uint64_t& numPts,
                      QtCharts::QLineSeries& qls,
                      double& miny,
                      double& maxy,
-                     unsigned long maxFft,
-                     unsigned long& numFft,
+                     uint64_t maxFft,
+                     uint64_t& numFft,
                      fftw_complex *array  );
 
   virtual int readTraceData2 ( std::filebuf& fb, int *buf, int readSizeInbytes );

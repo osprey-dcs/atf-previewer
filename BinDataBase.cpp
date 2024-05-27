@@ -48,14 +48,14 @@ int BinDataBase::newFile( QString filename ) {
   return 0;
 }
 
-void BinDataBase::initMaxBufSize( unsigned long max ) {
+void BinDataBase::initMaxBufSize( uint64_t max ) {
 }
 
 int BinDataBase::getDataFullTimeRange( QString filename, double sampleRate, double& minTime, double& maxTime ) {
 
   if ( sampleRate <= 0.0 ) return ERRINFO(ESampleRate,"");
 
-  unsigned long maxElements;
+  uint64_t maxElements;
 
   int st = this->getMaxElements( filename, 0, maxElements );
   if ( st ) {
@@ -74,11 +74,11 @@ int BinDataBase::getDataFullTimeRange( QString filename, double sampleRate, doub
 }
   
 int BinDataBase::getRecordRangeForTime( QString fileName, double sampleRate, double minTime, double maxTime,
-                                        unsigned long& min, unsigned long& max ) {
+                                        uint64_t& min, uint64_t& max ) {
 
   if ( sampleRate == 0.0 ) return ERRINFO(ESampleRate,"");
 
-  unsigned long maxElements;
+  uint64_t maxElements;
 
   int st = this->getMaxElements( fileName, 0, maxElements );
   if ( st ) {
@@ -86,7 +86,7 @@ int BinDataBase::getRecordRangeForTime( QString fileName, double sampleRate, dou
     return ERRINFO(st,"");
   }
 
-  unsigned long maxBytes = maxElements * sizeof(int);
+  uint64_t maxBytes = maxElements * sizeof(int);
 
   min = sampleRate * minTime * sizeof(int);
   if ( min % 4 ) min -= min % 4;
@@ -98,7 +98,7 @@ int BinDataBase::getRecordRangeForTime( QString fileName, double sampleRate, dou
 
 }
 
-int BinDataBase::getMaxElements2 ( QString filename, int sigIndex, unsigned long& max ) {
+int BinDataBase::getMaxElements2 ( QString filename, int sigIndex, uint64_t& max ) {
 
   return 0;
 
@@ -112,12 +112,12 @@ int BinDataBase::genLineSeries2 ( QString filename,
                             double startTimeInSec,
                             double endTimeInSec,
                             double dataTimeIncrementInSec,
-                            unsigned long& numPts,
+                            uint64_t& numPts,
                             QtCharts::QLineSeries& qls,
                             double& miny,
                             double& maxy,
-                            unsigned long maxFft,
-                            unsigned long& numFft,
+                            uint64_t maxFft,
+                            uint64_t& numFft,
                             fftw_complex *fftArray ) {
     
   return 0;
@@ -133,23 +133,23 @@ int BinDataBase::readTraceData2 (
 
 }
 
-void BinDataBase::inputSeekToStartOfData( std::filebuf &fb, unsigned long firstDataByte ) {
+void BinDataBase::inputSeekToStartOfData( std::filebuf &fb, uint64_t firstDataByte ) {
 
-  //unsigned long headerSize = sizeof(numSigbytes) + sizeof(version);
-  unsigned long loc = sizeof(unsigned long) + sizeof(unsigned int) * 3 + firstDataByte;
+  //uint64_t headerSize = sizeof(numSigbytes) + sizeof(version);
+  uint64_t loc = sizeof(uint64_t) + sizeof(unsigned int) * 3 + firstDataByte;
   fb.pubseekoff( loc, std::ios::beg, std::ios::in );
 
 }
 
-void BinDataBase::outputSeekToStartOfData( std::filebuf &fb, unsigned long firstDataByte ) {
+void BinDataBase::outputSeekToStartOfData( std::filebuf &fb, uint64_t firstDataByte ) {
 
-  //unsigned long headerSize = sizeof(numSigbytes) + sizeof(version);
-  unsigned long loc = sizeof(unsigned long) + sizeof(unsigned int) * 3 + firstDataByte;
+  //uint64_t headerSize = sizeof(numSigbytes) + sizeof(version);
+  uint64_t loc = sizeof(uint64_t) + sizeof(unsigned int) * 3 + firstDataByte;
   fb.pubseekoff( loc, std::ios::beg, std::ios::out );
 
 }
 
-int BinDataBase::getMaxElements ( QString filename, int sigIndex, unsigned long& max ) {
+int BinDataBase::getMaxElements ( QString filename, int sigIndex, uint64_t& max ) {
 
   return 0;
 
@@ -163,12 +163,12 @@ int BinDataBase::genLineSeries ( QString filename,
                             double startTimeInSec,
                             double endTimeInSec,
                             double dataTimeIncrementInSec,
-                            unsigned long& numPts,
+                            uint64_t& numPts,
                             QtCharts::QLineSeries& qls,
                             double& miny,
                             double& maxy,
-                            unsigned long maxFft,
-                            unsigned long& numFft,
+                            uint64_t maxFft,
+                            uint64_t& numFft,
                             fftw_complex *fftArray ) {
     
   return 0;
@@ -434,7 +434,7 @@ int BinDataBase::genFftLineSeriesFromBuffer (
       
         y = sqrt( buf[i][0]*buf[i][0] + buf[i][1]*buf[i][1] ) * frac;
 
-        if ( ( y >= 1e-10 ) || !suppressZeros ) {
+        if ( ( y >= Cnst::MinLogArg ) || !suppressZeros ) {
           
           minYVal = std::fmin( y, minYVal );
           maxYVal = std::fmax( y, maxYVal );
@@ -476,7 +476,7 @@ int BinDataBase::genFftLineSeriesFromBuffer (
       
         y = sqrt( buf[i][0]*buf[i][0] + buf[i][1]*buf[i][1] ) * frac;
 
-        if ( ( y >= 1e-10 ) || !suppressZeros ) {
+        if ( ( y >= Cnst::MinLogArg ) || !suppressZeros ) {
 
           minYVal = std::fmin( y, minYVal );
           maxYVal = std::fmax( y, maxYVal );
@@ -545,7 +545,7 @@ int BinDataBase::genFftLineSeriesFromBufferByFreq (
 
         y = sqrt( buf[i][0]*buf[i][0] + buf[i][1]*buf[i][1] ) * frac;
 
-        if ( ( y >= 1e-10 ) || !suppressZeros ) {
+        if ( ( y >= Cnst::MinLogArg ) || !suppressZeros ) {
 
           if ( firstSample ) {
             firstSample = false;
@@ -586,7 +586,7 @@ int BinDataBase::genFftLineSeriesFromBufferByFreq (
       
         y = sqrt( buf[i][0]*buf[i][0] + buf[i][1]*buf[i][1] ) * frac;
 
-        if ( ( y >= 1e-10 ) || !suppressZeros ) {
+        if ( ( y >= Cnst::MinLogArg ) || !suppressZeros ) {
           
           if ( firstSample ) {
             firstSample = false;

@@ -1721,9 +1721,9 @@ int ViewerCtlr::csvExport ( void ) {
   
   numSignals = 0;
   bool once = true;
-  unsigned long recRange;
+  uint64_t recRange;
   double minT=0, maxT=0;
-  unsigned long minByte=0, maxByte=0;
+  uint64_t minByte=0, maxByte=0;
   double timeInc = 1.0 / sampleRate;
     
   // write header and data to the csv file for each signal in list
@@ -1760,7 +1760,7 @@ int ViewerCtlr::csvExport ( void ) {
       }
       else {
 
-        unsigned long maxEle;
+        uint64_t maxEle;
         bd->getMaxElements ( binFile, 0, maxEle );
         minByte = 0;
         maxByte = maxEle * sizeof(int);
@@ -1831,7 +1831,7 @@ int ViewerCtlr::csvExport ( void ) {
     intercept[i] = std::get<DataHeader::INTERCEPT>( indexMap[ii] );
   }
 
-  unsigned long rec = 0;
+  uint64_t rec = 0;
   double time = minT;
 
   for ( i=0; i<numFullOps; i++ ) {
@@ -1957,7 +1957,7 @@ int ViewerCtlr::uff58bExport ( void ) {
     simpleName = simpleName + "." + Cnst::BinExtension.c_str();
 
     double minT=0, maxT=0;
-    unsigned long minByte=0, maxByte=0;
+    uint64_t minByte=0, maxByte=0;
 
     if ( mainWindow->exportDialog->exportRange == "From Start/End" ) {
     
@@ -1975,7 +1975,7 @@ int ViewerCtlr::uff58bExport ( void ) {
     }
     else {
 
-      unsigned long maxEle;
+      uint64_t maxEle;
       bd->getMaxElements ( binFile, 0, maxEle );
       minByte = 0;
       maxByte = maxEle * sizeof(int);

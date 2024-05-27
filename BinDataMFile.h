@@ -55,9 +55,9 @@ class BinDataMFile : public BinDataBase {
 
   int newFile ( QString fileName );
 
-  void initMaxBufSize( unsigned long max );
+  void initMaxBufSize( uint64_t max );
 
-  int getMaxElements ( QString filename, int sigIndex, unsigned long& max );
+  int getMaxElements ( QString filename, int sigIndex, uint64_t& max );
 
   int genLineSeries ( QString filename,
                      int sigIndex,
@@ -67,17 +67,17 @@ class BinDataMFile : public BinDataBase {
                      double startTimeInSec,
                      double endTimeInSec,
                      double dataTimeIncrementInSec,
-                     unsigned long& numPts,
+                     uint64_t& numPts,
                      QtCharts::QLineSeries& qls,
                      double& miny,
                      double& maxy,
-                     unsigned long maxFft,
-                     unsigned long& numFft,
+                     uint64_t maxFft,
+                     uint64_t& numFft,
                      fftw_complex *array  );
 
   int readTraceData( std::filebuf& fb, int *buf, int readSizeInbytes );
 
-  int getMaxElements2 ( QString filename, int sigIndex, unsigned long& max );
+  int getMaxElements2 ( QString filename, int sigIndex, uint64_t& max );
 
   int genLineSeries2 ( QString filename,
                      int sigIndex,
@@ -87,12 +87,12 @@ class BinDataMFile : public BinDataBase {
                      double startTimeInSec,
                      double endTimeInSec,
                      double dataTimeIncrementInSec,
-                     unsigned long& numPts,
+                     uint64_t& numPts,
                      QtCharts::QLineSeries& qls,
                      double& miny,
                      double& maxy,
-                     unsigned long maxFft,
-                     unsigned long& numFft,
+                     uint64_t maxFft,
+                     uint64_t& numFft,
                      fftw_complex *array  );
 
   int readTraceData2 ( std::filebuf& fb, int *buf, int readSizeInbytes );

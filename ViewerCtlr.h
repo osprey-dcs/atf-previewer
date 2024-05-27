@@ -113,7 +113,7 @@ public:
   QString simpleFileName;
   bool haveHeader;
   bool readyForData;
-  unsigned long curMaxElements;
+  uint64_t curMaxElements;
   int prevSigIndex[Cnst::NumGraphs];
   double sampleRate;
   DataHeaderFac dhf;
@@ -122,9 +122,9 @@ public:
   std::shared_ptr<BinDataBase> bd;
   fftw_complex *fftIn;
   fftw_complex *fftOut;
-  unsigned long numPts;
-  unsigned long numFft;
-  unsigned long maxFft;
+  uint64_t numPts;
+  uint64_t numFft;
+  uint64_t maxFft;
   bool haveDataForFft;
   ViewerGraphAreaBase *lastDataRequestGraphArea;
   ViewerGraphAreaBase *fftVga;
