@@ -19,6 +19,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include <unistd.h>
 
+#include <array>
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -1982,7 +1983,7 @@ int ViewerCtlr::uff58bExport ( void ) {
     }
 
     double timeInc = 1.0 / sampleRate;
-    unsigned long recRange = maxByte - minByte;
+    size_t recRange = maxByte - minByte;
     minT = minByte / sizeof(int) / sampleRate;
 
     // build the uff58b header lines
@@ -2059,11 +2060,11 @@ int ViewerCtlr::uff58bExport ( void ) {
     double slope = std::get<DataHeader::SLOPE>( indexMap[sigIndex] );
     double intercept = std::get<DataHeader::INTERCEPT>( indexMap[sigIndex] );
 
-    int intBuf[1000];
-    float outBuf[1000];
-    int numFullOps = recRange / 1000;
-    int numRemaining = recRange % 1000;
-    int nr, nw;
+    std::array<int32_t, 1000> intBuf;
+    std::array<float, 1000> outBuf;
+    size_t numFullOps = recRange / intBuf.size();
+    size_t numRemaining = recRange % intBuf.size();
+    size_t nr, nw;
 
     // seek to start of binary data for input file
     this->bd->inputSeekToStartOfData( fbInput, minByte );
@@ -2071,28 +2072,28 @@ int ViewerCtlr::uff58bExport ( void ) {
     nr = nw = 0;
     
     //read and write binary files in chunks
-    for ( i=0; i<numFullOps; i++ ) {
+    for ( size_t i=0; i<numFullOps; i++ ) {
 
-      nr += this->bd->readTraceData( fbInput, intBuf, 1000 );
+      nr += this->bd->readTraceData( fbInput, intBuf.data(), intBuf.size() );
 
-      for ( ii=0; ii<1000; ii++ ) {
+      for ( size_t ii=0; ii<1000; ii++ ) {
         outBuf[ii] = (float) intBuf[ii] * slope + intercept;
       }
 
-      nw += uff58b->writeBinary( fbExport, outBuf, 1000 );
+      nw += uff58b->writeBinary( fbExport, outBuf.data(), outBuf.size() );
 
     }
 
     // perform final op
     if ( numRemaining ) {
 
-      nr += this->bd->readTraceData( fbInput, intBuf, numRemaining );
+      nr += this->bd->readTraceData( fbInput, intBuf.data(), numRemaining );
 
-      for ( ii=0; ii<numRemaining; ii++ ) {
+      for ( size_t ii=0; ii<numRemaining; ii++ ) {
         outBuf[ii] = (float) intBuf[ii] * slope + intercept;
       }
 
-      nw += uff58b->writeBinary( fbExport, outBuf, numRemaining );
+      nw += uff58b->writeBinary( fbExport, outBuf.data(), numRemaining );
       
     }
 
