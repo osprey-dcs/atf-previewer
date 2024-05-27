@@ -46,8 +46,8 @@ class DataHeader : public ErrHndlr {
     inline static const std::string errMsgs[NumErrs] {
       { "Success" },
       { "Input file open failure: " },
-      { "Type mismatch, expected double" },
-      { "Type mismatch, expected string" },
+      { "Nonexistent key or type mismatch, expected double" },
+      { "Nonexistent key or type mismatch, expected string" },
       { "Output file open failure: " },
       { "Unknown signal index failure" }
     };

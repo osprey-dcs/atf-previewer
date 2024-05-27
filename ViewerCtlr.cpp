@@ -276,6 +276,7 @@ int ViewerCtlr::processHeaderFile (void ) {
   }
   else {
     std::cout << "Failed to get Acquisition ID" << std::endl;
+    this->dh->dspErrMsg( stat );
   }
   
   // get start date
@@ -285,6 +286,7 @@ int ViewerCtlr::processHeaderFile (void ) {
   }
   else {
     std::cout << "Failed to get start date" << std::endl;
+    this->dh->dspErrMsg( stat );
   }
   
   // get end date
@@ -294,6 +296,7 @@ int ViewerCtlr::processHeaderFile (void ) {
   }
   else {
     std::cout << "Failed to get end date" << std::endl;
+    this->dh->dspErrMsg( stat );
   }
   
   // get role 1
@@ -303,18 +306,19 @@ int ViewerCtlr::processHeaderFile (void ) {
   }
   else {
     std::cout << "Failed to get role 1 name" << std::endl;
+    this->dh->dspErrMsg( stat );
   }
   
   // get get sample rate
   sampleRate = 0;
   stat = this->dh->getDouble( "SampleRate", sampleRate );
   if ( !stat ) {
-    //std::cout << "sr = " << sampleRate << std::endl;
     if ( sampleRate == 0.0 ) sampleRate = 1.0;
     this->mainWindow->setSampleRate( sampleRate );
   }
   else {
     std::cout << "Failed to get sample rate" << std::endl;
+    this->dh->dspErrMsg( stat );
   }
   
   // populate combo boxes for the first row graphs
@@ -424,8 +428,6 @@ void ViewerCtlr::process(void ) {
       int sigIndex = std::get<ViewerCtlr::SigIndex>( dataReq );
       QString reqFileName = std::get<ViewerCtlr::FileName>( dataReq );
 
-      //std::cout << "\nprocess - request = " << request << "\n\n";
-
       // for fft calc and display, input data is from the time series graph
       // and displayed on the graph positioned under the time series one ( companion vga ).
 
@@ -436,7 +438,7 @@ void ViewerCtlr::process(void ) {
         stat = uff58bExport();
         if ( stat ) {
           exportFail.showMessage(QString("Export fails (%1)").arg(stat));
-          std::cout << "Error " << stat << " from uff58bExport" << std::endl;
+          this->dspErrMsg( stat );
         }
         this->mainWindow->setWorking( QString("Ready") );
         this->mainWindow->setWhat( "Idle" );
@@ -449,7 +451,7 @@ void ViewerCtlr::process(void ) {
         stat = csvExport();
         if ( stat ) {
           exportFail.showMessage(QString("Export fails (%1)").arg(stat));
-          std::cout << "Error " << stat << " from csvExport" << std::endl;
+          this->dspErrMsg( stat );
         }
         this->mainWindow->setWorking( QString("Ready") );
         this->mainWindow->setWhat( "Idle" );
@@ -507,7 +509,7 @@ void ViewerCtlr::process(void ) {
             }
             else {
               mainWindow->setNumPoints( 0ul );
-              std::cout << "genFftLineSeriesFromBuffer failure" << std::endl;
+              this->bd->dspErrMsg( stat );
               delete qls; qls = nullptr;
             }
         
@@ -559,7 +561,7 @@ void ViewerCtlr::process(void ) {
             x1 = maxTime;
           }
           else {
-            std::cout << "Error " << st << " from getDataFullTimeRange" << std::endl;
+            this->bd->dspErrMsg( stat );
             x1 = x0 + 1.0;
           }
         }
@@ -577,13 +579,14 @@ void ViewerCtlr::process(void ) {
 
         stat = this->bd->getMaxElements( binFile, sigIndex, this->curMaxElements );
         if ( stat ) {
+          this->bd->dspErrMsg( stat );
           this->curMaxElements = 0;
         }
 
         QString qsdiscard, egudiscard;
         stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
         if ( stat ) {
-          std::cout << "getSigInfoBySigIndex failure" << std::endl;
+          this->dh->dspErrMsg( stat );
         }
 
         //  file name, sig index, x scale width in pixels, start time in sec,
@@ -628,7 +631,7 @@ void ViewerCtlr::process(void ) {
           
           mainWindow->setNumPoints( 0ul );
           delete qls; qls = nullptr;
-          std::cout << "genLineSeries failure" << std::endl;
+          this->bd->dspErrMsg( stat );
 
         }
 
@@ -683,8 +686,8 @@ void ViewerCtlr::process(void ) {
           else {
           
             delete qls; qls = nullptr;
-            std::cout << "genFftFillUnderLineSeriesFromBuffer failure" << std::endl;
-          
+            this->bd->dspErrMsg( stat );
+
           }
 
         }
@@ -697,12 +700,9 @@ void ViewerCtlr::process(void ) {
         
           // get min/max time values
           double x0, x1, y0, y1;
-          //grArea->graph->getAxesLimits( x0, y0, x1, y1 );
-          //std::cout << "x0 = " << x0 << ", x1 = " << x1 << ", y0 = " << y0 << ", y1 = " << y1 << std::endl;
 
           // get num of pixels in x
           QSizeF size = grArea->graph->chart->size();
-          //std::cout << "x pixels = " << size.width() << std::endl;
 
           // save reqFileName before appending extension
           grArea->setCurInfo( reqFileName, sigIndex );
@@ -741,7 +741,7 @@ void ViewerCtlr::process(void ) {
           QString qsdiscard, egudiscard;
           stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
-            std::cout << "getSigInfoBySigIndex failure" << std::endl;
+            this->dh->dspErrMsg( stat );
           }
         
           //  file name, sig index, x scale width in pixels, start time in sec,
@@ -778,8 +778,8 @@ void ViewerCtlr::process(void ) {
           
             mainWindow->setNumPoints( 0ul );
             delete qls; qls = nullptr;
-            std::cout << "genLineSeries failure" << std::endl;
-          
+            this->bd->dspErrMsg( stat );
+
           }
 
         }
@@ -804,7 +804,6 @@ void ViewerCtlr::process(void ) {
 
           double x0, x1, y0, y1;
           grArea->graph->getAxesLimits( x0, y0, x1, y1 );
-          //std::cout << "x0, y0, x1, y1 = " << x0 << ", " << y0 << ", " << x1 << ", " << y1 << std::endl;
 
           // get num of pixels in x
           QSizeF size = grArea->graph->chart->size();
@@ -820,9 +819,6 @@ void ViewerCtlr::process(void ) {
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
-            //std::cout << "after - minx, maxx, miny, maxy = "
-            //          << minx << ", " << maxx << ", " << miny << ", " << maxy << std::endl;
-
             // Viewer graph object manages qls
             grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1 );
 
@@ -830,7 +826,7 @@ void ViewerCtlr::process(void ) {
           else {
 
             delete qls; qls = nullptr;
-            std::cout << "genFftFillUnderLineSeriesFromBuffer failure" << std::endl;
+            this->bd->dspErrMsg( stat );
           
           }
 
@@ -839,17 +835,13 @@ void ViewerCtlr::process(void ) {
 
           enableFftButton( grArea );
           lastDataRequestGraphArea = grArea;
-        
-          //std::cout << "haveHorizontalPanRequest" << std::endl;
 
           // get min/max time values
           double x0, x1, y0, y1;
           grArea->graph->getAxesLimits( x0, y0, x1, y1 );
-          //std::cout << "x0, y0, x1, y1 = " << x0 << ", " << y0 << ", " << x1 << ", " << y1 << std::endl;
 
           // get num of pixels in x
           QSizeF size = grArea->graph->chart->size();
-          //std::cout << "x pixels = " << size.width() << std::endl;
 
           // save reqFileName before appending extension
           grArea->setCurInfo( reqFileName, sigIndex );
@@ -870,7 +862,7 @@ void ViewerCtlr::process(void ) {
           QString qsdiscard, egudiscard;
           stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
-            std::cout << "getSigInfoBySigIndex failure" << std::endl;
+            this->dh->dspErrMsg( stat );
           }
           
           //  file name, sig index, x scale width in pixels, start time in sec,
@@ -906,8 +898,8 @@ void ViewerCtlr::process(void ) {
           
             mainWindow->setNumPoints( 0ul );
             delete qls; qls = nullptr;
-            std::cout << "genLineSeries failure" << std::endl;
-          
+            this->bd->dspErrMsg( stat );
+
           }
 
         }
@@ -919,10 +911,6 @@ void ViewerCtlr::process(void ) {
 
         if ( isFFT( grArea ) ) {
 
-          if ( fftVga ) {
-            //std::cout << "fftVga id = " << fftVga->id << ", grArea id = " << grArea->id << std::endl;
-          }
-
           if ( !fftVga || ( fftVga != grArea ) ) {
             mainWindow->setWhat( "Idle" );
             return;
@@ -932,7 +920,6 @@ void ViewerCtlr::process(void ) {
 
           double x0, x1, y0, y1;
           grArea->graph->getAxesLimits( x0, y0, x1, y1 );
-          //std::cout << "x0, y0, x1, y1 = " << x0 << ", " << y0 << ", " << x1 << ", " << y1 << std::endl;
 
           // get num of pixels in x
           QSizeF size = grArea->graph->chart->size();
@@ -948,9 +935,6 @@ void ViewerCtlr::process(void ) {
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
-            //std::cout << "after - minx, maxx, miny, maxy = "
-            //          << minx << ", " << maxx << ", " << miny << ", " << maxy << std::endl;
-
             // Viewer graph object manages qls
             grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1, y0, y1 );
 
@@ -958,8 +942,8 @@ void ViewerCtlr::process(void ) {
           else {
 
             delete qls; qls = nullptr;
-            std::cout << "genFftLineSeriesFromBuffer failure" << std::endl;
-          
+            this->bd->dspErrMsg( stat );
+
           }
             
         }
@@ -997,7 +981,7 @@ void ViewerCtlr::process(void ) {
           QString qsdiscard, egudiscard;
           stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
-            std::cout << "getSigInfoBySigIndex failure" << std::endl;
+            this->dh->dspErrMsg( stat );
           }
           
           //  file name, sig index, x scale width in pixels, start time in sec,
@@ -1033,8 +1017,8 @@ void ViewerCtlr::process(void ) {
           
             mainWindow->setNumPoints( 0ul );
             delete qls; qls = nullptr;
-            std::cout << "genLineSeries failure" << std::endl;
-          
+            this->bd->dspErrMsg( stat );
+
           }
 
         }
@@ -1062,10 +1046,6 @@ void ViewerCtlr::process(void ) {
 
           double x0, x1, y0, y1;
           grArea->graph->getAxesLimits( x0, y0, x1, y1 );
-          //std::cout << "111   x0, y0, x1, y1 = " << x0 << ", " << y0 << ", " << x1 << ", " << y1 << std::endl;
-          //grArea->graph->setAxesLimits( x0, y0, x1, y1 );
-          //grArea->graph->getAxesLimits( x0, y0, x1, y1 );
-          //std::cout << "112   x0, y0, x1, y1 = " << x0 << ", " << y0 << ", " << x1 << ", " << y1 << std::endl;
 
           // get num of pixels in x
           QSizeF size = grArea->graph->chart->size();
@@ -1076,29 +1056,20 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Scaling..." );
           
-          //stat = this->bd->genFftLineSeriesFromBufferByFreq
-          //  ( numFft, fftOut, sampleRate, size.width(),
-          //    x0, x1, *qls, minx, maxx, miny, maxy, true );
           stat = this->bd->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
-            //std::cout << "after - minx, maxx, miny, maxy = "
-            //          << minx << ", " << maxx << ", " << miny << ", " << maxy << std::endl;
-
             // Viewer graph object manages qls
-          grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1, y0, y1 );
-
-            //grArea->graph->getAxesLimits( x0, y0, x1, y1 );
-            //std::cout << "222   x0, y0, x1, y1 = " << x0 << ", " << y0 << ", " << x1 << ", " << y1 << std::endl;
+            grArea->graph->setSeries( qls, sigIndex, reqFileName, x0, x1, y0, y1 );
 
           }
           else {
 
             delete qls; qls = nullptr;
-            std::cout << "genFftLineSeriesFromBuffer failure" << std::endl;
-          
+            this->bd->dspErrMsg( stat );
+
           }
             
         }
@@ -1126,7 +1097,7 @@ void ViewerCtlr::process(void ) {
             x1 = std::fmin( x1, maxTime );
           }
           else {
-            std::cout << "Error " << st << " from getDataFullTimeRange\n";
+            this->bd->dspErrMsg( stat );
           }
 
           this->haveCurTimeRange = true;
@@ -1155,7 +1126,7 @@ void ViewerCtlr::process(void ) {
           QString qsdiscard, egudiscard;
           stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
-            std::cout << "getSigInfoBySigIndex failure" << std::endl;
+            this->dh->dspErrMsg( stat );
           }
           
           //  file name, sig index, x scale width in pixels, start time in sec,
@@ -1187,8 +1158,8 @@ void ViewerCtlr::process(void ) {
           
             mainWindow->setNumPoints( 0ul );
             delete qls; qls = nullptr;
-            std::cout << "genLineSeries failure" << std::endl;
-          
+            this->bd->dspErrMsg( stat );
+
           }
 
         }
@@ -1218,7 +1189,7 @@ void ViewerCtlr::process(void ) {
           x1 = std::fmin( x1, maxTime );
         }
         else {
-          std::cout << "Error " << st << " from getDataFullTimeRange\n";
+          this->bd->dspErrMsg( stat );
         }
 
         this->haveCurTimeRange = true;
@@ -1247,7 +1218,7 @@ void ViewerCtlr::process(void ) {
         QString qsdiscard, egudiscard;
         stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
         if ( stat ) {
-          std::cout << "getSigInfoBySigIndex failure" << std::endl;
+          this->dh->dspErrMsg( stat );
         }
           
         //  file name, sig index, x scale width in pixels, start time in sec,
@@ -1279,8 +1250,8 @@ void ViewerCtlr::process(void ) {
           
           mainWindow->setNumPoints( 0ul );
           delete qls; qls = nullptr;
-          std::cout << "genLineSeries failure" << std::endl;
-          
+          this->bd->dspErrMsg( stat );
+
         }
 
         mainWindow->setWhat( "Idle" );
@@ -1292,13 +1263,6 @@ void ViewerCtlr::process(void ) {
 
           enableFftButton( grArea );
           lastDataRequestGraphArea = grArea;
-        
-          // non slot scale does not cause rescale with signal emission hence the following kludge
-          //int maxMs = 100;
-          //for ( int i=0; i<25; i++ ) {
-          //  this->mainWindow->app->processEvents( QEventLoop::AllEvents, maxMs );
-          //  QThread::usleep( 10000 ); // 1/100 sec
-          //}
 
           double  x0, x1, y0, y1;
           grArea->graph->getAxesLimits( x0, y0, x1, y1 );
@@ -1314,7 +1278,7 @@ void ViewerCtlr::process(void ) {
             x1 = std::fmin( x1, maxTime );
           }
           else {
-            std::cout << "Error " << st << " from getDataFullTimeRange\n";
+            this->bd->dspErrMsg( stat );
           }
 
           // get num of pixels in x
@@ -1339,7 +1303,7 @@ void ViewerCtlr::process(void ) {
           QString qsdiscard, egudiscard;
           stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
-            std::cout << "getSigInfoBySigIndex failure" << std::endl;
+            this->dh->dspErrMsg( stat );
           }
           
           //  file name, sig index, x scale width in pixels, start time in sec,
@@ -1372,11 +1336,11 @@ void ViewerCtlr::process(void ) {
           
             mainWindow->setNumPoints( 0ul );
             delete qls; qls = nullptr;
-            std::cout << "genLineSeries failure" << std::endl;
+            this->bd->dspErrMsg( stat );
           
           }
 
-        mainWindow->setWhat( "Idle" );
+          mainWindow->setWhat( "Idle" );
         
       }
       else if ( ( request == ViewerCtlr::HavePrevViewRequest ) && this->readyForData ) {
@@ -1425,7 +1389,7 @@ void ViewerCtlr::process(void ) {
           else {
 
             delete qls; qls = nullptr;
-            std::cout << "genFftLineSeriesFromBuffer failure" << std::endl;
+            this->bd->dspErrMsg( stat );
           
           }
             
@@ -1434,8 +1398,6 @@ void ViewerCtlr::process(void ) {
 
           enableFftButton( grArea );
           lastDataRequestGraphArea = grArea;
-        
-          //std::cout << "request == ViewerCtlr::HavePrevViewRequest" << std::endl;
 
           double  x0, x1, y0, y1;
           stat = grArea->graph->views.popView( x0, y0, x1, y1 );
@@ -1471,7 +1433,7 @@ void ViewerCtlr::process(void ) {
           QString qsdiscard, egudiscard;
           stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
-            std::cout << "getSigInfoBySigIndex failure" << std::endl;
+            this->dh->dspErrMsg( stat );
           }
           
           //  file name, sig index, x scale width in pixels, start time in sec,
@@ -1507,8 +1469,8 @@ void ViewerCtlr::process(void ) {
           
             mainWindow->setNumPoints( 0ul );
             delete qls; qls = nullptr;
-            std::cout << "genLineSeries failure" << std::endl;
-          
+            this->bd->dspErrMsg( stat );
+
           }
 
         }
@@ -1571,10 +1533,8 @@ bool ViewerCtlr::allNonZero(const QRectF& r ) {
 bool ViewerCtlr::arrayAllNonZero(const QRectF r[], int n ) {
 
   for ( int i=0; i<n; i++ ) {
-    //qDebug() << n << "   " << i << " : " << r[i];
     if ( ( r[i].right() - r[i].left()) == 0.0 ) return false;
     if ( ( r[i].bottom() - r[i].top()) == 0.0 ) return false;
-
   }
 
   return true;
@@ -1614,7 +1574,7 @@ void ViewerCtlr::sigNameChange1(int index, int sigIndex, QWidget *w ) {
     QString binFile = FileUtil::makeBinFileName( dh.get(), this->fileName, sigIndex );
     int st = bd->newFile( binFile );
     if ( st ) {
-      std::cout << "Error " << st << " from newFile" << std::endl;
+      this->bd->dspErrMsg( st );
     }
     
     dataRequestList.push_back( std::make_tuple( request, vga, sigIndex, this->fileName ) );
@@ -1626,6 +1586,7 @@ void ViewerCtlr::sigNameChange1(int index, int sigIndex, QWidget *w ) {
     double sigInfoSlope, sigInfoIntercept;
 
     int stat = this->dh->getSigInfoBySigIndex ( sigIndex, sigInfoName, sigInfoEgu, sigInfoSlope, sigInfoIntercept );
+    // ignore err
 
     std::stringstream sstitle;
     sstitle << sigInfoName.toStdString() << "  (" << sigInfoEgu.toStdString() << ")";
@@ -1652,8 +1613,6 @@ void ViewerCtlr::sigAreaChanged(const QRectF& plotArea ) {
 }
 
 void ViewerCtlr::fileSelected1(const QString& file ) {
-
-  //qDebug() << "file is " << file;
 
   int l, count;
 
@@ -1753,13 +1712,9 @@ int ViewerCtlr::csvExport ( void ) {
     return ERRINFO(ESignal,"");
   }
 
-  //std::cout << "found " << numGoodSignalsFound << " signals" << std::endl;
-
   // open export file
   QString exportFileName = mainWindow->exportDialog->exportFileName;
   fbExport.open( exportFileName.toStdString() );
-
-  //std::cout << "export file " << exportFileName.toStdString() << " is open\n";
 
   QString binFile;
   
@@ -1774,8 +1729,6 @@ int ViewerCtlr::csvExport ( void ) {
   for ( int sigIndex : sigNumList ) {
 
     QString sigNameFromMap = std::get<DataHeader::SIGNAME>( indexMap[sigIndex] );
-
-    //std::cout << "sigIndex = " << sigIndex << std::endl;
 
     // get binary file name from fileName and signal + extension
     binFile = FileUtil::makeBinFileName( dh.get(), fileName, sigIndex );
@@ -1797,6 +1750,9 @@ int ViewerCtlr::csvExport ( void ) {
         // get min and max rec number corresponding to min and max time
         st = bd->getRecordRangeForTime( binFile, sampleRate, minT, maxT,
                                         minByte, maxByte );
+        if ( st ) {
+          this->bd->dspErrMsg( st );
+        }
 
         recRange = maxByte - minByte;
 
@@ -1813,13 +1769,6 @@ int ViewerCtlr::csvExport ( void ) {
 
       minT = minByte / sizeof(int) / sampleRate;
 
-      //std::cout << "minT = " << minT << std::endl;
-      //std::cout << "maxT = " <<  maxT << std::endl;
-      //std::cout << "minByte = " <<  minByte << std::endl;
-      //std::cout << "maxByte = " <<  maxByte << std::endl;
-      //std::cout << "recRange (ele) = " << recRange/sizeof(int) << std::endl;
-      //std::cout << "numSignals = " << numSignals << std::endl;
-
     }
     
     //std::fbin = open input bin files and count numSignals
@@ -1827,16 +1776,12 @@ int ViewerCtlr::csvExport ( void ) {
     if ( !result2 ) {
       fbExport.close();
       closeAll( fbInput, numSignals-1 );
-      //std::cout << "Open file " << binFile.toStdString() << " failure"  << std::endl;
       return ERRINFO(EFileOpen,binFile.toStdString());
     }
-    //std::cout << "input file " << binFile.toStdString() << " is open\n";
 
     numSignals++;
     
   }
-
-  //std::cout << "numSignals = " << numSignals << std::endl;
 
   QString id = dh->getString( "AcquisitionId" );
   QString desc = mainWindow->exportDialog->description;
@@ -1849,8 +1794,6 @@ int ViewerCtlr::csvExport ( void ) {
     closeAll( fbInput, numSignals );
     return ERRINFO(EFileWrite,"");
   }
-
-  //std::cout << "export header is written\n";
 
   int (*intBuf)[100];
   intBuf = new int[numSignals][100];
@@ -1865,7 +1808,6 @@ int ViewerCtlr::csvExport ( void ) {
   for ( int i=0; i<numSignals; i++ ) {
     int ii = signalIndices[i];
     names[i] = std::get<DataHeader::SIGNAME>( indexMap[ii] );
-    //std::cout << "sig name " << ii << " = " << names[i].toStdString() << std::endl;
   }
 
   st = csv->writeSignalProperties( fbExport, signalIndices, numSignals );
@@ -1877,9 +1819,6 @@ int ViewerCtlr::csvExport ( void ) {
     this->bd->inputSeekToStartOfData( fbInput[i], minByte );
   }
 
-  //std::cout << "numFullOps = " << numFullOps << std::endl;
-  //std::cout << "numRemaining = " << numRemaining << std::endl;
-
   zero( nr, numSignals );
   nw = 0;
 
@@ -1889,13 +1828,11 @@ int ViewerCtlr::csvExport ( void ) {
     int ii = signalIndices[i];
     slope[i] = std::get<DataHeader::SLOPE>( indexMap[ii] );
     intercept[i] = std::get<DataHeader::INTERCEPT>( indexMap[ii] );
-    //std::cout << i << ": slope = " << slope[i] << ", intercept = " <<  intercept[i] << std::endl;
   }
 
   unsigned long rec = 0;
   double time = minT;
-  //std::cout << "numFullOps = " << numFullOps << ", numRemaining = " << numRemaining << std::endl;
-  //read and write binary files in chunks
+
   for ( i=0; i<numFullOps; i++ ) {
 
     for ( int ii=0; ii<numSignals; ii++ ) {
@@ -1924,16 +1861,12 @@ int ViewerCtlr::csvExport ( void ) {
       for ( int ii=0; ii<numSignals; ii++ ) {
         outBuf[ii] = (double) intBuf[ii][iii] * slope[ii] + intercept[ii];
       }
-      //std::cout << "intBuf[ii][iii] = " << intBuf[ii][iii] << std::endl;
-      //std::cout << "iii = " << iii << ", ii = " << ii << std::endl;
       nw += csv->writeData( fbExport, rec, time, outBuf, numSignals );
       rec++;
       time += timeInc;
     }
 
   }
-
-  //std::cout << "nr = " << nr << ", nw = " << nw  << std::endl;
     
   //close input file
   closeAll( fbInput, numSignals );
@@ -2000,8 +1933,6 @@ int ViewerCtlr::uff58bExport ( void ) {
     return ERRINFO(ESignal,"");
   }
 
-  //std::cout << "found " << numGoodSignalsFound << " signals" << std::endl;
-
   // open export bin file
   QString exportFileName = mainWindow->exportDialog->exportFileName;
   auto result = fbExport.open( exportFileName.toStdString(), std::ios::out | std::ios::binary );
@@ -2009,8 +1940,6 @@ int ViewerCtlr::uff58bExport ( void ) {
     //qWarning()<<__func__<<"Unable to open for writing"<<exportFileName;
     return ERRINFO(EFileOpen,exportFileName.toStdString());
   }
-
-  //std::cout << "export file " << exportFileName.toStdString() << " is open\n";
 
   // write header and data to the uff58b file for each signal in list
   for ( int sigIndex : sigNumList ) {
@@ -2038,6 +1967,9 @@ int ViewerCtlr::uff58bExport ( void ) {
       // get min and max rec number corresponding to min and max time
       st = bd->getRecordRangeForTime( binFile, sampleRate, minT, maxT,
                                       minByte, maxByte );
+      if ( st ) {
+        this->bd->dspErrMsg( st );
+      }
 
     }
     else {
@@ -2052,12 +1984,6 @@ int ViewerCtlr::uff58bExport ( void ) {
     double timeInc = 1.0 / sampleRate;
     unsigned long recRange = maxByte - minByte;
     minT = minByte / sizeof(int) / sampleRate;
-
-    //std::cout << "minT = " << minT << std::endl;
-    //std::cout << "maxT = " <<  maxT << std::endl;
-    //std::cout << "minByte = " <<  minByte << std::endl;
-    //std::cout << "maxByte = " <<  maxByte << std::endl;
-    //std::cout << "recRange (ele) = " << recRange/sizeof(int) << std::endl;
 
     // build the uff58b header lines
     st = uff58b->set58bHeader( recRange );
@@ -2100,8 +2026,6 @@ int ViewerCtlr::uff58bExport ( void ) {
     
     // exponents depend on dataCategory
     uff58b->getExponents( dataCategory, refDir, lenUnitsExponent, forceUnitsExponent, tempUnitsExponent );
-    //st = uff58b->setDataCharacteristics( 9,  dataCategory, lenUnitsExponent, forceUnitsExponent,
-    //                                     tempUnitsExponent, "Acceleration", "NONE" );
     st = uff58b->setDataCharacteristics( 9,  dataCategory, lenUnitsExponent, forceUnitsExponent,
                                          tempUnitsExponent,
                                          std::get<DataHeader::SIGNAME>( indexMap[sigIndex] ),
@@ -2130,8 +2054,6 @@ int ViewerCtlr::uff58bExport ( void ) {
       //qWarning()<<__func__<<"Unable to write header";
       return ERRINFO(EFileWrite,"");
     }
-
-    //std::cout << "export header is written\n";
     
     // get slope and intercept for conversion
     double slope = std::get<DataHeader::SLOPE>( indexMap[sigIndex] );
@@ -2145,9 +2067,6 @@ int ViewerCtlr::uff58bExport ( void ) {
 
     // seek to start of binary data for input file
     this->bd->inputSeekToStartOfData( fbInput, minByte );
-
-    //std::cout << "numFullOps = " << numFullOps << std::endl;
-    //std::cout << "numRemaining = " << numRemaining << std::endl;
 
     nr = nw = 0;
     
@@ -2179,10 +2098,6 @@ int ViewerCtlr::uff58bExport ( void ) {
 
     uff58b->writeSpacer( fbExport );
 
-    //std::cout << "nr = " << nr << ", nw = " << nw  << std::endl;
-    
-    //close input file
-    //std::cout << " complete." << std::endl;
     fbInput.close();
 
   }
@@ -2369,14 +2284,9 @@ void ViewerCtlr::haveReset (int id, int curSigIndex, QString& curFileName ) {
 void ViewerCtlr::haveDoCalcFft (QWidget *w ) {
 
   ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>( w );
-  
-  //std::cout << "have do calc fft - id = " << vga->id << 
-  //  ", cur sig index = " << vga->curSigIndex <<
-  //  ", cur file = " << vga->curFileName.toStdString() << std::endl;
 
   if ( ( vga->curSigIndex >= 0 ) && ( vga->curSigIndex <= Cnst::MaxSigIndex ) ) {
     int request = ViewerCtlr::HaveFftRequest;
-    //std::cout << "push fft request" << std::endl;
     dataRequestList.push_back( std::make_tuple( request, vga, vga->curSigIndex, vga->curFileName ) );
   }
   
@@ -2406,6 +2316,10 @@ void ViewerCtlr::selectionRange ( int vgaId, double xMin, double xMax ) {
       if ( xMax > maxT ) xMax = maxT;
       if ( xMin < minT ) xMin = minT;
     }
+    else {
+      this->bd->dspErrMsg( st );
+    }
+    
   }
   
   vga->updateSelectionRange( xMin, xMax );
@@ -2416,7 +2330,6 @@ void ViewerCtlr::selectionRange ( int vgaId, double xMin, double xMax ) {
   QString text1 = strm1.str().c_str();
   text1 = text1.simplified();
   mainWindow->exportDialog->endTimeLineEdit->setText( text1 );
-  //std::cout << "text1 = " << text1.toStdString() << std::endl;
   
   mainWindow->exportDialog->startTimeValInSec = xMin;
   strm2.clear();
@@ -2424,13 +2337,11 @@ void ViewerCtlr::selectionRange ( int vgaId, double xMin, double xMax ) {
   QString text2 = strm2.str().c_str();
   text2 = text2.simplified();
   mainWindow->exportDialog->startTimeLineEdit->setText( text2 );
-  //std::cout << "text2 = " << text2.toStdString() << std::endl;
   
 }
 
 void ViewerCtlr::mousePosition ( int vgaId, double x, double y ) {
 
-  //std::cout << "mouse pos - id = " << vgaId << ", x = " << x << ", y = " << y << std::endl;
   ViewerGraphBase *vg = qobject_cast<ViewerGraphBase *>(sender());
   ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>( vg->parent1 );
 
@@ -2441,53 +2352,33 @@ void ViewerCtlr::mousePosition ( int vgaId, double x, double y ) {
       plotW=0, plotH=0, chartXRange=1, chartYRange=1, xFact, yFact,
       x0, x1, y0, y1;
 
-    //vg->getPlotSize( plotW, plotH );
-    //vg->getAxesLimits(  chartXMin, chartYMin, chartXMax, chartYMax );
-    //if ( ( chartXMax - chartXMin ) != 0 ) chartXRange = chartXMax - chartXMin;
-    //if ( ( chartYMax - chartYMin ) != 0 ) chartYRange = chartYMax - chartYMin;
-
-    //std::cout << "numFft = " << numFft << std::endl;
-
     double sampleRate = 0.0;
     int stat = this->dh->getDouble( "SampleRate", sampleRate );
     if ( stat ) {
-      //std::cout << "getDouble - stat = " << stat << std::endl;
+      this->dh->dspErrMsg( stat );
     }
     double sr = sampleRate;
     int index = 0;
-    //std::cout << "sr = " << sr << std::endl;
     if ( sr != 0.0 ) {
       index = x * numFft / sr;
       if ( index < 0 ) index = 0.0;
       if ( index > numFft ) index = numFft;
-      //std::cout << "index = " << index << std::endl;
     }
 
     vg->getPlotSize( plotW, plotH );
-    //std::cout << " plotW = " << plotW << " plotH = " << plotH << std::endl;
     
     vg->getAxesLimits(  chartXMin, chartYMin, chartXMax, chartYMax );
-    //std::cout << " chartXMin = " << chartXMin << " chartXMax = " << chartXMax
-    //          << " chartYMin = " << chartYMin << " chartYMax = " << chartYMax << std::endl << std::endl;
       
     if ( ( chartXMax - chartXMin ) != 0 ) chartXRange = chartXMax - chartXMin;
     if ( ( chartYMax - chartYMin ) != 0 ) chartYRange = chartYMax - chartYMin;
-    //std::cout << " chartXRange = " << chartXRange << " chartYRange = " << chartYRange   << std::endl << std::endl;
     
     double onePixel = chartXRange / plotW;
-    //std::cout << "onePixel = " << onePixel << std::endl  << std::endl;
 
-    //double freq = index * sr / numFft;
-    //double loFreq = freq - onePixel * Cnst::peakPixelRange;
     double freq = x;
     double loFreq = freq - onePixel * Cnst::peakPixelRange;
     if ( loFreq < 0.0 ) loFreq = 0.0;
     double hiFreq = freq + onePixel * Cnst::peakPixelRange;
-    //if ( hiFreq > sr / 2.0 ) hiFreq = sr / 2.0;
     if ( hiFreq > sr ) hiFreq = sr;
-
-    //std::cout << "loFreq = " << loFreq << std::endl;
-    //std::cout << "hiFreq = " << hiFreq << std::endl;
 
     int loIndex = loFreq * numFft / sr;
     if ( loIndex < 0 ) loIndex = 0;
@@ -2503,9 +2394,6 @@ void ViewerCtlr::mousePosition ( int vgaId, double x, double y ) {
 
     loFreq = loIndex * sr / numFft;
 
-    //std::cout << "loIndex = " << loIndex << std::endl;
-    //std::cout << "hiIndex = " << hiIndex << std::endl;
-
     //find max y and freq at max y
     double frac = 2.0 / (double) numFft;
     double max = sqrt( fftOut[loIndex][0]*fftOut[loIndex][0] +
@@ -2519,8 +2407,6 @@ void ViewerCtlr::mousePosition ( int vgaId, double x, double y ) {
                        fftOut[i][1]*fftOut[i][1] ) * frac;
 
       freq = i * sr / numFft;
-      //std::cout << "i = " << i << ", freq = " << freq << ". mag = " << mag
-      //          << ", max = " << max << ", maxFreq = " << maxFreq << std::endl;
       
       if ( mag > max ) {
         max = mag;
