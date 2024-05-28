@@ -127,9 +127,9 @@ int Uff58bExport::setDataForm( int dataType, int numEle, int xSpacing,
   strm << std::setw(10) << std::right << dataType <<
     std::setw(10) << std::right << numEle <<
     std::setw(10) << std::right << xSpacing <<
-    std::setw(13) << std::setprecision(7) << std::right << xMin <<
-    std::setw(13) << std::setprecision(7) << std::right << xInc <<
-    std::setw(13) << std::setprecision(7) << std::right << zAxisVal <<
+    std::setw(13) << std::showpoint << std::setprecision(7) << std::right << xMin <<
+    std::setw(13) << std::showpoint << std::setprecision(7) << std::right << xInc <<
+    std::setw(13) << std::showpoint << std::setprecision(7) << std::right << zAxisVal <<
     "         " << lf;
 
   int recNum = 7 - 1;
