@@ -1804,9 +1804,8 @@ int ViewerCtlr::csvExport ( void ) {
     return ERRINFO(EFileWrite,"");
   }
 
-  int (*intBuf)[100];
-  intBuf = new int[numSignals][100];
-  double outBuf[100];
+  int (*intBuf)[100] = new int[numSignals][100];
+  double *outBuf = new double[100];
   int numFullOps = recRange / 100;
   int numRemaining = recRange % 100;
   int *nr, nw;
@@ -1886,6 +1885,7 @@ int ViewerCtlr::csvExport ( void ) {
   std::cout << "CSV export complete." << std::endl;
 
   delete[] intBuf; intBuf = nullptr;
+  delete[] outBuf; outBuf = nullptr;
   delete[] nr; nr = nullptr;
   delete[] names; names = nullptr;
   delete[] slope; slope = nullptr;
