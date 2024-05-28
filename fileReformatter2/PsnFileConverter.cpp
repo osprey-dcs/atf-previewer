@@ -35,9 +35,19 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
 
   //sizeOfOneFile = 0;
 
-  unsigned int buf3BytesPerWord[Cnst::Max3PerWord];
-  unsigned int buf4BytesPerWord[Cnst::MaxSignals+1][Cnst::Max4PerWord];
-  unsigned int statusArray[Cnst::MaxStatus][PsnFileConverter::NumStatusFields];
+  auto buf3BytesPerWord = std::unique_ptr<unsigned int[]>( new unsigned int[Cnst::Max3PerWord] );
+  //unsigned int buf3BytesPerWord[Cnst::Max3PerWord];
+
+  // can't get unique_ptr to compile with 2d array
+  auto buf4BytesPerWord = std::shared_ptr<unsigned int[Cnst::MaxSignals+1][Cnst::Max4PerWord]>(
+       new unsigned int[Cnst::MaxSignals+1][Cnst::Max4PerWord] );
+  //unsigned int buf4BytesPerWord[Cnst::MaxSignals+1][Cnst::Max4PerWord];
+
+  // can't get unique_ptr to compile with 2d array
+  auto statusArray = std::shared_ptr<unsigned int[Cnst::MaxStatus][PsnFileConverter::NumStatusFields]>(
+       new unsigned int[Cnst::MaxStatus][PsnFileConverter::NumStatusFields] );
+  //unsigned int statusArray[Cnst::MaxStatus][PsnFileConverter::NumStatusFields];
+
   size_t numBytesRead;
   uint64_t dataLen, loc = 0;
   unsigned isignal = 1;
@@ -88,14 +98,14 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
     stat = readBinHeader( fb, loc, numBytesRead, headerType, complete );
     if ( complete ) {
       if ( ivalue ) { // there is unwritten data
-        int st = writeOutputFiles( chanList, ivalue, buf4BytesPerWord );
+        int st = writeOutputFiles( chanList, ivalue, buf4BytesPerWord.get() );
         if ( st ) {
           dspErrMsg( st );
           return ERRINFO(st,this->arg);
         }
       }
       if ( istatus ) { // there is unwritten data
-        int st = writeStatusOutputFile( istatus, statusArray );
+        int st = writeStatusOutputFile( istatus, statusArray.get() );
         if ( st ) {
           dspErrMsg( st );
           return ERRINFO(st,this->arg);
@@ -213,17 +223,17 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
         return ERRINFO(EInternal,"");
       }
     
-      stat = readBinData( fb, loc, dataLen, buf3BytesPerWord, numBytesRead, complete );
+      stat = readBinData( fb, loc, dataLen, buf3BytesPerWord.get(), numBytesRead, complete );
       if ( complete ) {
         if ( ivalue ) {  // unwritten data exists
-          int st = writeOutputFiles( chanList, ivalue, buf4BytesPerWord );
+          int st = writeOutputFiles( chanList, ivalue, buf4BytesPerWord.get() );
           if ( st ) {
             dspErrMsg( st );
             return ERRINFO(st,this->arg);
           }
         }
         if ( istatus ) { // there is unwritten data
-          int st = writeStatusOutputFile( istatus, statusArray );
+          int st = writeStatusOutputFile( istatus, statusArray.get() );
           if ( st ) {
             dspErrMsg( st );
             return ERRINFO(st,this->arg);
@@ -263,7 +273,6 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
           return ERRINFO(EInternal,"");
         }
 
-
         tmp1 = bswap_32( buf3BytesPerWord[i] );   // AAAB
         tmp2 = bswap_32( buf3BytesPerWord[i+1] ); // BBCC
         tmp3 = bswap_32( buf3BytesPerWord[i+2] ); // CDDD
@@ -302,7 +311,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
           ivalue++;
         }
         if ( ivalue >= Cnst::MaxValIndex ) {
-          writeOutputFiles( chanList, ivalue, buf4BytesPerWord );
+          writeOutputFiles( chanList, ivalue, buf4BytesPerWord.get() );
           ivalue = 0;
         }
       
@@ -322,7 +331,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
 
       istatus++;
       if ( istatus >= Cnst::MaxStatusIndex ) {
-        writeStatusOutputFile( istatus, statusArray );
+        writeStatusOutputFile( istatus, statusArray.get() );
         istatus = 0;
       }
 
