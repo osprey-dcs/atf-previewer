@@ -112,9 +112,7 @@ public:
 
   virtual ~Uff58bExport ();
 
-  int setOutFile ( const QString &qs );
-
-  int set58bHeader( uint64_t numBytes );
+  int set58bHeader( int64_t numBytes );
 
   int set80CharRec ( int rec, QString line );
 
@@ -132,13 +130,13 @@ public:
 
   int writeHeader( std::filebuf &fb );
 
-  int writeBinary( std::filebuf &fb, double *buf, uint64_t numBytes  );
+  int64_t writeBinary( std::filebuf &fb, double *buf, int64_t numBytes  );
   
-  int writeBinary( std::filebuf &fb, float *buf, uint64_t numBytes  );
+  int64_t writeBinary( std::filebuf &fb, float *buf, int64_t numBytes  );
 
-  int writeBinary( std::filebuf &fb, char *buf, uint64_t numBytes  );
+  int64_t writeBinary( std::filebuf &fb, char *buf, int64_t numBytes  );
 
-  int writeBinary( std::filebuf &fb, const char *buf, uint64_t numBytes  );
+  int64_t writeBinary( std::filebuf &fb, const char *buf, int64_t numBytes  );
 
   void getExponents( int dataType, int direction, int &lenExp, int &forceExp, int &tempExp );
 

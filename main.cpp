@@ -15,12 +15,10 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include <vector>
 #include <iostream>
-#include <memory>
 
 #include <QApplication>
 #include <QGuiApplication>
 #include <QScreen>
-#include <QPushButton>
 #include <QString>
 #include <QFile>
 #include <QThread>
@@ -29,8 +27,6 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "ViewerCtlr.h"
 #include "UserPrefs.h"
 #include "UserPrefsFac.h"
-#include "ViewerCtlr.h"
-#include "ChanSelector.h"
 
 int main(int argc, char *argv[]) {
 
@@ -80,7 +76,7 @@ int main(int argc, char *argv[]) {
   int count = 0, maxMs = 250;
   int delay = 1000000 * Cnst::EventProcessPeriod;
   do {
-    app.processEvents(QEventLoop::AllEvents, maxMs);
+    QApplication::processEvents(QEventLoop::AllEvents, maxMs);
     mainCtlr->process();
     QThread::usleep( delay );
   } while ( !mainWin->exitFlag );
@@ -88,8 +84,7 @@ int main(int argc, char *argv[]) {
   return 0;
 
   //return QApplication::exec();
-  int qResult = QApplication::exec();
-
-  return qResult;
+  //int qResult = QApplication::exec();
+  //return qResult;
 
 }

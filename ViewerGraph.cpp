@@ -234,11 +234,11 @@ void ViewerGraph::getAxesLimits( double& x0, double &y0,
   auto xAxes = chart->axes(Qt::Horizontal, qls );
   auto yAxes = chart->axes(Qt::Vertical, qls );
 
-  QtCharts::QValueAxis *xAxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
+  auto *xAxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
   x0 = xAxis->min();
   x1 = xAxis->max();
 
-  QtCharts::QValueAxis *yAxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
+  auto *yAxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
   y0 = yAxis->min();
   y1 = yAxis->max();
 
@@ -271,18 +271,11 @@ void ViewerGraph::setAxesLimits( double x0, double y0,
   lastXMax = max;
 
   getBetterAxesParams( y0, y1, 2, min, max, ticks, adjScales );
-  //std::cout << "1   y0 = " << y0 << ", y1 = " << y1 << ", 2 = " << 2
-  //          << ", min = " << min << ", max = " << max << ", ticks = " << ticks << std::endl << std::endl;
+
   yValAxis->setRange( min, max );
   yValAxis->setTickCount( ticks );
   lastYMin = min;
   lastYMax = max;
-
-  //xValAxis->setRange( x0, x1 );
-  //xValAxis->setTickCount( 2 );
-
-  //yValAxis->setRange( y0, y1 );
-  //yValAxis->setTickCount( 2 );
   
   qls->attachAxis( xAxes[0] );
   qls->attachAxis( yAxes[0] );
@@ -293,11 +286,6 @@ void ViewerGraph::setAxesLimits( double x0, double y0,
 
 void ViewerGraph::getPlotPos( double& x0, double& y0, double& x1, double& y1 ) {
 
-  //x0 = (double) this->chart->plotArea().x();
-  //y0 = (double) this->chart->plotArea().y();
-  //x1 = (double) this->chart->plotArea().x() + (double) this->chart->plotArea().size().width();
-  //y1 = (double) this->chart->plotArea().y() + (double) this->chart->plotArea().size().height();
-
   x0 = (double) this->chart->pos().x();
   y0 = (double) this->chart->pos().y();
   x1 = (double) this->chart->pos().x() + (double) this->chart->size().width();
@@ -307,9 +295,6 @@ void ViewerGraph::getPlotPos( double& x0, double& y0, double& x1, double& y1 ) {
 
 void ViewerGraph::getPlotSize( double& w, double &h ) {
 
-  //w = (double) this->chart->plotArea().size().width();
-  //h = (double) this->chart->plotArea().size().height();
-
   w = (double) this->chart->size().width();
   h = (double) this->chart->size().height();
 
@@ -317,13 +302,6 @@ void ViewerGraph::getPlotSize( double& w, double &h ) {
 
 void ViewerGraph::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QString fileName, double minX,
                               double maxX, double minY, double maxY, bool adjScales ) {
-
-  //std::cout << "ViewerGraph::setSeries 7" << std::endl;
-
-  // There's a memory leak somewhere in the following
-
-  // remove and delete existing data - causes axes text from mutilple sources - investigate
-  // chart->removeAllSeries();
 
   this->isEmpty = false;
   this->curSigIndex = sigIndex;
@@ -351,40 +329,24 @@ void ViewerGraph::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QStri
 
   chart->addSeries( qls );
 
-  //xaxis->setRange( minX, maxX );
-  //yaxis->setRange( minY, maxY );
-
   qls->attachAxis( xaxis );
   qls->attachAxis( yaxis );
-
-  //xaxis->setRange( minX, maxX );
-  //yaxis->setRange( minY, maxY );
   
   double newMinX, newMaxX, newMinY, newMaxY;
   int newXTicks, newYTicks;
   getBetterAxesParams( minX, maxX, 5, newMinX, newMaxX, newXTicks, adjScales );
-  //std::cout << "2   minX = " << minX << ", maxX = " << maxX << ", 5 = " << 5
-  //  << ", newMinX = " << newMinX << ", newMaxX = " << newMaxX
-  //<< ", newXTicks = " << newXTicks << std::endl  << std::endl;
-  //QtCharts::QValueAxis *xaxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
   xaxis->setRange( newMinX, newMaxX );
   xaxis->setTickCount( newXTicks );
   lastXMin = newMinX;
   lastXMax = newMaxX;
 
-
   getBetterAxesParams( minY, maxY, 5, newMinY, newMaxY, newYTicks, adjScales );
-  //std::cout << "2   minY = " << minY << ", maxY = " << maxY << ", 5 = " << 5
-  //          << ", newMinY = " << newMinY << ", newMaxY = " << newMaxY
-  //          << ", newYTicks = " << newYTicks << std::endl << std::endl;
-  //QtCharts::QValueAxis *yaxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
+
   yaxis->setRange( newMinY, newMaxY );
   yaxis->setTickCount( newYTicks );
   yaxis->setTitleText( this->yTitle );
   lastYMin = newMinY;
   lastYMax = newMaxY;
-  //std::cout << "this->yTitle = [" << this->yTitle.toStdString() << "]" << std::endl;
-
 
   parent1->update();
 
@@ -430,18 +392,13 @@ void ViewerGraph::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QStri
   double newMinX, newMaxX, newMinY, newMaxY;
   int newXTicks, newYTicks;
   getBetterAxesParams( minX, maxX, 5, newMinX, newMaxX, newXTicks, adjScales );
-  //std::cout << "3   minX = " << minX << ", maxX = " << maxX << ", 5 = " << 5
-  //  << ", newMinX = " << newMinX << ", newMaxX = " << newMaxX << ", newXTicks = " << newXTicks << std::endl  << std::endl;
-  //QtCharts::QValueAxis *xaxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
+
   xaxis->setRange( newMinX, newMaxX );
   xaxis->setTickCount( newXTicks );
   lastXMin = newMinX;
   lastXMax = newMaxX;
 
-  //std::cout << "this->yTitle = " << this->yTitle.toStdString() << std::endl;
   yaxis->setTitleText( this->yTitle );
-  
-  //xAxes[0]->setRange( minX, maxX );
 
   parent1->update();
 
@@ -480,7 +437,7 @@ void ViewerGraph::setEmptySeries ( QtCharts::QLineSeries *newQls ) {
   qls->attachAxis( xAxes[0] );
   qls->attachAxis( yAxes[0] );
 
-  QtCharts::QValueAxis *xaxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
+  auto *xaxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
   if ( xaxis ) {
     xaxis->setRange( Cnst::InitialMinTime, Cnst::InitialMaxTime );
     xaxis->setTickCount( 2 );
@@ -488,7 +445,7 @@ void ViewerGraph::setEmptySeries ( QtCharts::QLineSeries *newQls ) {
     lastXMax = Cnst::InitialMaxTime;
   }
 
-  QtCharts::QValueAxis *yaxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
+  auto *yaxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
   if ( yaxis ) {
     yaxis->setRange( Cnst::InitialMinSig, Cnst::InitialMaxSig );
     yaxis->setTickCount( 2 );
@@ -516,7 +473,7 @@ QString& ViewerGraph::getCurFileName ( void ) {
 
 void ViewerGraph::clear( void ) {
 
-  QtCharts::QLineSeries *emptyQls = new QtCharts::QLineSeries();
+  auto *emptyQls = new QtCharts::QLineSeries();
   this->setEmptySeries( emptyQls );
   isEmpty = true; // redundant
 
@@ -565,8 +522,8 @@ void ViewerGraph::wheelEvent( QWheelEvent *ev ) {
 
   auto xAxes = chart->axes(Qt::Horizontal, qls );
   auto yAxes = chart->axes(Qt::Vertical, qls );
-  QtCharts::QValueAxis *xAxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
-  QtCharts::QValueAxis *yAxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
+  auto *xAxis = dynamic_cast<QtCharts::QValueAxis *>( xAxes[0] );
+  auto *yAxis = dynamic_cast<QtCharts::QValueAxis *>( yAxes[0] );
 
   if ( ( chartXMax - chartXMin ) != 0 ) chartXRange = chartXMax - chartXMin;
   if ( ( chartYMax - chartYMin ) != 0 ) chartYRange = chartYMax - chartYMin;
@@ -1094,12 +1051,6 @@ int imag, inorm, imin, imax, inc1, inc2, inc5, imin1, imax1,
   inc5 = ( imax5 - imin5 ) / 5;
   if ( inc5 < 8 ) ok = 1;
 
-  //fprintf( stderr, "1st adj min 5 = %-d, 1st adj max 5 = %-d\n", imin5, imax5 );
-
-  //fprintf( stderr, "1 inc1 = %-d\n", inc1 );
-  //fprintf( stderr, "1 inc2 = %-d\n", inc2 );
-  //fprintf( stderr, "1 inc5 = %-d\n", inc5 );
-
   if ( ! ok ) {
 
     imag++;
@@ -1112,8 +1063,6 @@ int imag, inorm, imin, imax, inc1, inc2, inc5, imin1, imax1,
     imin1 = imin;
     imax1 = imax;
     if ( inc1 < 8 ) ok = 1;
-
-    //fprintf( stderr, "1st adj min 1 = %-d, 1st adj max 1 = %-d\n", imin1, imax1 );
 
     if ( imin < 0 ) {
       if ( imin % 2 )
@@ -1138,8 +1087,6 @@ int imag, inorm, imin, imax, inc1, inc2, inc5, imin1, imax1,
     inc2 = ( imax2 - imin2 ) / 2;
     if ( inc2 < 8 ) ok = 1;
 
-    //fprintf( stderr, "1st adj min 2 = %-d, 1st adj max 2 = %-d\n", imin2, imax2 );
-
     if ( imin < 0 ) {
       if ( imin % 5 )
         imin5 = imin - 5 - ( imin % 5 );
@@ -1162,12 +1109,6 @@ int imag, inorm, imin, imax, inc1, inc2, inc5, imin1, imax1,
 
     inc5 = ( imax5 - imin5 ) / 5;
     if ( inc5 < 8 ) ok = 1;
-
-    //fprintf( stderr, "1st adj min 5 = %-d, 1st adj max 5 = %-d\n", imin5, imax5 );
-
-    //fprintf( stderr, "2 inc1 = %-d\n", inc1 );
-    //fprintf( stderr, "2 inc2 = %-d\n", inc2 );
-    //fprintf( stderr, "2 inc5 = %-d\n", inc5 );
 
   }
 

@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include <QDebug>
+#include <utility>
 
 #include "ChanSelector.h"
 #include "Cnst.h"
@@ -28,13 +29,13 @@ int ChanSelector::setText( QString s ) {
   const int FindDigitOrCommaOrEnd = 4;
   const int ElimTextEditNewLine = 5;
 
-  int state, prevState, startDigit, endDigit, error;
+  int state, startDigit, endDigit, error;
 
-  text = s;
+  text = std::move(s);
 
   chans.clear();
   error = 0;
-  prevState = state = FindStartDigit;
+  state = FindStartDigit;
 
   //std::cout<<  "ChanSelector::setText, text = " << text.toStdString() << std::endl;
 
@@ -53,7 +54,6 @@ int ChanSelector::setText( QString s ) {
 
         if ( c == "\\" ) {
           state = ElimTextEditNewLine;
-          prevState = state;
           break;
         }
         else if ( c.isDigit() ) {
@@ -72,7 +72,6 @@ int ChanSelector::setText( QString s ) {
 
         if ( c == "\\" ) {
           state = ElimTextEditNewLine;
-          prevState = state;
           break;
         }
         else if ( c.isDigit() ) {
@@ -105,7 +104,6 @@ int ChanSelector::setText( QString s ) {
 
         if ( c == "\\" ) {
           state = ElimTextEditNewLine;
-          prevState = state;
           break;
         }
         else if ( c.isDigit() ) {
@@ -124,7 +122,6 @@ int ChanSelector::setText( QString s ) {
 
         if ( c == "\\" ) {
           state = ElimTextEditNewLine;
-          prevState = state;
           break;
         }
         else if ( c.isDigit() ) {
@@ -160,6 +157,10 @@ int ChanSelector::setText( QString s ) {
         break;
       }
 
+      break;
+
+    default:
+      // do nothing
       break;
 
     }

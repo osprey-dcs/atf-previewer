@@ -16,11 +16,7 @@ Uff58bExport::~Uff58bExport () {
 
 }
 
-int Uff58bExport::setOutFile ( const QString &qs ) {
-  return 0;
-}
-
-int Uff58bExport::set58bHeader(uint64_t numBytes) {
+int Uff58bExport::set58bHeader(int64_t numBytes) {
 
   int endian = LITTLE;
   short sval = 1;
@@ -191,16 +187,16 @@ int Uff58bExport::writeSpacer( std::filebuf &fb ) {
 
   s = strm.str();
   
-  int n = writeBinary( fb, s.c_str(), 7 );
+  int64_t n = writeBinary( fb, s.c_str(), 7 );
   //std::cout << "Uff58bExport::writeSpacer - n = " << n << std::endl;
 
   return 0;
-  
+
 }
 
 int Uff58bExport::writeHeader( std::filebuf &fb ) {
 
-  int n;
+  int64_t n;
 
   // write spacer: -1 as I6
   n = writeSpacer( fb );
@@ -221,25 +217,25 @@ int Uff58bExport::writeHeader( std::filebuf &fb ) {
   
 }
 
-int Uff58bExport::writeBinary( std::filebuf &fb, double *buf, uint64_t numBytes ) {
+int64_t Uff58bExport::writeBinary( std::filebuf &fb, double *buf, int64_t numBytes ) {
 
   // write binary file in chunks
   
-  int n = fb.sputn( (char *) buf, numBytes );
+  int64_t n = fb.sputn( (char *) buf, numBytes );
 
   return n;
 
 }
 
-int Uff58bExport::writeBinary( std::filebuf &fb, float *buf, uint64_t numBytes ) {
+int64_t Uff58bExport::writeBinary( std::filebuf &fb, float *buf, int64_t numBytes ) {
 
-  int n = fb.sputn( (char *) buf, numBytes );
+  int64_t n = fb.sputn( (char *) buf, numBytes );
 
   return n;
 
 }
 
-int Uff58bExport::writeBinary( std::filebuf &fb, char *buf, uint64_t numBytes ) {
+int64_t Uff58bExport::writeBinary( std::filebuf &fb, char *buf, int64_t numBytes ) {
 
   int n = fb.sputn( (char *) buf, numBytes );
   
@@ -247,7 +243,7 @@ int Uff58bExport::writeBinary( std::filebuf &fb, char *buf, uint64_t numBytes ) 
 
 }
 
-int Uff58bExport::writeBinary( std::filebuf &fb, const char *buf, uint64_t numBytes ) {
+int64_t Uff58bExport::writeBinary( std::filebuf &fb, const char *buf, int64_t numBytes ) {
 
   int n = fb.sputn( (char *) buf, numBytes );
 

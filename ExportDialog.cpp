@@ -18,8 +18,8 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
 
   gl = new QGridLayout( this );
 
-  QHBoxLayout *hl1 = new QHBoxLayout();
-  QHBoxLayout *hl2 = new QHBoxLayout();
+  auto *hl1 = new QHBoxLayout();
+  auto *hl2 = new QHBoxLayout();
 
   gl->addLayout( hl1, 1, 1, Qt::AlignLeft );
   gl->addLayout( hl2, 1, 2, Qt::AlignLeft );
@@ -145,10 +145,11 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   fileSelect->setAcceptMode( QFileDialog::AcceptSave );
   fileSelect->setLabelText(QFileDialog::Accept, "Export" );
   fileSelect->setFileMode( QFileDialog::AnyFile );
-  fileSelect->setDefaultSuffix( "uff58b" );
-  fileSelect->setNameFilters( { "Export files ( *.csv *.uff58b )",
-                                "All files ( *.* )" } );
 
+  fileSelect->setDefaultSuffix( "uff58b" );
+  fileSelect->setNameFilters( { "Export files ( *.uff58b )",
+      "All files ( *.* )" } );
+  
   // init fields from user prefs
 
   // if item doesn't exist, give it a default value
@@ -166,6 +167,17 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
 
   if ( up->getString( "ExportFormat", exportFormat ) ) exportFormat = "UFF58b";
   exportFormatLabel->setText( exportFormat );
+
+  if ( exportFormat == "UFF58b" ) {
+    fileSelect->setDefaultSuffix( "uff58b" );
+    fileSelect->setNameFilters( { "Export files ( *.uff58b )",
+        "All files ( *.* )" } );
+  }
+  else {
+    fileSelect->setDefaultSuffix( "cvs" );
+    fileSelect->setNameFilters( { "Export files ( *.csv )",
+        "All files ( *.* )" } );
+  }
 
   if ( up->getString( "ExportRange", exportRange ) ) exportRange = "All Time";
   exportRangeLabel->setText( exportRange );
@@ -235,7 +247,7 @@ void ExportDialog::close ( void ) {
 
 void ExportDialog::performAction( bool checked ) {
 
-  QAction *action = qobject_cast<QAction *>( sender() );
+  auto *action = qobject_cast<QAction *>( sender() );
   
   if ( action == csvAction ) {
     
@@ -243,6 +255,8 @@ void ExportDialog::performAction( bool checked ) {
     up->setString( "ExportFormat", "CSV" );
     up->update();
 
+    fileSelect->setNameFilters( { "Export files ( *.csv )",
+        "All files ( *.* )" } );
     fileSelect->setDefaultSuffix( "csv" );
     fileSelect->update();
     
@@ -253,6 +267,8 @@ void ExportDialog::performAction( bool checked ) {
     up->setString( "ExportFormat", "UFF58b" );
     up->update();
 
+    fileSelect->setNameFilters( { "Export files ( *.uff58b )",
+        "All files ( *.* )" } );
     fileSelect->setDefaultSuffix( "uff58b" );
     fileSelect->update();
 
@@ -312,7 +328,7 @@ void ExportDialog::textUpdated( const QString &s ) {
 void ExportDialog::textUpdated( void ) {
 
   if ( sender() == chanSelectTextEdit ) {
-    QTextEdit *te = qobject_cast<QTextEdit *>( sender() );
+    auto *te = qobject_cast<QTextEdit *>( sender() );
     chanSelect = te->toPlainText();
     up->setString( "chanSelect", chanSelect );
     up->update();
@@ -320,7 +336,7 @@ void ExportDialog::textUpdated( void ) {
 
 }
  
-void ExportDialog::openFileSelect( bool ) {
+void ExportDialog::openFileSelect( bool ) const {
 
   fileSelect->move( 100, 50 );
   fileSelect->show();

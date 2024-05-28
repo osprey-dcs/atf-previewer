@@ -59,10 +59,10 @@ ShortcutDialog::ShortcutDialog( QWidget *w, QWidget *parent ) {
 
   for ( int i=0; i<leftStr.size(); i++ ) {
 
-    QHBoxLayout *tmpLayout = new QHBoxLayout;
+    auto *tmpLayout = new QHBoxLayout;
     vlayout->addLayout( tmpLayout );
 
-    QLabel *tmpLabel = new QLabel( leftStr[i] );
+    auto *tmpLabel = new QLabel( leftStr[i] );
     tmpLayout->addWidget( tmpLabel );
     tmpLayout->setAlignment( tmpLabel, Qt::AlignLeft );
 
@@ -75,10 +75,10 @@ ShortcutDialog::ShortcutDialog( QWidget *w, QWidget *parent ) {
 
   }
 
-  QHBoxLayout *tmpLayout = new QHBoxLayout;
+  auto *tmpLayout = new QHBoxLayout;
   vlayout->addLayout( tmpLayout );
 
-  QLabel *tmpLabel = new QLabel( " " );
+  auto *tmpLabel = new QLabel( " " );
   tmpLayout->addWidget( tmpLabel );
 
   tmpLayout = new QHBoxLayout;

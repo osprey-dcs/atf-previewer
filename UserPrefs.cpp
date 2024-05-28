@@ -86,7 +86,7 @@ UserPrefs::UserPrefs() : ErrHndlr( NumErrs, errMsgs ) {
 
   }
 
-  int UserPrefs::setString(const QString &s, QString qs ) {
+  int UserPrefs::setString(const QString &s, const QString& qs ) {
 
     jo[s] = qs;
 

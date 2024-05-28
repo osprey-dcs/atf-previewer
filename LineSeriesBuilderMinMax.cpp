@@ -44,7 +44,6 @@ int LineSeriesBuilderMinMax::setXPixelWidth ( int w ) {
 
   if ( w != 0 ) {
     this->xPixelWidth = static_cast<double>( w );
-    //std::cout << "this->xPixelWidth = " << this->xPixelWidth << std::endl;
   }
   else {
     return ERRINFO(EVal,"");
@@ -193,12 +192,5 @@ void LineSeriesBuilderMinMax::show () {
     //qDebug() << i << ", p = " << p;
     i++;
   }
-
-  //qDebug() << "";
-
-  //qDebug() << "finalMinX = " << finalMinX << ", finalMaxX = " << finalMaxX << ", finalMinY = "
-  //          << finalMinY << ", finalMaxY = " << finalMaxY;
-
-  //qDebug() << "";
   
 }

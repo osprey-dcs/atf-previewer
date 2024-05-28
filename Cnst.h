@@ -42,20 +42,20 @@ class Cnst {
 
   // normal file reads
   inline static const std::string BinDataName {"File"};
-  static const uint64_t MaxMFileBufSize {0};
+  static const int64_t MaxMFileBufSize {0};
 
   // One data point requires 8 bytes of time-series storage and 16 bytes for FFT calculatin
   
   // memory-backed file reads - could be useful if running on a system with enought memory
   //inline static const std::string BinDataName {"MFile"};
   // next value is number of 8-byte doubles (total mem used = 8 * value below)
-  //static const uint64_t MaxMFileBufSize {75000000};
+  //static const int64_t MaxMFileBufSize {75000000};
 
   static const int MaxSigIndex {1023};
   static const int MaxSignals {1024};
 
   // next value is number of 16-byte complex doubles (total mem used = 16 * value below)
-  static const uint64_t MaxFftSize {45000000};
+  static const int64_t MaxFftSize {45000000};
   static const bool UseHanning {true};
   static constexpr double peakPixelRange {5.0}; // num of pixels (+/-) for peak search
 

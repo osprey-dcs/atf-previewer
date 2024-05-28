@@ -66,7 +66,7 @@ public:
   int setDouble ( const QString &s, double d );
 
   int getString ( const QString &s, QString &qs );
-  int setString ( const QString &s, QString qs );
+  int setString ( const QString &s, const QString& qs );
 
   int update();
   int readContents ();

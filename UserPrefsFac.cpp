@@ -20,8 +20,6 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "UserPrefs.h"
 #include "UserPrefsFac.h"
 
-//namespace osp {
-
   UserPrefsFac::UserPrefsFac ( ) { }
 
   UserPrefs *UserPrefsFac::createUserPrefs () {
@@ -34,4 +32,3 @@ If not, see <https://www.gnu.org/licenses/>.
 
   }
 
-//}

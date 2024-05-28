@@ -13,11 +13,11 @@ class FileUtil {
 
 public:
   FileUtil();
-  static bool hasExtension( QString str );
+  static bool hasExtension( const QString& str );
   static QString getHeaderFileName (
     const QString& rootDir,
     const QString& name );
-  static QString extractFileName( QString str );
+  static QString extractFileName( const QString& str );
   static QString extractDir( QString str );
   static QString getBinDir(
      const QString& binRoot,

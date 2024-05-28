@@ -3,25 +3,22 @@
 //
 
 #include <sstream>
-#include <iomanip>
 
 #include "HelpAboutDialog.h"
 
 // version.h declares static ints: g_major, g_minor, g_release
 #include "version.h"
 
-HelpAboutDialog::HelpAboutDialog(QWidget *w, QWidget *parent ) {
+HelpAboutDialog::HelpAboutDialog( QWidget *w, QWidget *parent ) : QDialog( parent ) {
 
   std::stringstream strm;
   strm << "Version " << g_major << "." << g_minor << "." << g_release;
 
   refWidget = w;
   vlayout = new QVBoxLayout();
-  //hlayout = new QHBoxLayout();
   description = new QLabel( "Vibration Data Viewer" );
   version = new QLabel( strm.str().c_str() );
   ok = new QPushButton( "Dismiss" );
-  //vlayout->addLayout( hlayout );
   vlayout->addWidget( description );
   vlayout->addSpacing( 10 );
   vlayout->addWidget( version );

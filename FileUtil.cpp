@@ -2,14 +2,13 @@
 // Created by jws3 on 5/2/24.
 //
 
-#include <sstream>
 #include <iomanip>
-
+#include <utility>
 #include "FileUtil.h"
 
 FileUtil::FileUtil() {}
 
-bool FileUtil::hasExtension( QString str ) {
+bool FileUtil::hasExtension( const QString& str ) {
 
   /* Search backwards for a ".". If we find "/" first, then there is no extension.
    * If we find a "." before finding a "/" and the "." is not the first character,
@@ -37,7 +36,7 @@ QString FileUtil::getHeaderFileName (
    * If name does not include an extension, append the default one.
    */
 
-  QString path = "";
+  QString path;
 
   QString rootDir1 = rootDir.trimmed();
   if ( !( rootDir1.endsWith( "/" ) ) ) {
@@ -68,7 +67,7 @@ QString FileUtil::getHeaderFileName (
 
 }
 
-QString FileUtil::extractFileName( QString str ) {
+QString FileUtil::extractFileName( const QString& str ) {
 
   QString tmp = str;
 
@@ -107,7 +106,7 @@ QString FileUtil::extractFileName( QString str ) {
 
 QString FileUtil::extractDir( QString str ) {
 
-  QString tmp = str;
+  QString tmp = std::move(str);
 
   int dirEnd = -1;
   for ( int i=tmp.length()-1; i>=0; i-- ) {

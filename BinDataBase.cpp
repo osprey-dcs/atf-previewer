@@ -48,14 +48,14 @@ int BinDataBase::newFile( QString filename ) {
   return 0;
 }
 
-void BinDataBase::initMaxBufSize( uint64_t max ) {
+void BinDataBase::initMaxBufSize( int64_t max ) {
 }
 
 int BinDataBase::getDataFullTimeRange( QString filename, double sampleRate, double& minTime, double& maxTime ) {
 
   if ( sampleRate <= 0.0 ) return ERRINFO(ESampleRate,"");
 
-  uint64_t maxElements;
+  int64_t maxElements;
 
   int st = this->getMaxElements( filename, 0, maxElements );
   if ( st ) {
@@ -74,11 +74,11 @@ int BinDataBase::getDataFullTimeRange( QString filename, double sampleRate, doub
 }
   
 int BinDataBase::getRecordRangeForTime( QString fileName, double sampleRate, double minTime, double maxTime,
-                                        uint64_t& min, uint64_t& max ) {
+                                        int64_t& min, int64_t& max ) {
 
   if ( sampleRate == 0.0 ) return ERRINFO(ESampleRate,"");
 
-  uint64_t maxElements;
+  int64_t maxElements;
 
   int st = this->getMaxElements( fileName, 0, maxElements );
   if ( st ) {
@@ -86,7 +86,7 @@ int BinDataBase::getRecordRangeForTime( QString fileName, double sampleRate, dou
     return ERRINFO(st,"");
   }
 
-  uint64_t maxBytes = maxElements * sizeof(int);
+  int64_t maxBytes = maxElements * sizeof(int);
 
   min = sampleRate * minTime * sizeof(int);
   if ( min % 4 ) min -= min % 4;
@@ -98,7 +98,7 @@ int BinDataBase::getRecordRangeForTime( QString fileName, double sampleRate, dou
 
 }
 
-int BinDataBase::getMaxElements2 ( QString filename, int sigIndex, uint64_t& max ) {
+int BinDataBase::getMaxElements2 ( QString filename, int sigIndex, int64_t& max ) {
 
   return 0;
 
@@ -112,44 +112,44 @@ int BinDataBase::genLineSeries2 ( QString filename,
                             double startTimeInSec,
                             double endTimeInSec,
                             double dataTimeIncrementInSec,
-                            uint64_t& numPts,
+                            int64_t& numPts,
                             QtCharts::QLineSeries& qls,
                             double& miny,
                             double& maxy,
-                            uint64_t maxFft,
-                            uint64_t& numFft,
+                            int64_t maxFft,
+                            int64_t& numFft,
                             fftw_complex *fftArray ) {
     
   return 0;
 
 }
 
-int BinDataBase::readTraceData2 (
+int64_t BinDataBase::readTraceData2 (
  std::filebuf& fb,
  int *buf,
- int readSizeInbytes ) {
+ int64_t readSizeInbytes ) {
 
   return 0;
 
 }
 
-void BinDataBase::inputSeekToStartOfData( std::filebuf &fb, uint64_t firstDataByte ) {
+void BinDataBase::inputSeekToStartOfData( std::filebuf &fb, int64_t firstDataByte ) {
 
-  //uint64_t headerSize = sizeof(numSigbytes) + sizeof(version);
-  uint64_t loc = sizeof(uint64_t) + sizeof(unsigned int) * 3 + firstDataByte;
+  //int64_t headerSize = sizeof(numSigbytes) + sizeof(version);
+  int64_t loc = sizeof(int64_t) + sizeof(unsigned int) * 3 + firstDataByte;
   fb.pubseekoff( loc, std::ios::beg, std::ios::in );
 
 }
 
-void BinDataBase::outputSeekToStartOfData( std::filebuf &fb, uint64_t firstDataByte ) {
+void BinDataBase::outputSeekToStartOfData( std::filebuf &fb, int64_t firstDataByte ) {
 
-  //uint64_t headerSize = sizeof(numSigbytes) + sizeof(version);
-  uint64_t loc = sizeof(uint64_t) + sizeof(unsigned int) * 3 + firstDataByte;
+  //int64_t headerSize = sizeof(numSigbytes) + sizeof(version);
+  int64_t loc = sizeof(int64_t) + sizeof(unsigned int) * 3 + firstDataByte;
   fb.pubseekoff( loc, std::ios::beg, std::ios::out );
 
 }
 
-int BinDataBase::getMaxElements ( QString filename, int sigIndex, uint64_t& max ) {
+int BinDataBase::getMaxElements ( QString filename, int sigIndex, int64_t& max ) {
 
   return 0;
 
@@ -163,29 +163,29 @@ int BinDataBase::genLineSeries ( QString filename,
                             double startTimeInSec,
                             double endTimeInSec,
                             double dataTimeIncrementInSec,
-                            uint64_t& numPts,
+                            int64_t& numPts,
                             QtCharts::QLineSeries& qls,
                             double& miny,
                             double& maxy,
-                            uint64_t maxFft,
-                            uint64_t& numFft,
+                            int64_t maxFft,
+                            int64_t& numFft,
                             fftw_complex *fftArray ) {
     
   return 0;
 
 }
 
-int BinDataBase::readTraceData (
+int64_t BinDataBase::readTraceData (
  std::filebuf& fb,
  int *buf,
- int readSizeInbytes ) {
+ int64_t readSizeInbytes ) {
 
   return 0;
 
 }
 
 void BinDataBase::updateLineSeries(
-  int readOpCount,
+  int64_t readOpCount,
   QPointF *pts,
   double slope,
   double intercept,
@@ -194,7 +194,7 @@ void BinDataBase::updateLineSeries(
   double startTimeInSec,
   double endTimeInSec,
   double dataTimeIncrementInSec,
-  int numBytesToProcess,
+  int64_t numBytesToProcess,
   int *buf,
   LineSeriesBuilderBase *ls,
   double& miny,

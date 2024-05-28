@@ -24,8 +24,6 @@ int CsvExport::writeHeader( std::ofstream &fb, QString &id, QString &desc,
                             QString &startTime, QString &endTime,
                             QString &inputCsvFileName, QString &headerFileName ) {
 
-  int n;
-
   std::stringstream strm;
 
   fb << "\"Acquistion ID\", \"" << id.toStdString() << "\"" << std::endl;
@@ -75,7 +73,6 @@ int CsvExport::writeSignalProperties( std::ofstream &fb, int *signalIndices, int
 
 int CsvExport::writeSignalNames( std::ofstream &fb, QString *names, int numNames ) {
 
-  int nr;
   std::stringstream strm;
 
   fb << "Rec, Time, ";
@@ -90,11 +87,11 @@ int CsvExport::writeSignalNames( std::ofstream &fb, QString *names, int numNames
 
   //nr = fb.sputn( (const char *) (strm.str().c_str()), strm.str().size() );
 
-  return nr;
+  return 0;
 
 }
 
-int CsvExport::writeData( std::ofstream& fb, uint64_t rec, double time, double *buf, uint64_t n ) {
+int CsvExport::writeData( std::ofstream& fb, int64_t rec, double time, double *buf, int64_t n ) {
 
   int nr;
   std::stringstream strm;

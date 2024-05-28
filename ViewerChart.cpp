@@ -17,8 +17,6 @@ If not, see <https://www.gnu.org/licenses/>.
 // Created by jws3 on 4/16/24.
 //
 
-#include <iostream>
-
 #include "ViewerChart.h"
 
 ViewerChart::ViewerChart() {

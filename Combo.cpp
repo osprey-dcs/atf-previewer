@@ -19,7 +19,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include "Combo.h"
 
-Combo::Combo( QWidget *w ) {
+Combo::Combo( QWidget *w ) : QComboBox( w ) {
 
   this->setEditable( false );
 

@@ -26,10 +26,8 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <QFile>
 #include <iostream>
 #include <string>
-#include <QDebug>
 
 #include "DataHeader.h"
-#include "DataHeaderFac.h"
 
 DataHeader::DataHeader() : ErrHndlr( NumErrs, errMsgs ) {
 
@@ -130,9 +128,6 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     
     QJsonObject::iterator it = jobj.begin();
     while ( it != jobj.end() ) {
-      //QString qsk = it.key();
-      //QString qsv = it.value().toString();
-      //std::cout << qsk.toStdString() << "  " << qsv.toStdString() << std::endl;
       jobj.erase( it );
       it = jobj.begin();
     }
@@ -220,8 +215,6 @@ int DataHeader::getString(const QString &s, QString& qs ) {
           
           QJsonObject::iterator it = jobj1.begin();
           while ( it != jobj1.end() ) {
-            
-            QString qsk = it.key();
 
             jobj1New[it.key()] = it.value();
             it++;

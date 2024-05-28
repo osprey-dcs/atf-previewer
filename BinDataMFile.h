@@ -55,9 +55,9 @@ class BinDataMFile : public BinDataBase {
 
   int newFile ( QString fileName );
 
-  void initMaxBufSize( uint64_t max );
+  void initMaxBufSize( int64_t max );
 
-  int getMaxElements ( QString filename, int sigIndex, uint64_t& max );
+  int getMaxElements ( QString filename, int sigIndex, int64_t& max );
 
   int genLineSeries ( QString filename,
                      int sigIndex,
@@ -67,17 +67,17 @@ class BinDataMFile : public BinDataBase {
                      double startTimeInSec,
                      double endTimeInSec,
                      double dataTimeIncrementInSec,
-                     uint64_t& numPts,
+                     int64_t& numPts,
                      QtCharts::QLineSeries& qls,
                      double& miny,
                      double& maxy,
-                     uint64_t maxFft,
-                     uint64_t& numFft,
+                     int64_t maxFft,
+                     int64_t& numFft,
                      fftw_complex *array  );
 
-  int readTraceData( std::filebuf& fb, int *buf, int readSizeInbytes );
+  int64_t readTraceData( std::filebuf& fb, int *buf, int64_t readSizeInbytes );
 
-  int getMaxElements2 ( QString filename, int sigIndex, uint64_t& max );
+  int getMaxElements2 ( QString filename, int sigIndex, int64_t& max );
 
   int genLineSeries2 ( QString filename,
                      int sigIndex,
@@ -87,18 +87,18 @@ class BinDataMFile : public BinDataBase {
                      double startTimeInSec,
                      double endTimeInSec,
                      double dataTimeIncrementInSec,
-                     uint64_t& numPts,
+                     int64_t& numPts,
                      QtCharts::QLineSeries& qls,
                      double& miny,
                      double& maxy,
-                     uint64_t maxFft,
-                     uint64_t& numFft,
+                     int64_t maxFft,
+                     int64_t& numFft,
                      fftw_complex *array  );
 
-  int readTraceData2 ( std::filebuf& fb, int *buf, int readSizeInbytes );
+  int64_t readTraceData2 ( std::filebuf& fb, int *buf, int64_t readSizeInbytes );
 
   void updateLineSeries (
-    int readOpCount,
+    int64_t readOpCount,
     QPointF *pts,
     double slope,
     double intercept,
@@ -107,7 +107,7 @@ class BinDataMFile : public BinDataBase {
     double startTimeInSec,
     double endTimeInSec,
     double dataTimeIncrementInSec,
-    int numBytesToProcess,
+    int64_t numBytesToProcess,
     int *buf,
     LineSeriesBuilderBase *lsb,
     double& miny,

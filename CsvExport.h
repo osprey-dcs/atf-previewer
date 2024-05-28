@@ -38,7 +38,7 @@ public:
   
   int writeSignalNames( std::ofstream &fb, QString *names, int numNames );
   
-  int writeData( std::ofstream &fb, uint64_t rec, double time, double *buf, uint64_t numBytes );
+  int writeData( std::ofstream &fb, int64_t rec, double time, double *buf, int64_t numBytes );
   
   DataHeaderFac dhf;
   std::shared_ptr<DataHeader> dh;

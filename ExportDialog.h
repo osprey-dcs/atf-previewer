@@ -78,7 +78,7 @@ private slots:
   void cancelButtonClicked( bool );
   void textUpdated( const QString &s );
   void textUpdated( void );
-  void openFileSelect( bool );
+  void openFileSelect( bool ) const;
   void exportFileSelected( const QString& file );
   
 };

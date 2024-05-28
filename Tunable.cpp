@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include "Tunable.h"
-#include "Cnst.h"
 
 QString Tunable::getString( const std::string& key, const std::string& cnstName ) {
 

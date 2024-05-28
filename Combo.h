@@ -34,7 +34,6 @@ class Combo : public QComboBox {
   
   Combo( QWidget *w );
   QWidget *callbackW;
-  int index;
 
   public slots:
   

@@ -28,7 +28,7 @@ RoiSelector::RoiSelector( ViewerGraphBase *gr ) {
   leftIndicator = new  QGraphicsLineItem( leftPos,
                                           yMin, leftPos, yMax );
   
-  QPen pen1( QColor(Qt::magenta) );
+  QPen pen1( (QColor(Qt::magenta)) );
   pen1.setWidth( 1 );
   leftIndicator->setPen( pen1 );
   leftIndicator->setVisible( false );
@@ -37,7 +37,7 @@ RoiSelector::RoiSelector( ViewerGraphBase *gr ) {
   rightIndicator = new  QGraphicsLineItem( rightPos,
                                            yMin, rightPos, yMax );
   
-  QPen pen2( QColor(Qt::magenta) );
+  QPen pen2( (QColor(Qt::magenta)) );
   pen2.setWidth( 1 );
   rightIndicator->setPen( pen2 );
   rightIndicator->setVisible( false );

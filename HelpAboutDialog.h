@@ -23,7 +23,6 @@ public:
   void close ( void );
   QWidget *refWidget;
   QVBoxLayout *vlayout;
-  QHBoxLayout *hlayout;
   QLabel *description;
   QLabel *version;
   QPushButton *ok;

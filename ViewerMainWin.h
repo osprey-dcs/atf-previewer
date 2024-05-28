@@ -72,8 +72,8 @@ If not, see <https://www.gnu.org/licenses/>.
       void setSampleRate ( double val );
       void setWorking ( QString text );
       void setWhat( QString text );
-      void setNumPoints ( uint64_t val );
-      void setNumFftPoints ( uint64_t val );
+      void setNumPoints ( int64_t val );
+      void setNumFftPoints ( int64_t val );
 
       static const int NumRows {Cnst::NumRows};
       static const int NumCols {Cnst::NumCols};
