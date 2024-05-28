@@ -178,7 +178,7 @@ int BinData::genLineSeries2 ( QString filename,
     this->slsb->startNewSeries();
 
     // read data in maximum chunks of 4000 bytes (1000 ints)
-    int numBytesRead, buf[1000];
+    int numBytesRead, *buf = new int[1000];
     uint64_t numReadOps = (totalpoints * sizeof(int)) / 4000;
     uint64_t finalReadSize = (totalpoints * sizeof(int)) % 4000;
     //std::cout << "finalReadSize 1: " << finalReadSize << std::endl;
@@ -214,10 +214,10 @@ int BinData::genLineSeries2 ( QString filename,
       numFft = ifft;
       offset += finalReadSize;
       numPts += numBytesRead / sizeof(int);
-      //std::cout << "final numBytesRead: " << numBytesRead << std::endl;
-      //std::cout << "final numWordsRead: " << numBytesRead/sizeof(int) << std::endl;
     }
-    //std::cout << "numFft: " << numFft << std::endl;
+
+    delete[] buf;
+    buf = nullptr;
 
   }
   else { // build line series with first, min, max, and last
@@ -228,7 +228,7 @@ int BinData::genLineSeries2 ( QString filename,
     this->lsb->startNewSeries();
       
     // read data in maximum chunks of 4000 bytes (1000 ints)
-    int numBytesRead, buf[1000];
+    int numBytesRead, *buf = new int[1000];
     uint64_t numReadOps = (totalpoints * sizeof(int)) / 4000;
     uint64_t finalReadSize = (totalpoints * sizeof(int)) % 4000;
     //std::cout << "finalReadSize 1: " << finalReadSize << std::endl;
@@ -264,10 +264,10 @@ int BinData::genLineSeries2 ( QString filename,
       numFft = ifft;
       offset += finalReadSize;
       numPts += numBytesRead / sizeof(int);
-      //std::cout << "final numBytesRead: " << numBytesRead << std::endl;
-      //std::cout << "final numWordsRead: " << numBytesRead/sizeof(int) << std::endl;
     }
-    //std::cout << "numFft: " << numFft << std::endl;
+
+    delete[] buf;
+    buf = nullptr;
 
   }
 
@@ -403,7 +403,7 @@ int BinData::genLineSeries ( QString filename,
     this->slsb->startNewSeries();
 
     // read data in maximum chunks of 4000 bytes (1000 ints)
-    int numBytesRead, buf[1000];
+    int numBytesRead, *buf = new int[1000];
     uint64_t numReadOps = (totalpoints * sizeof(int)) / 4000;
     uint64_t finalReadSize = (totalpoints * sizeof(int)) % 4000;
     //std::cout << "finalReadSize 1: " << finalReadSize << std::endl;
@@ -439,10 +439,10 @@ int BinData::genLineSeries ( QString filename,
       numFft = ifft;
       offset += finalReadSize;
       numPts += numBytesRead / sizeof(int);
-      //std::cout << "final numBytesRead: " << numBytesRead << std::endl;
-      //std::cout << "final numWordsRead: " << numBytesRead/sizeof(int) << std::endl;
     }
-    //std::cout << "numFft: " << numFft << std::endl;
+
+    delete[] buf;
+    buf = nullptr;
 
   }
   else { // build line series with first, min, max, and last
@@ -453,7 +453,7 @@ int BinData::genLineSeries ( QString filename,
     this->lsb->startNewSeries();
       
     // read data in maximum chunks of 4000 bytes (1000 ints)
-    int numBytesRead, buf[1000];
+    int numBytesRead, *buf = new int[1000];
     uint64_t numReadOps = (totalpoints * sizeof(int)) / 4000;
     uint64_t finalReadSize = (totalpoints * sizeof(int)) % 4000;
     //std::cout << "finalReadSize 1: " << finalReadSize << std::endl;
@@ -489,10 +489,10 @@ int BinData::genLineSeries ( QString filename,
       numFft = ifft;
       offset += finalReadSize;
       numPts += numBytesRead / sizeof(int);
-      //std::cout << "final numBytesRead: " << numBytesRead << std::endl;
-      //std::cout << "final numWordsRead: " << numBytesRead/sizeof(int) << std::endl;
     }
-    //std::cout << "numFft: " << numFft << std::endl;
+
+    delete[] buf;
+    buf = nullptr;
 
   }
 

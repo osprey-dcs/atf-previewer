@@ -1876,6 +1876,12 @@ int ViewerCtlr::csvExport ( void ) {
   fbExport.close();
   
   std::cout << "CSV export complete." << std::endl;
+
+  delete[] intBuf; intBuf = nullptr;
+  delete[] nr; nr = nullptr;
+  delete[] names; names = nullptr;
+  delete[] slope; slope = nullptr;
+  delete[] intercept; intercept = nullptr;
   
   return 0;
 
@@ -2064,6 +2070,12 @@ int ViewerCtlr::uff58bExport ( void ) {
     std::array<float, 1000> outBuf;
     size_t numFullOps = recRange / intBuf.size();
     size_t numRemaining = recRange % intBuf.size();
+
+    //int32_t *intBuf = new int32_t[1000];
+    //float *outBuf = new float[1000];
+    //size_t numFullOps = recRange / 1000;
+    //size_t numRemaining = recRange % 1000;
+    
     size_t nr, nw;
 
     // seek to start of binary data for input file
@@ -2107,6 +2119,9 @@ int ViewerCtlr::uff58bExport ( void ) {
   fbExport.close();
 
   std::cout << "UFF58b export complete." << std::endl;
+
+  //delete[] intBuf; intBuf = nullptr;
+  //delete[] outBuf; outBuf = nullptr;
   
   return 0;
   
