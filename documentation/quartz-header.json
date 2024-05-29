@@ -72,6 +72,10 @@
                         "type": "string",
                         "default": ""
                     },
+                    "Desc5": {
+                        "type": "string",
+                        "default": ""
+                    },
                     "Egu": {
                         "type": "string",
                         "default": ""
