@@ -20,6 +20,26 @@
             "type": "string",
             "default": ""
         },
+        "AcquisitionStartDate": {
+            "type": ["string", "null"],
+            "default": ""
+        },
+        "AcquisitionStartDate2": {
+            "type": ["string", "null"],
+            "default": ""
+        },
+        "AcquisitionEndDate": {
+            "type": "string",
+            "default": ""
+        },
+        "AcquisitionEndDate2": {
+            "type": "string",
+            "default": ""
+        },
+        "Role1Name": {
+            "type": "string",
+            "default": ""
+        },
         "Signals": {
             "type": "array",
             "minItems": 1,
@@ -99,6 +119,9 @@
                     "ReferenceDirection": {
                         "type": "integer",
                         "default": 0
+                    },
+                    "OutDataFile": {
+                        "type": "string"
                     }
                 },
                 "required": [
