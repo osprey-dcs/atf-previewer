@@ -169,9 +169,17 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     // We only copy json records if the record chassis number matches the parameter chassisNum and
     // fileMap[record signal number] is non-blank
 
+    bool result;
+    
     QFile inf( inFile );
-    bool result = inf.open( QIODevice::ReadOnly );
-    if ( !result ) return  ERRINFO(EInFileOpen,inFile.toStdString());
+    try {
+      result = inf.open( QIODevice::ReadOnly );
+      if ( !result ) return  ERRINFO(EInFileOpen,inFile.toStdString());
+    }
+    catch ( const std::exception& e ) {
+      QString qmsg = QStringLiteral("file name is %1, %2").arg(inFile).arg(e.what());
+      return ERRINFO(EInFileOpen,qmsg.toStdString());
+    }
     QString contents = inf.readAll();
     inf.close();
 
@@ -250,13 +258,19 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     if ( verbose ) std::cout << "write out file " << outFile.toStdString() << std::endl;
 
     QFile outf{ outFile };
-    result = outf.open( QIODevice::WriteOnly );
-    if ( result ) {
+    try {
+      result = outf.open( QIODevice::WriteOnly );
+      if ( result ) {
         outf.write(jdocNew.toJson(QJsonDocument::Indented));
         outf.close();
+      }
+      else {
+        return ERRINFO(EOutFileOpen,outFile.toStdString());
+      }
     }
-    else {
-      return ERRINFO(EOutFileOpen,outFile.toStdString());
+    catch ( const std::exception& e ) {
+      QString qmsg = QStringLiteral("file name is %1, %2").arg(outFile).arg(e.what());
+      return ERRINFO(EOutFileOpen,qmsg.toStdString());
     }
     
     return ESuccess;
@@ -268,13 +282,19 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     jd.setObject(jo);
 
     QFile outf{ filename };
-    bool result = outf.open( QIODevice::WriteOnly );
-    if ( result ) {
+    try {
+      bool result = outf.open( QIODevice::WriteOnly );
+      if ( result ) {
         outf.write(jd.toJson(QJsonDocument::Indented));
         outf.close();
+      }
+      else {
+        return ERRINFO(EOutFileOpen,filename.toStdString());
+      }
     }
-    else {
-      return ERRINFO(EOutFileOpen,filename.toStdString());
+    catch ( const std::exception& e ) {
+      QString qmsg = QStringLiteral("file name is %1, %2").arg(filename).arg(e.what());
+      return ERRINFO(EOutFileOpen,qmsg.toStdString());
     }
 
     return ESuccess;
@@ -284,8 +304,14 @@ int DataHeader::getString(const QString &s, QString& qs ) {
   int DataHeader::readContents ( const QString& filename ) {
 
     QFile inf( filename );
-    bool result = inf.open( QIODevice::ReadOnly );
-    if ( !result ) return ERRINFO(EInFileOpen,filename.toStdString());
+    try {
+      bool result = inf.open( QIODevice::ReadOnly );
+      if ( !result ) return ERRINFO(EInFileOpen,filename.toStdString());
+    }
+    catch ( const std::exception& e ) {
+      QString qmsg = QStringLiteral("file name is %1, %2").arg(filename).arg(e.what());
+      return ERRINFO(EInFileOpen,qmsg.toStdString());
+    }
     QString contents = inf.readAll();
     inf.close();
 

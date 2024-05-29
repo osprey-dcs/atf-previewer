@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iomanip>
 #include <byteswap.h>
+#include <exception>
 
 #include "PsnFileConverter.h"
 
@@ -59,9 +60,15 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
   QString headerType;
   firstSeqNum = true;
 
-  auto result = fb.open( rawDataFile.toStdString(), std::ios::in | std::ios::binary );
-  if ( !result ) {
-    return ERRINFO(1,rawDataFile.toStdString());
+  try {
+    auto result = fb.open( rawDataFile.toStdString(), std::ios::in | std::ios::binary );
+    if ( !result ) {
+      return ERRINFO(EInFileOpen,rawDataFile.toStdString());
+    }
+  }
+  catch ( const std::exception& e ) {
+    QString qsl = QString("file name is %s, %s").arg(rawDataFile).arg(e.what());
+    return ERRINFO(EInFileOpen,qsl.toStdString());
   }
 
   stat = createAndOpenOutputFiles( chanList, startingSigIndex, binDataFileDir, simpleName, verbose );
@@ -351,12 +358,20 @@ int PsnFileConverter::readHeaderType( std::filebuf& fb, size_t loc, QString& hea
 
   size_t numBytessRead;
   unsigned char buf[4];
-  
-  fb.pubseekoff( loc, std::ios::beg, std::ios::in );
 
-  numBytessRead = fb.sgetn( ( (char *) buf ), sizeof(buf) );
-  if ( numBytessRead != sizeof(buf) ) { // eof
-    eof = true;
+  try {
+  
+    fb.pubseekoff( loc, std::ios::beg, std::ios::in );
+
+    numBytessRead = fb.sgetn( ( (char *) buf ), sizeof(buf) );
+    if ( numBytessRead != sizeof(buf) ) { // eof
+      eof = true;
+    }
+
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QString("%s").arg(e.what());
+    return ERRINFO(EReadFailure,qmsg.toStdString());
   }
 
   headerType = buf[0];
@@ -380,45 +395,53 @@ int PsnFileConverter::readBinHeader( std::filebuf& fb, size_t loc, size_t& numBy
 
   complete = false;
 
-  fb.pubseekoff( loc, std::ios::beg, std::ios::in );
+  try {
 
-  if ( headerType == "PSNA" ) {
+    fb.pubseekoff( loc, std::ios::beg, std::ios::in );
 
-    numBytessRead = fb.sgetn( ( (char *) &binHeaderPsna ), sizeof(BinHdrPsnaType ) );
-    if ( numBytessRead == 0 ) {
-      complete = true;
+    if ( headerType == "PSNA" ) {
+
+      numBytessRead = fb.sgetn( ( (char *) &binHeaderPsna ), sizeof(BinHdrPsnaType ) );
+      if ( numBytessRead == 0 ) {
+        complete = true;
+      }
+      else if ( numBytessRead != sizeof(BinHdrPsnaType ) ) { // incomplete read - treat as end of file
+        std::cout << "eof - readBinHeader - numBytessRead is " << numBytessRead << std::endl;
+        return ERRINFO(EReadFailure,"");
+      }
+
     }
-    else if ( numBytessRead != sizeof(BinHdrPsnaType ) ) { // incomplete read - treat as end of file
-      std::cout << "eof - readBinHeader - numBytessRead is " << numBytessRead << std::endl;
-      return ERRINFO(EReadFailure,"");
+    else if ( headerType == "PSNB" ) {
+
+      numBytessRead = fb.sgetn( ( (char *) &binHeaderPsnb ), sizeof(BinHdrPsnbType ) );
+      if ( numBytessRead == 0 ) {
+        complete = true;
+      }
+      else if ( numBytessRead != sizeof(BinHdrPsnbType ) ) { // incomplete read - treat as end of file
+        std::cout << "eof - readBinHeader - numBytessRead is " << numBytessRead << std::endl;
+        return ERRINFO(EReadFailure,"");
+      }
+
+    }
+    else { // read into common header so caller may skip
+
+      headerType = "Generic";
+
+      numBytessRead = fb.sgetn( ( (char *) &binHeaderGeneric ), sizeof(BinHdrGenericType ) );
+      if ( numBytessRead == 0 ) {
+        complete = true;
+      }
+      else if ( numBytessRead != sizeof(BinHdrGenericType ) ) { // incomplete read - treat as end of file
+        std::cout << "eof - readBinHeader - numBytessRead is " << numBytessRead << std::endl;
+        return ERRINFO(EReadFailure,"");
+      }
+
     }
 
   }
-  else if ( headerType == "PSNB" ) {
-
-    numBytessRead = fb.sgetn( ( (char *) &binHeaderPsnb ), sizeof(BinHdrPsnbType ) );
-    if ( numBytessRead == 0 ) {
-      complete = true;
-    }
-    else if ( numBytessRead != sizeof(BinHdrPsnbType ) ) { // incomplete read - treat as end of file
-      std::cout << "eof - readBinHeader - numBytessRead is " << numBytessRead << std::endl;
-      return ERRINFO(EReadFailure,"");
-    }
-
-  }
-  else { // read into common header so caller may skip
-
-    headerType = "Generic";
-
-    numBytessRead = fb.sgetn( ( (char *) &binHeaderGeneric ), sizeof(BinHdrGenericType ) );
-    if ( numBytessRead == 0 ) {
-      complete = true;
-    }
-    else if ( numBytessRead != sizeof(BinHdrGenericType ) ) { // incomplete read - treat as end of file
-      std::cout << "eof - readBinHeader - numBytessRead is " << numBytessRead << std::endl;
-      return ERRINFO(EReadFailure,"");
-    }
-
+  catch ( const std::exception& e ) {
+    QString qmsg = QStringLiteral("%1").arg(e.what());
+    return ERRINFO(EReadFailure,qmsg.toStdString());
   }
 
   if ( complete ) {
@@ -434,14 +457,22 @@ int PsnFileConverter::readBinData(std::filebuf& fb, size_t loc, unsigned int dat
 
   complete = false;
 
-  fb.pubseekoff( loc, std::ios::beg, std::ios::in );
+  try {
 
-  numBytessRead = fb.sgetn( ( (char *) buf ), dataLen );
-  if ( numBytessRead == 0 ) { // eof
-    complete = true;
+    fb.pubseekoff( loc, std::ios::beg, std::ios::in );
+
+    numBytessRead = fb.sgetn( ( (char *) buf ), dataLen );
+    if ( numBytessRead == 0 ) { // eof
+      complete = true;
+    }
+    else if ( numBytessRead != dataLen ) { // incomplete read - treat as end of file
+      return ERRINFO(EReadFailure,"");
+    }
+
   }
-  else if ( numBytessRead != dataLen ) { // incomplete read - treat as end of file
-    return ERRINFO(EReadFailure,"");
+  catch ( const std::exception& e ) {
+    QString qmsg = QStringLiteral("%1").arg(e.what());
+    return ERRINFO(EReadFailure,qmsg.toStdString());
   }
 
   if ( complete ) {
@@ -488,21 +519,35 @@ int PsnFileConverter::createAndOpenOutputFiles( std::list<int>& chanList, int st
     if ( verbose ) {
       std::cout << "  Writing output file: " << fname.toStdString() << std::endl;
     }
-    
-    auto result = fb[i].open( fname.toStdString(), std::ios::out | std::ios::binary );
-    if ( !result ) {
-      return ERRINFO(EOutFileOpen,fname.toStdString());
+
+    try {
+      auto result = fb[i].open( fname.toStdString(), std::ios::out | std::ios::binary );
+      if ( !result ) {
+        return ERRINFO(EOutFileOpen,fname.toStdString());
+      }
+    }
+    catch ( const std::exception& e ) {
+      QString qmsg = QString("file name is %s, %s").arg(fname).arg(e.what());
+      return ERRINFO(EOutFileOpen,qmsg.toStdString());
     }
 
-    // write version and zero the size (in bytes) field
-    auto num = fb[i].sputn( (char *) dataFileVersion, sizeof(dataFileVersion) );
-    if ( num != sizeof(dataFileVersion) ) {
-      return ERRINFO(EWriteFailure,fname.toStdString());
-    }
+    try {
 
-    num = fb[i].sputn( (char *) &sizeInBytes, sizeof(sizeInBytes) );
-    if ( num != sizeof(sizeInBytes) ) {
-      return ERRINFO(EWriteFailure,fname.toStdString());
+      // write version and zero the size (in bytes) field
+      auto num = fb[i].sputn( (char *) dataFileVersion, sizeof(dataFileVersion) );
+      if ( num != sizeof(dataFileVersion) ) {
+        return ERRINFO(EWriteFailure,fname.toStdString());
+      }
+
+      num = fb[i].sputn( (char *) &sizeInBytes, sizeof(sizeInBytes) );
+      if ( num != sizeof(sizeInBytes) ) {
+        return ERRINFO(EWriteFailure,fname.toStdString());
+      }
+
+    }
+    catch ( const std::exception& e ) {
+      QString qmsg = QStringLiteral("file name is %1, %2").arg(fname).arg(e.what());
+      return ERRINFO(EWriteFailure,qmsg.toStdString());
     }
 
     fileLoc[i] = 20;
@@ -518,19 +563,30 @@ int PsnFileConverter::writeOutputFiles( std::list<int>& chanList, unsigned numVa
 
   uint64_t sizeInBytes = numValues * sizeof(unsigned int);
 
-  //for ( int i=0; i<Cnst::MaxSignals; i++ ) {
-  for ( int i : chanList ) {
+  int index;
 
-    size_t num = fb[i].sputn( (char *) &array[i][0], sizeInBytes );
-    if ( num == 0 ) {
-      return ESuccess;
-    }
-    else if ( num != sizeInBytes ) {
-      return ERRINFO(EWriteFailure,"");
-    }
+  try {
+    
+    for ( int i : chanList ) {
 
-    fileLoc[i] += sizeInBytes;
+      index = i;
+      
+      size_t num = fb[i].sputn( (char *) &array[i][0], sizeInBytes );
+      if ( num == 0 ) {
+        return ESuccess;
+      }
+      else if ( num != sizeInBytes ) {
+        return ERRINFO(EWriteFailure,"");
+      }
+
+      fileLoc[i] += sizeInBytes;
      
+    }
+
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QStringLiteral("index = %1, %2").arg(index).arg(e.what());
+    return ERRINFO(EWriteFailure,qmsg.toStdString());
   }
 
   //sizeOfOneFile += sizeInBytes;
@@ -544,22 +600,36 @@ int PsnFileConverter::closeOutputFiles ( std::list<int>& chanList ) {
   // write number of data bytes (i.e. don't include the 20 header bytes) to the
   // 64bit unsigned quantity at location 12 and then close file
 
-  //for ( int i=0; i<Cnst::MaxSignals; i++ ) {
-  for ( int i : chanList ) {
-    
-    fileLoc[i] -= 20;
-    
-    fb[i].pubseekoff( 12, std::ios::beg, std::ios::out );
+  int index;
 
-    auto num = fb[i].sputn( (char *) &fileLoc[i], sizeof(fileLoc[i]) );
-    if ( num != sizeof(fileLoc[i]) ) {
-      return ERRINFO(EWriteFailure,"");
+  try {
+    
+    //for ( i=0; i<Cnst::MaxSignals; i++ ) {
+    for ( int i : chanList ) {
+
+      index = i;
+      
+      fileLoc[i] -= 20;
+
+      fb[i].pubseekoff( 12, std::ios::beg, std::ios::out );
+
+      auto num = fb[i].sputn( (char *) &fileLoc[i], sizeof(fileLoc[i]) );
+      if ( num != sizeof(fileLoc[i]) ) {
+        fb[i].close();
+        return ERRINFO(EWriteFailure,"");
+      }
+
+      fb[i].close();
+        
     }
-    
-    fb[i].close();
-    
-  }
 
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QStringLiteral("index = %1, %2").arg(index).arg(e.what());
+    fb[index].close();
+    return ERRINFO(EWriteFailure,qmsg.toStdString());
+  }
+    
   return ESuccess;
 
 }
@@ -597,20 +667,34 @@ int PsnFileConverter::createAndOpenStatusOutputFile ( int chassisIndex, const QS
     std::cout << "  Writing output status file: " << fname.toStdString() << std::endl;
   }
 
-  auto result = statusFb.open( fname.toStdString(), std::ios::out | std::ios::binary );
-  if ( !result ) {
-    return ERRINFO(EStatFileOpen,fname.toStdString());
+  try {
+    auto result = statusFb.open( fname.toStdString(), std::ios::out | std::ios::binary );
+    if ( !result ) {
+      return ERRINFO(EStatFileOpen,fname.toStdString());
+    }
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QString("file name is %s, %s").arg(fname).arg(e.what());
+    return ERRINFO(EStatFileOpen,qmsg.toStdString());
   }
 
-  // write version and zero the size (in bytes) field
-  auto num = statusFb.sputn( (char *) statusFileVersion, sizeof(statusFileVersion) );
-  if ( num != sizeof(statusFileVersion) ) {
-    return ERRINFO(EWriteFailure,fname.toStdString());
-  }
+  try {
+  
+    // write version and zero the size (in bytes) field
+    auto num = statusFb.sputn( (char *) statusFileVersion, sizeof(statusFileVersion) );
+    if ( num != sizeof(statusFileVersion) ) {
+      return ERRINFO(EWriteFailure,fname.toStdString());
+    }
 
-  num = statusFb.sputn( (char *) &sizeInBytes, sizeof(sizeInBytes) );
-  if ( num != sizeof(sizeInBytes) ) {
-    return ERRINFO(EWriteFailure,fname.toStdString());
+    num = statusFb.sputn( (char *) &sizeInBytes, sizeof(sizeInBytes) );
+    if ( num != sizeof(sizeInBytes) ) {
+      return ERRINFO(EWriteFailure,fname.toStdString());
+    }
+
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QStringLiteral("file name is %1, %2").arg(fname).arg(e.what());
+    return ERRINFO(EWriteFailure,qmsg.toStdString());
   }
 
   statusFileLoc = 20;
@@ -624,12 +708,20 @@ int PsnFileConverter::writeStatusOutputFile ( unsigned numValues,
 
   std::streamsize sizeInBytes = numValues * sizeof(unsigned int) * PsnFileConverter::NumStatusFields;
 
-  auto num = statusFb.sputn( (const char *) array, sizeInBytes );
-  if ( num == 0 ) {
-    return ESuccess;
+  try {
+    
+    auto num = statusFb.sputn( (const char *) array, sizeInBytes );
+    if ( num == 0 ) {
+      return ESuccess;
+    }
+    else if ( num != sizeInBytes ) {
+      return ERRINFO(EWriteFailure,"");
+    }
+
   }
-  else if ( num != sizeInBytes ) {
-    return ERRINFO(EWriteFailure,"");
+  catch ( const std::exception& e ) {
+    QString qmsg = QStringLiteral("%1").arg(e.what());
+    return ERRINFO(EWriteFailure,qmsg.toStdString());
   }
 
   statusFileLoc += sizeInBytes;
@@ -645,11 +737,21 @@ int PsnFileConverter::closeStatusOutputFile ( void ) {
 
   statusFileLoc -= 20;
 
-  statusFb.pubseekoff( 12, std::ios::beg, std::ios::out );
+  try {
 
-  auto num = statusFb.sputn( (char *) &statusFileLoc, sizeof(statusFileLoc) );
-  if ( num != sizeof(statusFileLoc) ) {
-    return ERRINFO(EWriteFailure,"");
+    statusFb.pubseekoff( 12, std::ios::beg, std::ios::out );
+
+    auto num = statusFb.sputn( (char *) &statusFileLoc, sizeof(statusFileLoc) );
+    if ( num != sizeof(statusFileLoc) ) {
+      statusFb.close();
+      return ERRINFO(EWriteFailure,"");
+    }
+
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QStringLiteral("%1").arg(e.what());
+    statusFb.close();
+    return ERRINFO(EWriteFailure,qmsg.toStdString());
   }
     
   statusFb.close();
@@ -667,20 +769,36 @@ int PsnFileConverter::getRawBinFileChanList( const QString& rawBinFileName, std:
   unsigned int buf;
   std::filebuf fb;
 
-  auto result1 = fb.open( rawBinFileName.toStdString(), std::ios::in | std::ios::binary );
-  if ( !result1 ) {
-    return ERRINFO(EInFileOpen,rawBinFileName.toStdString());
+  try {
+    auto result1 = fb.open( rawBinFileName.toStdString(), std::ios::in | std::ios::binary );
+    if ( !result1 ) {
+      return ERRINFO(EInFileOpen,rawBinFileName.toStdString());
+    }
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QString("file name is %s, %s").arg(rawBinFileName).arg(e.what());
+    return ERRINFO(EInFileOpen,qmsg.toStdString());
   }
 
-  size_t loc = 5 * sizeof(int);
-  // read chan mask (active adc channels)
-  fb.pubseekoff( loc, std::ios::beg, std::ios::in );
+  try {
   
-  auto num = fb.sgetn( reinterpret_cast<char *>( &buf ), sizeof(buf) );
-  if ( num != sizeof(buf) ) {
-    return ERRINFO(EReadFailure,rawBinFileName.toStdString());
+    size_t loc = 5 * sizeof(int);
+    // read chan mask (active adc channels)
+    fb.pubseekoff( loc, std::ios::beg, std::ios::in );
+  
+    auto num = fb.sgetn( reinterpret_cast<char *>( &buf ), sizeof(buf) );
+    if ( num != sizeof(buf) ) {
+      fb.close();
+      return ERRINFO(EReadFailure,rawBinFileName.toStdString());
+    }
+    buf = bswap_32( buf );
+
   }
-  buf = bswap_32( buf );
+  catch ( const std::exception& e ) {
+    QString qmsg = QStringLiteral("file name is %1, %2").arg(rawBinFileName).arg(e.what());
+    fb.close();
+    return ERRINFO(EReadFailure,qmsg.toStdString());
+  }
 
   fb.close();
 
