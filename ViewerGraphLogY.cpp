@@ -140,6 +140,9 @@ ViewerGraphLogY::ViewerGraphLogY( int _id, DataType _dataType, QWidget *_parent 
 
   connect( this->popupMenu.data(), SIGNAL( triggered( QAction * ) ),
            this, SLOT( performAction( QAction * ) ) );
+
+  connect( this->chart.data(), SIGNAL( plotAreaChanged( const QRectF & ) ),
+           this, SLOT( dimensionChange( const QRectF & ) ) );
   
   isEmpty = true;
   curSigIndex = -1;
@@ -226,12 +229,12 @@ void ViewerGraphLogY::setAxesLimits( double x0, double y0,
 
 }
 
-void ViewerGraphLogY::getPlotSize( double& w, double &h ) {
-
-  w = (double) this->chart->plotArea().width();
-  h = (double) this->chart->plotArea().height();
-
-}
+//void ViewerGraphLogY::getPlotSize( double& w, double &h ) {
+//
+//  w = (double) this->chart->plotArea().width();
+//  h = (double) this->chart->plotArea().height();
+//
+//}
 
 void ViewerGraphLogY::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QString fileName, double minX,
                               double maxX, double minY, double maxY, bool adjScales ) {

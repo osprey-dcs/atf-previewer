@@ -48,7 +48,7 @@ public:
                       double& x1, double& y1 );
   void setAxesLimits( double x0, double y0,
                       double x1, double y1, bool adjScales = true );
-  void getPlotSize( double& w, double& h );
+  //void getPlotSize( double& w, double& h );
   void setSeries ( QtCharts::QLineSeries *qls, int sigIndex, QString curFileName,
                    double minX, double maxX, double minY, double maxY, bool adjScales = true );
   void setSeries ( QtCharts::QLineSeries *qls, int sigIndex, QString curFileName,

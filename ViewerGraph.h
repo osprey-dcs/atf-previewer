@@ -48,8 +48,8 @@ public:
                       double& x1, double& y1 );
   void setAxesLimits( double x0, double y0,
                       double x1, double y1, bool adjScales = true );
-  void getPlotSize( double& w, double& h );
-  void getPlotPos( double& x0, double& y0, double& x1, double& y1 );
+  //void getPlotSize( double& w, double& h );
+  //void getPlotPos( double& x0, double& y0, double& x1, double& y1 );
   void setSeries ( QtCharts::QLineSeries *qls, int sigIndex, QString curFileName,
                    double minX, double maxX, double minY, double maxY, bool adjScales = true );
   void setSeries ( QtCharts::QLineSeries *qls, int sigIndex, QString curFileName,
@@ -82,6 +82,7 @@ signals:
 
 private slots:
   void performAction( QAction *a );
+  //void dimensionChange( const QRectF &r );  // in base class
 
 private:
   bool inside( int x, int y );

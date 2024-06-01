@@ -142,6 +142,9 @@ ViewerGraph::ViewerGraph( int _id, DataType _dataType, QWidget *_parent ) :
 
   connect( this->popupMenu.data(), SIGNAL( triggered( QAction * ) ),
            this, SLOT( performAction( QAction * ) ) );
+
+  this->connect( this->chart.data(), SIGNAL( plotAreaChanged( const QRectF & ) ),
+                 this, SLOT( dimensionChange( const QRectF & ) ) );
   
   isEmpty = true;
   curSigIndex = -1;
@@ -284,21 +287,21 @@ void ViewerGraph::setAxesLimits( double x0, double y0,
 
 }
 
-void ViewerGraph::getPlotPos( double& x0, double& y0, double& x1, double& y1 ) {
+//void ViewerGraph::getPlotPos( double& x0, double& y0, double& x1, double& y1 ) {
 
-  x0 = (double) this->chart->pos().x();
-  y0 = (double) this->chart->pos().y();
-  x1 = (double) this->chart->pos().x() + (double) this->chart->size().width();
-  y1 = (double) this->chart->pos().y() + (double) this->chart->size().height();
+//  x0 = (double) this->chart->pos().x();
+//  y0 = (double) this->chart->pos().y();
+//  x1 = (double) this->chart->pos().x() + (double) this->chart->size().width();
+//  y1 = (double) this->chart->pos().y() + (double) this->chart->size().height();
 
-}
+//}
 
-void ViewerGraph::getPlotSize( double& w, double &h ) {
+//void ViewerGraph::getPlotSize( double& w, double &h ) {
 
-  w = (double) this->chart->size().width();
-  h = (double) this->chart->size().height();
+//  w = (double) this->chart->size().width();
+//  h = (double) this->chart->size().height();
 
-}
+//}
 
 void ViewerGraph::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, QString fileName, double minX,
                               double maxX, double minY, double maxY, bool adjScales ) {
@@ -607,8 +610,10 @@ void ViewerGraph::wheelEvent( QWheelEvent *ev ) {
 
 void ViewerGraph::mousePressEvent( QMouseEvent *ev ) {
 
+  //std::cout << "mousePressEvent" << std::endl;
+
   if ( isEmpty ) {
-    //std::cout << "empty" << std::endl;
+    std::cout << "empty" << std::endl;
     return;
   }
   
@@ -626,6 +631,9 @@ void ViewerGraph::mousePressEvent( QMouseEvent *ev ) {
 
   this->getPlotSize( plotW, plotH );
   this->getAxesLimits(  chartXMin, chartYMin, chartXMax, chartYMax );
+
+  //std::cout << "plotX = " << plotX << ", plotY = " << plotY << ", plotW = " << plotW << ", plotH = " << plotH << std::endl;
+  //std::cout << "chartXMin = " << chartXMin << ", chartXMax = " << chartXMax << ", chartYMin = " << chartYMin << ", chartYMax = " << chartYMax << std::endl;
 
   if ( ( chartXMax - chartXMin ) != 0 ) chartXRange = chartXMax - chartXMin;
   if ( ( chartYMax - chartYMin ) != 0 ) chartYRange = chartYMax - chartYMin;
@@ -1146,3 +1154,69 @@ int imag, inorm, imin, imax, inc1, inc2, inc5, imin1, imax1,
   num_label_ticks = idiv + 1;
 
 }
+
+// in base class
+//void ViewerGraph::dimensionChange( const QRectF &r ) {
+
+//  std::cout << "ViewerGraph::dimensionChange" << std::endl;
+
+//  std::cout << "r.x() = " << r.x() << std::endl;
+//  std::cout << "r.y() = " << r.y() << std::endl;
+//  std::cout << "r.size().width() = " << r.size().width() << std::endl;
+//  std::cout << "r.size().height() = " << r.size().height() << std::endl;
+
+  //double x0Old = x0;
+  //double x1Old = x1;
+  //double wOld = w;
+  //double leftOld = leftPos;
+  //double rightOld = rightPos;
+
+  //std::cout << "x0Old = " << x0Old << ", wOld = " << wOld << ", leftOld = " << leftOld << ", rightOld = " <<
+  //  rightOld << std::endl;
+
+  //return;
+  
+  //x0 = r.x();
+  //y0 = r.y();
+  //w = r.size().width();
+  //h = r.size().height();
+  //x1 = x0 + w;
+  //y1 = y0 + h;
+
+  //yMin = y0;
+  //yMax = y1;
+
+  //haveDimensions = true;
+
+  //if ( requestSetInitialStateAtLeastOnce ) {
+  
+  //  leftPos = w / wOld * ( leftOld - x0Old ) + x0;
+    
+  //  rightPos = w / wOld * ( rightOld - x1Old ) + x1;
+
+  //  leftIndicator->setLine( leftPos,
+  //                          yMin, leftPos, yMax );
+  //  leftIndicator->update();
+
+  //  rightIndicator->setLine( rightPos,
+  //                           yMin, rightPos, yMax );
+  //  rightIndicator->update();  
+  
+    //////////std::cout << "x0 = " << x0 << ", w = " << w << ", left = " << leftPos << ", right = " <<
+    //  rightPos << std::endl;
+
+  //  emit roiRange( graph->id, leftPos, rightPos );
+
+  //}
+  //else {
+
+  //  setInitialState();
+
+  //}
+
+  //setInitialState();
+  
+  //if ( requestSetInitialState ) setInitialState();
+  //if ( requestSetActive ) setActive( true );
+
+//}

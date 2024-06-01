@@ -32,6 +32,8 @@ ViewerGraphBase::ViewerGraphBase( int _id, DataType _dataType, QWidget *_parent 
   id = _id;
   parent1 = _parent;
   dataType = _dataType;
+  haveDimensions = false;
+  curX0 = curY0 = curX1 = curY1 = curW = curH = 0;
 
 }
 
@@ -61,9 +63,31 @@ void ViewerGraphBase::setAxesLimits( double x0, double y0,
 
 void ViewerGraphBase::getPlotSize( double& w, double &h ) {
 
+  if ( !haveDimensions ) {
+    w = (double) this->chart->size().width();
+    h = (double) this->chart->size().height();
+  }
+  else {
+    w = curW;
+    h = curH;
+  }
+
 }
 
 void ViewerGraphBase::getPlotPos( double& x0, double& y0, double& x1, double& y1 ) {
+
+  if ( !haveDimensions ) {
+    x0 = (double) this->chart->pos().x();
+    y0 = (double) this->chart->pos().y();
+    x1 = (double) this->chart->pos().x() + (double) this->chart->size().width();
+    y1 = (double) this->chart->pos().y() + (double) this->chart->size().height();
+  }
+  else {
+    x0 = curX0;
+    y0 = curY0;
+    x1 = curX1;
+    y1 = curY1;
+  }
 
 }
 
@@ -169,5 +193,25 @@ void ViewerGraphBase::panVertical ( double panDist ) {
 
 void ViewerGraphBase::getBetterAxesParams ( double min, double max, int ticks,
                                         double& adj_min, double& adj_max, int& num_label_ticks, bool adjScales ) {
+
+}
+
+void ViewerGraphBase::dimensionChange( const QRectF &r ) {
+
+  //std::cout << "ViewerGraphBase::dimensionChange" << std::endl;
+
+  //std::cout << "r.x() = " << r.x() << std::endl;
+  //std::cout << "r.y() = " << r.y() << std::endl;
+  //std::cout << "r.size().width() = " << r.size().width() << std::endl;
+  //std::cout << "r.size().height() = " << r.size().height() << std::endl;
+
+  curX0 = r.x();
+  curY0 = r.y();
+  curW = r.size().width();
+  curH = r.size().height();
+  curX1 = curX0 + curW;
+  curY1 = curY0 + curH;
+
+  haveDimensions = true;
 
 }

@@ -131,6 +131,8 @@ public:
   QString curFileName;
   QRubberBand *qrb;
   ViewStack views;
+  bool haveDimensions;
+  int curX0, curY0, curX1, curY1, curW, curH;
 
 //signals:
 //  virtual void horizontalPan( int id, int curSigIndex, QString& curFileName,
@@ -147,6 +149,7 @@ public:
 //
 private slots:
   virtual void performAction( QAction *a );
+  virtual void dimensionChange( const QRectF &r );
 
 private:
   virtual bool inside( int x, int y );
