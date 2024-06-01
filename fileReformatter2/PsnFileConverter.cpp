@@ -165,7 +165,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
       }
 
       loc += sizeof(BinHdrPsnaType);
-      dataLen = bodyLen - 24;
+      dataLen = bodyLen - sizeof(BinHdrPsnaType) + 16;
 
     }
     else if ( headerType == "PSNB" ) {
@@ -200,10 +200,18 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
 
       loc += sizeof(BinHdrPsnbType);
 
-      dataLen = bodyLen - 40;
+      //std::cout << "bodyLen = " << bodyLen << std::endl;
+
+      //std::cout << "sizeof(BinHdrPsnbType) = " << sizeof(BinHdrPsnbType) << std::endl;
+
+      //dataLen = bodyLen - 40;
+      //std::cout << "dataLen = " << dataLen << std::endl;
+
+      dataLen = bodyLen - sizeof(BinHdrPsnbType) + 16;
+      //std::cout << "dataLen = " << dataLen << std::endl;
 
     }
-    else { // for this to work, body len of any unknown record type must always exclude 24 bytes of the header
+    else {
       
       bodyLen = bswap_32( binHeaderGeneric.bodyLen );
       rcvSeconds = 0;
@@ -218,7 +226,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
       hihi = 0;
 
       loc += sizeof(BinHdrGenericType);
-      dataLen = bodyLen - 24;
+      dataLen = bodyLen;
       skip = true;
 
     }
@@ -708,6 +716,21 @@ int PsnFileConverter::writeStatusOutputFile ( unsigned numValues,
 
   std::streamsize sizeInBytes = numValues * sizeof(unsigned int) * PsnFileConverter::NumStatusFields;
 
+  double time;
+  for ( int i=0; i<numValues; i++ ) {
+
+    if ( firstStatusTime ) {
+      baseTime = (double) array[i][SECS] + (double) array[i][NANOSECS] * 1e-9;
+      firstStatusTime = false;
+    }
+
+    time = (double) array[i][SECS] + (double) array[i][NANOSECS] * 1e-9 - baseTime;
+    
+    //std::cout << i << ":  time = " << std::setprecision(14) << time <<
+    //  ", stat = " << std::hex << array[i][STATUS] << std::dec << std::endl;
+
+  }
+  
   try {
     
     auto num = statusFb.sputn( (const char *) array, sizeInBytes );

@@ -101,8 +101,8 @@ private:
     unsigned int seqLow;
     unsigned int seconds;
     unsigned int nanoseconds;
-    int lo;
     int lolo;
+    int lo;
     int hi;
     int hihi;
   } BinHdrPsnbType, *BinHdrPsnbPtr;
@@ -112,10 +112,8 @@ private:
   typedef struct BinHdrGenericTag {
     char id[4];
     unsigned int bodyLen;
-    unsigned int dummy1;
-    unsigned int dummy2;
-    unsigned int dummy3;
-    unsigned int dummy4;
+    unsigned int rcvSeconds;
+    unsigned int rcvNanoseconds;
   } BinHdrGenericType, *BinHdrGenericPtr;
   #pragma pack(pop)
 
@@ -124,6 +122,8 @@ private:
   BinHdrGenericType binHeaderGeneric;
 
   bool firstSeqNum = true;
+  bool firstStatusTime = true;
+  double baseTime = 0.0;
   uint64_t prevSeqNum;
 
 };

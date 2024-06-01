@@ -192,7 +192,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     QJsonValue jvNew;
     QString qsKey {"OutDataFile"};
 
-    jobjNew["AcquisitionId"] = jobj["AcquisitionId"];
+    jobjNew["CCCR"] = jobj["CCCR"];
     jobjNew["AcquisitionId"] = jobj["AcquisitionId"];
     jobjNew["AcquisitionStartDate"] = jobj["AcquisitionStartDate"];
     jobjNew["AcquisitionEndDate"] = jobj["AcquisitionEndDate"];
@@ -349,6 +349,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
              qjo["Chassis"].toDouble(),
              qjo["Channel"].toDouble(),
              jv1["OutDataFile"].toString() );
+             jv1["Desc5"].toString(),
 
              sigs[jv1["Name"].toString()] = tp;
              sigNameList.push_back( jv1["Name"].toString() );
@@ -371,6 +372,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
              qjo["Chassis"].toDouble(),
              qjo["Channel"].toDouble(),
              jv1["OutDataFile"].toString() );
+             jv1["Desc5"].toString(),
 
              sigsByIndex[jv1["SigNum"].toDouble()] = tp1;
 
