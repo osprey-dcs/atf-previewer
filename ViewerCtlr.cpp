@@ -2007,8 +2007,9 @@ int ViewerCtlr::uff58bExport ( void ) {
     st = uff58b->set80CharRec( 2, std::get<DataHeader::DESC>( indexMap[sigIndex] ) );
     st = dh->getString( "AcquisitionStartDate", str );
     st = uff58b->set80CharRec( 3, str );
-    st = uff58b->set80CharRec( 4, "NONE" );
-    st = uff58b->set80CharRec( 5, std::get<DataHeader::IDLINE5>( indexMap[sigIndex] ) );
+    st = dh->getString( "CCCR", str );
+    st = uff58b->set80CharRec( 4, str );
+    st = uff58b->set80CharRec( 5, std::get<DataHeader::DESC5>( indexMap[sigIndex] ) );
 
     int funcType = 1; // general or unknown - (0 to 27 possible values)
     int dataCategory = std::get<DataHeader::TYPE>( indexMap[sigIndex] ); // (21 possible values)

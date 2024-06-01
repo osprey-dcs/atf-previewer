@@ -78,13 +78,13 @@ class DataHeader : public ErrHndlr {
     static const int ADDRESS_CHASSIS {12};
     static const int ADDRESS_CHANNEL {13};
     static const int DATA_FILENAME {14};
-    static const int IDLINE5 {15};
+    static const int DESC5 {15};
 
     QJsonDocument jd;
     QJsonObject jo;
     //                            0        1       2          3        4       5        6        7         8        9        10        11        12            13            14
-    //                            egu      slope   intercept  sig num  type    Y label  desc     rsp node  rsp dir  ref node  ref dir  coupling  addr chassis  addr channel  data filename
-    //std::map<QString,std::tuple<QString, double, double,    double,  double, QString, QString, QString,  double,  QString,  double,  double,   double,       double,       QString>> sigs;
+    //                            egu      slope   intercept  sig num  type    Y label  desc     rsp node  rsp dir  ref node  ref dir  coupling  addr chassis  addr channel  data filename   desc5
+    //std::map<QString,std::tuple<QString, double, double,    double,  double, QString, QString, QString,  double,  QString,  double,  double,   double,       double,       QString,        QString>> sigs;
     //std::list<QString> sigNameList;
 
     DataHeaderMapType sigs;
