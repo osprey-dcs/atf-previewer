@@ -98,41 +98,6 @@ int BinDataBase::getRecordRangeForTime( QString fileName, double sampleRate, dou
 
 }
 
-int BinDataBase::getMaxElements2 ( QString filename, int sigIndex, int64_t& max ) {
-
-  return 0;
-
-}
-    
-int BinDataBase::genLineSeries2 ( QString filename,
-                            int sigIndex,
-                            double slope,
-                            double intercept,
-                            int plotAreaWidthPixels,
-                            double startTimeInSec,
-                            double endTimeInSec,
-                            double dataTimeIncrementInSec,
-                            int64_t& numPts,
-                            QtCharts::QLineSeries& qls,
-                            double& miny,
-                            double& maxy,
-                            int64_t maxFft,
-                            int64_t& numFft,
-                            fftw_complex *fftArray ) {
-    
-  return 0;
-
-}
-
-int64_t BinDataBase::readTraceData2 (
- std::filebuf& fb,
- int *buf,
- int64_t readSizeInbytes ) {
-
-  return 0;
-
-}
-
 void BinDataBase::inputSeekToStartOfData( std::filebuf &fb, int64_t firstDataByte ) {
 
   //int64_t headerSize = sizeof(numSigbytes) + sizeof(version);

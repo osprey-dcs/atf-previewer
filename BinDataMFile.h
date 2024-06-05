@@ -77,26 +77,6 @@ class BinDataMFile : public BinDataBase {
 
   int64_t readTraceData( std::filebuf& fb, int *buf, int64_t readSizeInbytes );
 
-  int getMaxElements2 ( QString filename, int sigIndex, int64_t& max );
-
-  int genLineSeries2 ( QString filename,
-                     int sigIndex,
-                     double slope,
-                     double intercept,
-                     int plotAreaWidthPixels,
-                     double startTimeInSec,
-                     double endTimeInSec,
-                     double dataTimeIncrementInSec,
-                     int64_t& numPts,
-                     QtCharts::QLineSeries& qls,
-                     double& miny,
-                     double& maxy,
-                     int64_t maxFft,
-                     int64_t& numFft,
-                     fftw_complex *array  );
-
-  int64_t readTraceData2 ( std::filebuf& fb, int *buf, int64_t readSizeInbytes );
-
   void updateLineSeries (
     int64_t readOpCount,
     QPointF *pts,
