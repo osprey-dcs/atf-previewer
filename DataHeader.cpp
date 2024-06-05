@@ -29,8 +29,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include "DataHeader.h"
 
-DataHeader::DataHeader() : ErrHndlr( NumErrs, errMsgs ) {
-
+DataHeader::DataHeader() : ErrHndlr ( DataHeader::NumErrs, DataHeader::errMsgs ) {
 }
 
 DataHeader::~DataHeader() {
@@ -53,7 +52,7 @@ int DataHeader::getDouble(const QString &s, double& d ) {
     return ERRINFO(ETypeD,"");
   }
 
-  return 0;
+  return ESuccess;
 
 }
 
@@ -61,7 +60,7 @@ int DataHeader::setDouble(const QString &s, const double& d ) {
 
   jo[s] = d;
 
-  return 0;
+  return ESuccess;
 
 }
 
@@ -93,7 +92,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     return ERRINFO(ETypeS,"");
   }
 
-  return 0;
+  return ESuccess;
 
 }
 
@@ -110,7 +109,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
       return ERRINFO(ETypeS,"");
     }
 
-    return 0;
+    return ESuccess;
 
   }
 
@@ -118,7 +117,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
 
     jo[s] = ss;
 
-    return 0;
+    return ESuccess;
 
   }
 
@@ -128,6 +127,9 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     
     QJsonObject::iterator it = jobj.begin();
     while ( it != jobj.end() ) {
+      //QString qsk = it.key();
+      //QString qsv = it.value().toString();
+      //std::cout << qsk.toStdString() << "  " << qsv.toStdString() << std::endl;
       jobj.erase( it );
       it = jobj.begin();
     }
@@ -167,9 +169,17 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     // We only copy json records if the record chassis number matches the parameter chassisNum and
     // fileMap[record signal number] is non-blank
 
+    bool result;
+    
     QFile inf( inFile );
-    bool result = inf.open( QIODevice::ReadOnly );
-    if ( !result ) return ERRINFO(EInFileOpen,inFile.toStdString());
+    try {
+      result = inf.open( QIODevice::ReadOnly );
+      if ( !result ) return  ERRINFO(EInFileOpen,inFile.toStdString());
+    }
+    catch ( const std::exception& e ) {
+      QString qmsg = QStringLiteral("file name is %1, %2").arg(inFile).arg(e.what());
+      return ERRINFO(EInFileOpen,qmsg.toStdString());
+    }
     QString contents = inf.readAll();
     inf.close();
 
@@ -224,11 +234,10 @@ int DataHeader::getString(const QString &s, QString& qs ) {
                                                         // be discarded below
           jobj1New[qsKey] = (QJsonValue) QString( outputDatafileName );
 
-          if ( verbose ) std::cout << "rec chassis num = " << recChassisNum << std::endl;
-          if ( verbose ) std::cout << "rec sig num = " << recSigNum << ", outputDatafileName = " <<
-           outputDatafileName.toStdString() << std::endl;
-          
           if ( doCopy( recChassisNum, recSigNum, chassisNum, fileMap ) ) {
+            if ( verbose ) std::cout << "rec chassis num = " << recChassisNum << std::endl;
+            if ( verbose ) std::cout << "rec sig num = " << recSigNum << ", outputDatafileName = " <<
+              outputDatafileName.toStdString() << std::endl;
             jvaNew.append( jobj1New );
           }
           
@@ -249,44 +258,60 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     if ( verbose ) std::cout << "write out file " << outFile.toStdString() << std::endl;
 
     QFile outf{ outFile };
-    result = outf.open( QIODevice::WriteOnly );
-    if ( result ) {
+    try {
+      result = outf.open( QIODevice::WriteOnly );
+      if ( result ) {
         outf.write(jdocNew.toJson(QJsonDocument::Indented));
         outf.close();
+      }
+      else {
+        return ERRINFO(EOutFileOpen,outFile.toStdString());
+      }
     }
-    else {
-      std::cout << "Viewer header file could not be opened" << std::endl;
-      return ERRINFO(EOutFileOpen,outFile.toStdString());
+    catch ( const std::exception& e ) {
+      QString qmsg = QStringLiteral("file name is %1, %2").arg(outFile).arg(e.what());
+      return ERRINFO(EOutFileOpen,qmsg.toStdString());
     }
     
-    return 0;
+    return ESuccess;
 
   }
 
-  int DataHeader::update( QString filename ) {
+  int DataHeader::update( const QString& filename ) {
 
     jd.setObject(jo);
 
     QFile outf{ filename };
-    bool result = outf.open( QIODevice::WriteOnly );
-    if ( result ) {
+    try {
+      bool result = outf.open( QIODevice::WriteOnly );
+      if ( result ) {
         outf.write(jd.toJson(QJsonDocument::Indented));
         outf.close();
+      }
+      else {
+        return ERRINFO(EOutFileOpen,filename.toStdString());
+      }
     }
-    else {
-      std::cout << "Viewer header file could not be opened" << std::endl;
-      return ERRINFO(EOutFileOpen,filename.toStdString());
+    catch ( const std::exception& e ) {
+      QString qmsg = QStringLiteral("file name is %1, %2").arg(filename).arg(e.what());
+      return ERRINFO(EOutFileOpen,qmsg.toStdString());
     }
 
-    return 0;
+    return ESuccess;
 
   }
 
-  int DataHeader::readContents ( QString filename ) {
+  int DataHeader::readContents ( const QString& filename ) {
 
     QFile inf( filename );
-    bool result = inf.open( QIODevice::ReadOnly );
-    if ( !result ) return ERRINFO(EInFileOpen,filename.toStdString());
+    try {
+      bool result = inf.open( QIODevice::ReadOnly );
+      if ( !result ) return ERRINFO(EInFileOpen,filename.toStdString());
+    }
+    catch ( const std::exception& e ) {
+      QString qmsg = QStringLiteral("file name is %1, %2").arg(filename).arg(e.what());
+      return ERRINFO(EInFileOpen,qmsg.toStdString());
+    }
     QString contents = inf.readAll();
     inf.close();
 
@@ -359,7 +384,7 @@ int DataHeader::getString(const QString &s, QString& qs ) {
     
     sigNameList.sort();
 
-    return 0;
+    return ESuccess;
 
   }
 
@@ -371,35 +396,35 @@ int DataHeader::getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu
   slope = 1.0;
   intercept = 0.0;
   
-  for ( auto it = sigs.begin(); it != sigs.end(); it++ ) {
+  for (auto & sig : sigs) {
 
-    QString qs = it->first;
+    QString qs = sig.first;
     
-    if ( sigIndex == ( std::get<SIGINDEX>( it->second ) ) ) {
+    if ( sigIndex == ( std::get<SIGINDEX>( sig.second ) ) ) {
 
       name = qs;
-      egu = std::get<EGU>( it->second );
-      slope  = std::get<SLOPE>( it->second );
-      intercept = std::get<INTERCEPT>( it->second );
+      egu = std::get<EGU>( sig.second );
+      slope  = std::get<SLOPE>( sig.second );
+      intercept = std::get<INTERCEPT>( sig.second );
 
-      return 0;
+      return ESuccess;
 
     }
 
   }
 
-  return ERRINFO(ESigIndex,"");
+  return  ERRINFO(ESigIndex,"");
 
 }
 
-const DataHeader::DataHeaderListType& DataHeader::getNameList() {
+const DataHeader::DataHeaderListType& DataHeader::getNameList() const {
   return sigNameList;
 }
 
-const DataHeader::DataHeaderMapType& DataHeader::getNameMap() {
+const DataHeader::DataHeaderMapType& DataHeader::getNameMap() const {
   return sigs;
-};
+}
 
-const DataHeader::DataHeaderIndexMapType& DataHeader::getIndexMap() {
+const DataHeader::DataHeaderIndexMapType& DataHeader::getIndexMap() const {
   return sigsByIndex;
-};
+}

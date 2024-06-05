@@ -54,11 +54,11 @@ class DataHeader : public ErrHndlr {
   
     typedef std::map<QString,std::tuple<QString, double, double, double,
                                         double, QString, QString, double, double, double, double,
-                                        double, double, double, QString>> DataHeaderMapType;
+                                        double, double, double, QString, QString>> DataHeaderMapType;
 
     typedef std::map<double,std::tuple<QString, double, double, QString,
                                        double, QString, QString, double, double, double, double,
-                                       double, double, double, QString>> DataHeaderIndexMapType;
+                                       double, double, double, QString, QString>> DataHeaderIndexMapType;
   
     typedef std::list<QString> DataHeaderListType;
 

@@ -46,12 +46,12 @@ class DataHeader : public ErrHndlr {
     inline static const std::string errMsgs[NumErrs] {
       { "Success" },
       { "Input file open failure: " },
-      { "Nonexistent key or type mismatch, expected double" },
-      { "Nonexistent key or type mismatch, expected string" },
+      { "Type mismatch, expected double" },
+      { "Type mismatch, expected string" },
       { "Output file open failure: " },
       { "Unknown signal index failure" }
     };
-
+  
     typedef std::map<QString,std::tuple<QString, double, double, double,
                                         double, QString, QString, double, double, double, double,
                                         double, double, double, QString, QString>> DataHeaderMapType;
@@ -82,9 +82,9 @@ class DataHeader : public ErrHndlr {
 
     QJsonDocument jd;
     QJsonObject jo;
-    //                            0        1       2          3        4       5        6        7         8        9        10        11        12            13            14
-    //                            egu      slope   intercept  sig num  type    Y label  desc     rsp node  rsp dir  ref node  ref dir  coupling  addr chassis  addr channel  data filename   desc5
-    //std::map<QString,std::tuple<QString, double, double,    double,  double, QString, QString, QString,  double,  QString,  double,  double,   double,       double,       QString,        QString>> sigs;
+    //                            0        1       2          3        4       5        6        7         8        9        10        11        12            13            14             15
+    //                            egu      slope   intercept  sig num  type    Y label  desc     rsp node  rsp dir  ref node  ref dir  coupling  addr chassis  addr channel  data filename  desc5
+    //std::map<QString,std::tuple<QString, double, double,    double,  double, QString, QString, QString,  double,  QString,  double,  double,   double,       double,       QString,       QString>> sigs;
     //std::list<QString> sigNameList;
 
     DataHeaderMapType sigs;
@@ -108,18 +108,18 @@ class DataHeader : public ErrHndlr {
     int getString(const QString &s, QString& ss );
     int getString(const QString &s, std::string& ss );
     int setString(const QString &s, const QString& ss );
-  int writeNewHeaderFile ( int chassisNum, std::map<int,QString>& fileMap, const QString& inFile,
+    int writeNewHeaderFile ( int chassisNum, std::map<int,QString>& fileMap, const QString& inFile,
                              const QString& outFile, bool verbose=false );
-    int update( QString filename );
-    int readContents ( QString filename );
+    int update( const QString& filename );
+    int readContents ( const QString& filename );
     int getSigInfoBySigIndex ( int sigIndex, QString& name, QString& egu,
                                double& slope, double& intercept );
 
-    const DataHeaderListType& getNameList();
+    const DataHeaderListType& getNameList() const;
 
-    const DataHeaderMapType& getNameMap();
+    const DataHeaderMapType& getNameMap() const;
   
-    const DataHeaderIndexMapType& getIndexMap();
+    const DataHeaderIndexMapType& getIndexMap() const;
   
   };
 
