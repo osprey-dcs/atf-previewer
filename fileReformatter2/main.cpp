@@ -101,9 +101,10 @@ int main ( int argc, char **argv ) {
     std::cout << "output dir and file root = " << outBinFileRoot.toStdString() << std::endl;
   }
 
-  std::shared_ptr<DataHeader> dh = std::make_shared<DataHeader>();
-
   int st;
+
+  std::shared_ptr<DataHeader> dh = std::make_shared<DataHeader>();
+  st = dh->readContents( configJsonFile );
 
   QString inputRawDataFileType;
   std::shared_ptr<BinFileType> bft = std::shared_ptr<BinFileType>( new BinFileType() );

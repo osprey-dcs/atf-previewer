@@ -25,9 +25,10 @@ class PsnFileConverter : public FileConverter {
 public:
 
   static constexpr unsigned int dataFileVersion[] { 1,0,0 };
-  
-  static constexpr unsigned int statusFileVersion[] { 1,0,0 };
 
+  static const int NumStatusVersion {3};
+  static const int NumStatusFileType {16};
+  static const int NumCccr {80};
   static const unsigned int NumStatusFields {10};
 
   // for writing status file
@@ -43,7 +44,7 @@ public:
   static const int HIHI        = 9;
 
   PsnFileConverter();
-  int convert(  int chassisIndex, std::list<int>& chanList, int startingSigIndex, const DataHeader *dh,
+  int convert(  int chassisIndex, std::list<int>& chanList, int startingSigIndex, DataHeader *dh,
                 const QString& rawDataFile, const QString& binDataFileDir, const QString& simpleName,
                 bool verbose=false );
   
@@ -70,7 +71,12 @@ private:
                                       const QString& simpleName );
   int createAndOpenStatusOutputFile ( int chassisIndex, const QString& binDataFileDir, 
                                       const QString& simpleName, bool verbose=false );
-  int writeStatusOutputFile ( unsigned numValues, const unsigned int array[Cnst::MaxStatus][NumStatusFields] );
+  void statusHdrSetCccr( QString& cccr );
+  void statusHdrSetNumBytes( const int64_t numBytes );
+  int writeStatusHdr ( void );
+  void initStatusOutputFile( void );
+  int writeStatusOutputFile ( const int64_t numValues,
+                              const unsigned int array[Cnst::MaxStatus][NumStatusFields] );
   int closeStatusOutputFile ( void );
   int getRawBinFileChanList( const QString& rawBinFileName, std::list<int>& chanList );
 
@@ -117,14 +123,28 @@ private:
   } BinHdrGenericType, *BinHdrGenericPtr;
   #pragma pack(pop)
 
+  static constexpr unsigned int statusFileVersion[] { 2,0,0 };
+
+  #pragma pack(push, 1)
+  typedef struct StatusHdrTag {
+    unsigned int version[NumStatusVersion];
+    char fileType[NumStatusFileType];
+    char cccr[NumCccr];
+    uint64_t recSize;
+    uint64_t numBytes;
+    unsigned int summaryValues[PsnFileConverter::NumStatusFields];
+  } StatusHdrType, StatusHdrPtr;
+
   BinHdrPsnaType binHeaderPsna;
   BinHdrPsnbType binHeaderPsnb;
   BinHdrGenericType binHeaderGeneric;
 
+  DataHeader *dh = nullptr;
   bool firstSeqNum = true;
   bool firstStatusTime = true;
   double baseTime = 0.0;
   uint64_t prevSeqNum;
+  StatusHdrType statusHdr;
 
 };
 

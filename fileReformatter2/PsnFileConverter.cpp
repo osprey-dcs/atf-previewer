@@ -10,13 +10,26 @@
 #include "PsnFileConverter.h"
 
 PsnFileConverter::PsnFileConverter ( ) {
+
+  memset( (void *) &statusHdr, 0, sizeof( StatusHdrType ) );
+  for ( int i=0; i<NumStatusVersion; i++ ) {
+    statusHdr.version[i] = statusFileVersion[i];
+  }
+  strncpy( statusHdr.fileType, "PSN Status", NumStatusFileType );
+  statusHdr.fileType[NumStatusFileType-1] = 0;
+  // statusHdr.cccr will be updated later
+  statusHdr.recSize = (int64_t) sizeof( unsigned int ) * PsnFileConverter::NumStatusFields;
+  statusHdr.numBytes = 0; // will be updated just before file close
+  for ( auto i=0; i<PsnFileConverter::NumStatusFields; i++ ) {
+    statusHdr.summaryValues[i] = 0;
+  }
+  
 }
 
 int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int startingSigIndex,
-                                const DataHeader *dh, const QString &rawDataFile, const QString& binDataFileDir,
+                                DataHeader *_dh, const QString &rawDataFile, const QString& binDataFileDir,
                                 const QString& simpleName, bool verbose ) {
 
-  (void)dh; // unused
   // first cut will be single threaded
 
   // Open rawDataFile
@@ -35,6 +48,8 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
   // signal files.
 
   //sizeOfOneFile = 0;
+
+  dh = _dh;
 
   auto buf3BytesPerWord = std::unique_ptr<unsigned int[]>( new unsigned int[Cnst::Max3PerWord] );
   //unsigned int buf3BytesPerWord[Cnst::Max3PerWord];
@@ -60,6 +75,13 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
   QString headerType;
   firstSeqNum = true;
 
+  QString cccr;
+  stat = dh->getString( "CCCR", cccr );
+  if ( stat ) {
+    dh->dspErrMsg( stat );
+  }
+  statusHdrSetCccr( cccr );
+  
   try {
     auto result = fb.open( rawDataFile.toStdString(), std::ios::in | std::ios::binary );
     if ( !result ) {
@@ -84,7 +106,7 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
     dspErrMsg( stat );
     return ERRINFO(stat,this->arg);
   }
-  
+
   unsigned int bodyLen;
   unsigned int status;
   unsigned int chanMask;
@@ -686,32 +708,73 @@ int PsnFileConverter::createAndOpenStatusOutputFile ( int chassisIndex, const QS
     return ERRINFO(EStatFileOpen,qmsg.toStdString());
   }
 
-  try {
+  //try {
   
     // write version and zero the size (in bytes) field
-    auto num = statusFb.sputn( (char *) statusFileVersion, sizeof(statusFileVersion) );
-    if ( num != sizeof(statusFileVersion) ) {
-      return ERRINFO(EWriteFailure,fname.toStdString());
-    }
+    //auto num = statusFb.sputn( (char *) statusFileVersion, sizeof(statusFileVersion) );
+    //if ( num != sizeof(statusFileVersion) ) {
+    //  return ERRINFO(EWriteFailure,fname.toStdString());
+    //}
 
-    num = statusFb.sputn( (char *) &sizeInBytes, sizeof(sizeInBytes) );
-    if ( num != sizeof(sizeInBytes) ) {
-      return ERRINFO(EWriteFailure,fname.toStdString());
-    }
+    //num = statusFb.sputn( (char *) &sizeInBytes, sizeof(sizeInBytes) );
+    //if ( num != sizeof(sizeInBytes) ) {
+    //  return ERRINFO(EWriteFailure,fname.toStdString());
+    //}
 
-  }
-  catch ( const std::exception& e ) {
-    QString qmsg = QStringLiteral("file name is %1, %2").arg(fname).arg(e.what());
-    return ERRINFO(EWriteFailure,qmsg.toStdString());
-  }
+  //}
+  //catch ( const std::exception& e ) {
+    //QString qmsg = QStringLiteral("file name is %1, %2").arg(fname).arg(e.what());
+    //  return ERRINFO(EWriteFailure,qmsg.toStdString());
+  //}
 
-  statusFileLoc = 20;
+  //statusFileLoc = 20;
 
   return ESuccess;
 
 }
 
-int PsnFileConverter::writeStatusOutputFile ( unsigned numValues,
+void PsnFileConverter::statusHdrSetCccr( QString& cccr ) {
+
+  strncpy( statusHdr.cccr, cccr.toStdString().c_str(), NumCccr );
+  statusHdr.cccr[NumCccr-1] = 0;
+
+}
+
+void PsnFileConverter::statusHdrSetNumBytes( const int64_t numBytes ) {
+
+  statusHdr.numBytes = numBytes;
+
+}
+
+int PsnFileConverter::writeStatusHdr ( void ) {
+
+  try {
+
+    int64_t loc = 0;
+    statusFb.pubseekoff( loc, std::ios::beg, std::ios::out );
+
+    auto num = statusFb.sputn( (const char *) &statusHdr, sizeof(StatusHdrType) );
+    if ( num != sizeof(StatusHdrType) ) {
+      return ERRINFO(EWriteFailure,"");
+    }
+
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QStringLiteral("%1").arg(e.what());
+    return ERRINFO(EWriteFailure,qmsg.toStdString());
+  }
+
+  return ESuccess;
+
+}
+
+void PsnFileConverter::initStatusOutputFile( void ) {
+
+  firstStatusTime = true;
+
+}
+
+int PsnFileConverter::writeStatusOutputFile ( const int64_t numValues,
                                               const unsigned int array[Cnst::MaxStatus][PsnFileConverter::NumStatusFields] ) {
 
   std::streamsize sizeInBytes = numValues * sizeof(unsigned int) * PsnFileConverter::NumStatusFields;
@@ -719,7 +782,14 @@ int PsnFileConverter::writeStatusOutputFile ( unsigned numValues,
   double time;
   for ( int i=0; i<numValues; i++ ) {
 
+    statusHdr.summaryValues[STATUS] |= array[i][STATUS];
+    statusHdr.summaryValues[LO] |= array[i][LO];
+    statusHdr.summaryValues[LOLO] |= array[i][LOLO];
+    statusHdr.summaryValues[HI] |= array[i][HI];
+    statusHdr.summaryValues[HIHI] |= array[i][HIHI];
+
     if ( firstStatusTime ) {
+      statusFileLoc = (int64_t) sizeof(StatusHdrType);
       baseTime = (double) array[i][SECS] + (double) array[i][NANOSECS] * 1e-9;
       firstStatusTime = false;
     }
@@ -730,8 +800,10 @@ int PsnFileConverter::writeStatusOutputFile ( unsigned numValues,
     //  ", stat = " << std::hex << array[i][STATUS] << std::dec << std::endl;
 
   }
-  
+
   try {
+    
+    statusFb.pubseekoff( statusFileLoc, std::ios::beg, std::ios::out );
     
     auto num = statusFb.sputn( (const char *) array, sizeInBytes );
     if ( num == 0 ) {
@@ -748,35 +820,26 @@ int PsnFileConverter::writeStatusOutputFile ( unsigned numValues,
   }
 
   statusFileLoc += sizeInBytes;
- 
- return ESuccess;
+
+  return ESuccess;
 
 }
 
 int PsnFileConverter::closeStatusOutputFile ( void ) {
 
-  // write number of data bytes (i.e. don't include the 20 header bytes) to the
+  // write number of data bytes (i.e. don't include the header bytes) to the
   // 64bit unsigned quantity at location 12 and then close file
 
-  statusFileLoc -= 20;
+  statusFileLoc -= sizeof(StatusHdrType);
 
-  try {
+  statusHdrSetNumBytes( statusFileLoc );
 
-    statusFb.pubseekoff( 12, std::ios::beg, std::ios::out );
-
-    auto num = statusFb.sputn( (char *) &statusFileLoc, sizeof(statusFileLoc) );
-    if ( num != sizeof(statusFileLoc) ) {
-      statusFb.close();
-      return ERRINFO(EWriteFailure,"");
-    }
-
-  }
-  catch ( const std::exception& e ) {
-    QString qmsg = QStringLiteral("%1").arg(e.what());
+  int stat = writeStatusHdr();
+  if ( stat ) {
     statusFb.close();
-    return ERRINFO(EWriteFailure,qmsg.toStdString());
+    return ERRINFO(EWriteFailure,"");
   }
-    
+  
   statusFb.close();
 
   return ESuccess;

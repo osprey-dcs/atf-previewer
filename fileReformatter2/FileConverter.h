@@ -43,7 +43,7 @@ public:
 
   FileConverter();
   virtual int convert( int chassisIndex, std::list<int>& chanList, int startingSigIndex,
-                       const DataHeader *dh, const QString& rawDataFile,
+                       DataHeader *dh, const QString& rawDataFile,
                        const QString& binDataFileDir, const QString& simpleName, bool verbose=false );
   virtual QString buildOutputFileName( int sigIndex, const QString& binDataFileDir, const QString& simpleName );
   virtual QString buildStatusOutputFileName( int chassisIndex, const QString& binDataFileDir,
@@ -56,6 +56,7 @@ public:
 
   std::filebuf statusFb;
   uint64_t statusFileLoc;
+
 
 };
 

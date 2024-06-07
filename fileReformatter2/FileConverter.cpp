@@ -15,7 +15,7 @@ FileConverter::FileConverter ( ) : ErrHndlr ( FileConverter::NumErrs,
 
 }
 
-int FileConverter::convert ( int chassisIndex, std::list<int>& chanList, int startingSigIndex, const DataHeader *dh, const QString &rawDataFile,
+int FileConverter::convert ( int chassisIndex, std::list<int>& chanList, int startingSigIndex, DataHeader *dh, const QString &rawDataFile,
                              const QString& binDataFileDir, const QString& simpleName, bool verbose ) {
 
   // first cut will be single threaded
