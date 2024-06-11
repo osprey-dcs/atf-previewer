@@ -1,0 +1,161 @@
+commandLineArguments = chassisNumber + configFileName + outputFileName
+
+chachassisNumber = /integer/ * 1 to 32 *
+
+configFileName = /string/
+
+outputFileName = /string/
+
+JSONConfigFile = * JSON file containing globalConfigInfo and
+                   signals *
+
+JSONOutputFile = * JSON file containing globalOutputInfo and perSignalOutputInfo *
+
+globalConfigInfo = acquisitionId + sampleRate (Hz) + CCCR + { signals }
+
+acquisitionId = /string/
+
+sampleRate = /double/ * In Hz *
+
+CCCR = /string/ * unique identifier for acquistion that maps to hardware configuration, should be less than 80
+                  characters long *
+
+signals = address.channel + address,chassis + Desc + Desc5 +
+egu + intercept + name + referenceDirection +
+referenceNode + responceDirection + responnceNode + sigNum +
+slope + type
+
+address.channel = /integer/ * 1 to 32 *
+
+address,chassis = /integer/ * 1 to 32 *
+
+Desc = /string/
+
+Desc5 = /string/ * used in UUF58b export *
+
+egu = /string/ * units *
+
+intercept = /double/
+
+name = /string/
+
+referenceDirection = /integer/
+
+referenceNode = /integer/
+
+responceDirection = /integer/
+
+responnceNode = /integer/
+
+sigNum = /integer/ * 1 to 1024 */
+
+slope = /double/
+
+type = /double/
+
+* for referenceDirection, referenceNode, responceDirection, responnceNode, and type, see information
+related to UFF58b interchange data format *
+
+perSignalConfigInfo = * same as signals *
+
+perSignalOutputInfo = * same as signals + outDataFile *
+
+globalOutputInfo = * same as globalConfigInfo + outDataFile *
+
+acquisitionBinaryDataFile = * binary file from processed raw
+udp stream containing multiple record headers and record data
+for 32 signals *
+
+binaryFileRecordHeader = bfrhId + bfrhBodyLen + bfrhRcvSeconds +
+bfrhRcvnanoSeconds + bfrhStatus + bfrhChanMask + bfrhSeqHigh +
+bfrhSeqLow + bfrhSeconds + bfrhNanoseconds + bfrhLoLo + bfrhLo +
+bfrhHi + bfrhHiHi
+
+bfrhId = /4 character array/
+
+bfrhBodyLen = /integer/ * length of data in body given in bytes,
+                        data length in bytes = bfrhBodyLen - sizeof(binaryFileRecordHeader) + 16 *
+
+bfrhRcvSeconds = /integer/ * seconds as determined by server receiving the udp data stream *
+
+bfrhRcvnanoSeconds = /integer/ * as above *
+
+bfrhStatus = /integer/ * status bits are described elsewhere, need to put them here *
+
+bfrhChanMask = /integer/ * each bit corresponds to signal, if bit is set then signal is active *
+
+bfrhSeqHigh = /integer/ * sequence given by high and low words must increment by 1 for each record header
+                          else the software currently aborts *
+
+bfrhSeqLow = /integer/
+
+bfrhSeconds = /integer/ * time in seconds determined by source of udp data stream *
+
+bfrhNanoseconds = /integer/ * as above *
+
+bfrhLoLo = each bit corresponds to signal, if bit is set then signal was below lolo alarm value *
+
+bfrhLo = each bit corresponds to signal, if bit is set then signal was below lo warning value *
+
+bfrhHi = each bit corresponds to signal, if bit is set then signal was above hi warning value *
+
+bfrhHiHi= each bit corresponds to signal, if bit is set then signal was above hihi alarm value *
+
+* binary file header records and data records are, at the moment, all big endian
+and must be converted to little *
+
+* binary file data records are all three byte integers and must be converted to
+four byte integers *
+
+binaryFileRecordData = 1 { 1 { rawSignalData } numSignals } numRecords
+* numSignals is 32 *
+* length of a data record is given as bfrhBodyLen - sizeof(binaryFileRecordHeader) + 16
+* numRecords is thus ( length of a data record ) / numSignals *
+
+rawSignalData = /3 byte, big endian integer/ * above 1 { rawSignalData } numSignals means sig1 val, sig2 val, ...
+                                               sig32 val *
+
+chassisBinaryStatusFile = * binary file containing one file header and many records of status *
+
+statusFileHeader = cbsfVersion + cbsfFileType + cbsfFileType + cbsfCCCR + cbsfRecSize +
+                   cbsfNumBytes + cbsfSummaryValues
+
+cbsfVersion = /array of 3 integers/ * meaning is major, minor, release *
+
+cbsfFileType = /string/ * 16 character string indicating file type with terminating null *
+
+cbsfCCCR = /string/ * 80 character string with terminating null *
+
+cbsfRecSize = /integer/ * size of statusRecordData in bytes *
+
+cbsfNumBytes = /integer/ * length of all data in bytes *
+
+cbsfSummaryValues = statusRecordData * one record where any bit is the inclusive or of all records,
+                    may be used to know if any status event or limit excursion has occurred without
+                    having to read all data *
+
+statusRecordData = 1 { integer } 10;
+
+* fields:
+field 1 = status
+field 2 = chanMask
+field 3 = secs
+field 4 = nanosecs
+field 5 = rcvSecs
+field 6 = rcvNanosecs
+field 7 = lo
+field 8 = lolo
+field 9 = hi
+field 10 = hihi *
+
+signalBinaryDataFile = * up to 32 files containing a file header and data for one signal each *
+
+signalFileHeader = sbdfVersion + sbdfNumBytes * need to add other fields to header including fileType,
+                                                and CCCR *
+
+cbsfVersion = /array of 3 integers/ * meaning is major, minor, release *
+
+cbsfNumBytes = /integer/ * length of all data in bytes *
+
+signalFileData = 1 { /integer/ } cbsfNumBytes / sizeof(integer)
+
