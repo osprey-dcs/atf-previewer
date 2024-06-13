@@ -24,26 +24,17 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <memory>
 
 #include <QString>
-#include <QtCharts/QLineSeries>
-#include <QSharedPointer>
 
-#include "LineSeriesBuilderSimple.h"
-#include "LineSeriesBuilderMinMax.h"
-#include "LineSeriesBuilderSimpleFillUnder.h"
-#include "LineSeriesBuilderMinMaxFillUnder.h"
 #include "Cnst.h"
 #include "VDisk.h"
 #include "BinDataBase.h"
 
-extern "C" {
-#include <math.h>
-#include <fftw3.h>
-};
-
 class BinDataMFile : public BinDataBase {
 
   public:
-  
+
+  VDisk vdisk;
+
   BinDataMFile ();
   virtual ~BinDataMFile ();
   BinDataMFile ( const BinDataMFile& ) = delete;
@@ -55,45 +46,17 @@ class BinDataMFile : public BinDataBase {
 
   int newFile ( QString fileName );
 
+  virtual int readVersion ( int64_t& major, int64_t& minor, int64_t& release );
+
+  virtual int readNumBytes ( int64_t& num );
+
   void initMaxBufSize( int64_t max );
 
   int getMaxElements ( QString filename, int sigIndex, int64_t& max );
 
-  int genLineSeries ( QString filename,
-                     int sigIndex,
-                     double slope,
-                     double intercept,
-                     int plotAreaWidthPixels,
-                     double startTimeInSec,
-                     double endTimeInSec,
-                     double dataTimeIncrementInSec,
-                     int64_t& numPts,
-                     QtCharts::QLineSeries& qls,
-                     double& miny,
-                     double& maxy,
-                     int64_t maxFft,
-                     int64_t& numFft,
-                     fftw_complex *array  );
-
+  int64_t readTraceData( int *buf, int64_t readSizeInbytes );
+  
   int64_t readTraceData( std::filebuf& fb, int *buf, int64_t readSizeInbytes );
-
-  void updateLineSeries (
-    int64_t readOpCount,
-    QPointF *pts,
-    double slope,
-    double intercept,
-    double& timeStep,
-    int plotAreaWidthPixels,
-    double startTimeInSec,
-    double endTimeInSec,
-    double dataTimeIncrementInSec,
-    int64_t numBytesToProcess,
-    int *buf,
-    LineSeriesBuilderBase *lsb,
-    double& miny,
-    double &maxy );
-
-  VDisk vdisk;
 
 };
 

@@ -88,6 +88,10 @@ add_executable(viewer main.cpp
         DspErr.h
         ErrHndlr.cpp
         ErrHndlr.h
+        DataMediator.cpp
+        DataMediator.h
+        DataMediatorFac.cpp
+        DataMediatorFac.h
 )
 
 include_directories(/usr/include/c++/10

@@ -104,11 +104,12 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw, const QString& file
   }
 
   this->dh = this->dhf.createDataHeader();
-  //this->dh = std::shared_ptr<DataHeader>( new DataHeader() );
 
+  this->dm = this->dmf.createDataMediator( Cnst::BinDataName );
+  this->dm->initMaxBufSize( Cnst::MaxMFileBufSize );
+  
   this->bd = this->bdf.createBinData( Cnst::BinDataName );
-  this->bd->initMaxBufSize( Cnst::MaxMFileBufSize);
-  //this->bd = std::shared_ptr<BinData>( new BinData() );
+  this->bd->initMaxBufSize( Cnst::MaxMFileBufSize );
 
   this->fftIn = new fftw_complex[Cnst::MaxFftSize+1];
   this->fftOut = nullptr;
@@ -499,7 +500,7 @@ void ViewerCtlr::process(void ) {
         
             double minx, maxx, miny, maxy;
 
-            stat = this->bd->genFftLineSeriesFromBuffer( numFft, fftOut, sampleRate, size.width(),
+            stat = this->dm->genFftLineSeriesFromBuffer( numFft, fftOut, sampleRate, size.width(),
                                                       *qls, minx, maxx, miny, maxy, true );
             if ( !stat ) {
               companVga->setInitialState();
@@ -510,7 +511,7 @@ void ViewerCtlr::process(void ) {
             }
             else {
               mainWindow->setNumPoints( 0ul );
-              this->bd->dspErrMsg( stat );
+              this->dm->dspErrMsg( stat );
               delete qls; qls = nullptr;
             }
         
@@ -556,13 +557,13 @@ void ViewerCtlr::process(void ) {
 
         if ( x1 == 0.0 ) { // use all data
           double minTime=0, maxTime=1;
-          int st = bd->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
+          int st = dm->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
           if ( !st ) {
             x0 = minTime;
             x1 = maxTime;
           }
           else {
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
             x1 = x0 + 1.0;
           }
         }
@@ -578,9 +579,9 @@ void ViewerCtlr::process(void ) {
 
         mainWindow->setWhat( "Reading file..." );
 
-        stat = this->bd->getMaxElements( binFile, sigIndex, this->curMaxElements );
+        stat = this->dm->getMaxElements( binFile, sigIndex, this->curMaxElements );
         if ( stat ) {
-          this->bd->dspErrMsg( stat );
+          this->dm->dspErrMsg( stat );
           this->curMaxElements = 0;
         }
 
@@ -593,7 +594,7 @@ void ViewerCtlr::process(void ) {
         //  file name, sig index, x scale width in pixels, start time in sec,
         //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
 
-        stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
+        stat = this->dm->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                         dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
         if ( !stat ) {
 
@@ -633,7 +634,7 @@ void ViewerCtlr::process(void ) {
           
           mainWindow->setNumPoints( 0ul );
           delete qls; qls = nullptr;
-          this->bd->dspErrMsg( stat );
+          this->dm->dspErrMsg( stat );
 
         }
 
@@ -671,7 +672,7 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Reseting..." );
 
-          stat = this->bd->genFftLineSeriesFromBufferByFreq
+          stat = this->dm->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
@@ -688,7 +689,7 @@ void ViewerCtlr::process(void ) {
           else {
           
             delete qls; qls = nullptr;
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
 
           }
 
@@ -718,7 +719,7 @@ void ViewerCtlr::process(void ) {
 
           if ( x1 == 0.0 ) { // use all data
             double minTime=0, maxTime=1;
-            int st = bd->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
+            int st = dm->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
             if ( !st ) {
               x0 = minTime;
               x1 = maxTime;
@@ -748,7 +749,7 @@ void ViewerCtlr::process(void ) {
         
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
-          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
+          stat = this->dm->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                           dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
           if ( !stat ) {
 
@@ -781,7 +782,7 @@ void ViewerCtlr::process(void ) {
           
             mainWindow->setNumPoints( 0ul );
             delete qls; qls = nullptr;
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
 
           }
 
@@ -817,7 +818,7 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Panning..." );
 
-          stat = this->bd->genFftLineSeriesFromBufferByFreq
+          stat = this->dm->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
@@ -829,7 +830,7 @@ void ViewerCtlr::process(void ) {
           else {
 
             delete qls; qls = nullptr;
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
           
           }
 
@@ -870,7 +871,7 @@ void ViewerCtlr::process(void ) {
           
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
-          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
+          stat = this->dm->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                         dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
           if ( !stat ) {
           
@@ -902,7 +903,7 @@ void ViewerCtlr::process(void ) {
           
             mainWindow->setNumPoints( 0ul );
             delete qls; qls = nullptr;
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
 
           }
 
@@ -934,7 +935,7 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Scaling..." );
           
-          stat = this->bd->genFftLineSeriesFromBufferByFreq
+          stat = this->dm->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
@@ -946,7 +947,7 @@ void ViewerCtlr::process(void ) {
           else {
 
             delete qls; qls = nullptr;
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
 
           }
             
@@ -990,7 +991,7 @@ void ViewerCtlr::process(void ) {
           
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
-          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
+          stat = this->dm->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                             dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
           if ( !stat ) {
           
@@ -1022,7 +1023,7 @@ void ViewerCtlr::process(void ) {
           
             mainWindow->setNumPoints( 0ul );
             delete qls; qls = nullptr;
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
 
           }
 
@@ -1061,7 +1062,7 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Scaling..." );
           
-          stat = this->bd->genFftLineSeriesFromBufferByFreq
+          stat = this->dm->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
@@ -1073,7 +1074,7 @@ void ViewerCtlr::process(void ) {
           else {
 
             delete qls; qls = nullptr;
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
 
           }
             
@@ -1096,13 +1097,13 @@ void ViewerCtlr::process(void ) {
           binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
 
           double minTime, maxTime;
-          int st = bd->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
+          int st = dm->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
           if ( !st ) {
             x0 = std::fmax( x0, minTime );
             x1 = std::fmin( x1, maxTime );
           }
           else {
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
           }
 
           this->haveCurTimeRange = true;
@@ -1136,7 +1137,7 @@ void ViewerCtlr::process(void ) {
           
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
-          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
+          stat = this->dm->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                           dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
           if ( !stat ) {
           
@@ -1164,7 +1165,7 @@ void ViewerCtlr::process(void ) {
           
             mainWindow->setNumPoints( 0ul );
             delete qls; qls = nullptr;
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
 
           }
 
@@ -1189,13 +1190,13 @@ void ViewerCtlr::process(void ) {
         binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
 
         double minTime, maxTime;
-        int st = bd->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
+        int st = dm->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
         if ( !st ) {
           x0 = std::fmax( x0, minTime );
           x1 = std::fmin( x1, maxTime );
         }
         else {
-          this->bd->dspErrMsg( stat );
+          this->dm->dspErrMsg( stat );
         }
 
         this->haveCurTimeRange = true;
@@ -1229,7 +1230,7 @@ void ViewerCtlr::process(void ) {
           
         //  file name, sig index, x scale width in pixels, start time in sec,
         //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
-        stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
+        stat = this->dm->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                         dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
         if ( !stat ) {
           
@@ -1257,7 +1258,7 @@ void ViewerCtlr::process(void ) {
           
           mainWindow->setNumPoints( 0ul );
           delete qls; qls = nullptr;
-          this->bd->dspErrMsg( stat );
+          this->dm->dspErrMsg( stat );
 
         }
 
@@ -1279,13 +1280,13 @@ void ViewerCtlr::process(void ) {
           binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
 
           double minTime, maxTime;
-          int st = bd->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
+          int st = dm->getDataFullTimeRange( binFile, sampleRate, minTime, maxTime );
           if ( !st ) {
             x0 = std::fmax( x0, minTime );
             x1 = std::fmin( x1, maxTime );
           }
           else {
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
           }
 
           // get num of pixels in x
@@ -1315,7 +1316,7 @@ void ViewerCtlr::process(void ) {
           
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
-          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
+          stat = this->dm->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                           dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
           
           if ( !stat ) {
@@ -1344,7 +1345,7 @@ void ViewerCtlr::process(void ) {
           
             mainWindow->setNumPoints( 0ul );
             delete qls; qls = nullptr;
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
           
           }
 
@@ -1382,7 +1383,7 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Getting prev view..." );
           
-          stat = this->bd->genFftLineSeriesFromBufferByFreq
+          stat = this->dm->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
@@ -1397,7 +1398,7 @@ void ViewerCtlr::process(void ) {
           else {
 
             delete qls; qls = nullptr;
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
           
           }
             
@@ -1446,7 +1447,7 @@ void ViewerCtlr::process(void ) {
           
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
-          stat = this->bd->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
+          stat = this->dm->genLineSeries( binFile, sigIndex, slope, intercept, size.width(), x0, x1,
                                           dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
           if ( !stat ) {
           
@@ -1478,7 +1479,7 @@ void ViewerCtlr::process(void ) {
           
             mainWindow->setNumPoints( 0ul );
             delete qls; qls = nullptr;
-            this->bd->dspErrMsg( stat );
+            this->dm->dspErrMsg( stat );
 
           }
 
@@ -1581,9 +1582,9 @@ void ViewerCtlr::sigNameChange1(int index, int sigIndex, QWidget *w ) {
     int request = ViewerCtlr::HaveDataRequest;
 
     QString binFile = FileUtil::makeBinFileName( dh.get(), this->fileName, sigIndex );
-    int st = bd->newFile( binFile );
+    int st = dm->newFile( binFile );
     if ( st ) {
-      this->bd->dspErrMsg( st );
+      this->dm->dspErrMsg( st );
     }
     
     dataRequestList.push_back( std::make_tuple( request, vga, sigIndex, this->fileName ) );
@@ -1757,10 +1758,10 @@ int ViewerCtlr::csvExport ( void ) {
         maxT = mainWindow->exportDialog->endTimeValInSec;
 
         // get min and max rec number corresponding to min and max time
-        st = bd->getRecordRangeForTime( binFile, sampleRate, minT, maxT,
+        st = dm->getRecordRangeForTime( binFile, sampleRate, minT, maxT,
                                         minByte, maxByte );
         if ( st ) {
-          this->bd->dspErrMsg( st );
+          this->dm->dspErrMsg( st );
         }
 
         recRange = maxByte - minByte;
@@ -1769,7 +1770,7 @@ int ViewerCtlr::csvExport ( void ) {
       else {
 
         int64_t maxEle;
-        bd->getMaxElements ( binFile, 0, maxEle );
+        dm->getMaxElements ( binFile, 0, maxEle );
         minByte = 0;
         maxByte = maxEle * sizeof(int);
         recRange = maxByte - minByte;
@@ -1824,7 +1825,7 @@ int ViewerCtlr::csvExport ( void ) {
 
   // seek to start of binary data for input files
   for ( int i=0; i<numSignals; i++ ) {
-    this->bd->inputSeekToStartOfData( fbInput[i], minByte );
+    this->dm->inputSeekToStartOfData( fbInput[i], minByte );
   }
 
   zero( nr, numSignals );
@@ -1844,7 +1845,7 @@ int ViewerCtlr::csvExport ( void ) {
   for ( i=0; i<numFullOps; i++ ) {
 
     for ( int ii=0; ii<numSignals; ii++ ) {
-      nr[ii] += this->bd->readTraceData( fbInput[ii], intBuf[ii], 100 );
+      nr[ii] += this->dm->readTraceData( fbInput[ii], intBuf[ii], 100 );
     }
 
     for ( int iii=0; iii<100/sizeof(int); iii++ ) {
@@ -1862,7 +1863,7 @@ int ViewerCtlr::csvExport ( void ) {
   if ( numRemaining ) {
 
     for ( int ii=0; ii<numSignals; ii++ ) {
-      nr[ii] += this->bd->readTraceData( fbInput[ii], intBuf[ii], numRemaining );
+      nr[ii] += this->dm->readTraceData( fbInput[ii], intBuf[ii], numRemaining );
     }
 
     for ( int iii=0; iii<numRemaining/sizeof(int); iii++ ) {
@@ -1980,17 +1981,17 @@ int ViewerCtlr::uff58bExport ( void ) {
       maxT = mainWindow->exportDialog->endTimeValInSec;
 
       // get min and max rec number corresponding to min and max time
-      st = bd->getRecordRangeForTime( binFile, sampleRate, minT, maxT,
+      st = dm->getRecordRangeForTime( binFile, sampleRate, minT, maxT,
                                       minByte, maxByte );
       if ( st ) {
-        this->bd->dspErrMsg( st );
+        this->dm->dspErrMsg( st );
       }
 
     }
     else {
 
       int64_t maxEle;
-      bd->getMaxElements ( binFile, 0, maxEle );
+      dm->getMaxElements ( binFile, 0, maxEle );
       minByte = 0;
       maxByte = maxEle * sizeof(int);
 
@@ -2088,14 +2089,14 @@ int ViewerCtlr::uff58bExport ( void ) {
     size_t nr, nw;
 
     // seek to start of binary data for input file
-    this->bd->inputSeekToStartOfData( fbInput, minByte );
+    this->dm->inputSeekToStartOfData( fbInput, minByte );
 
     nr = nw = 0;
     
     //read and write binary files in chunks
     for ( size_t i=0; i<numFullOps; i++ ) {
 
-      nr += this->bd->readTraceData( fbInput, intBuf.data(), intBuf.size() );
+      nr += this->dm->readTraceData( fbInput, intBuf.data(), intBuf.size() );
 
       for ( size_t ii=0; ii<1000; ii++ ) {
         outBuf[ii] = (float) intBuf[ii] * slope + intercept;
@@ -2108,7 +2109,7 @@ int ViewerCtlr::uff58bExport ( void ) {
     // perform final op
     if ( numRemaining ) {
 
-      nr += this->bd->readTraceData( fbInput, intBuf.data(), numRemaining );
+      nr += this->dm->readTraceData( fbInput, intBuf.data(), numRemaining );
 
       for ( size_t ii=0; ii<numRemaining; ii++ ) {
         outBuf[ii] = (float) intBuf[ii] * slope + intercept;
@@ -2336,13 +2337,13 @@ void ViewerCtlr::selectionRange ( int vgaId, double xMin, double xMax ) {
     vga->getCurInfo( curFileName, curSigIndex );
     double minT=0, maxT=0;
     QString binFile = FileUtil::makeBinFileName( dh.get(), curFileName, curSigIndex );
-    int st = bd->getDataFullTimeRange( binFile, sampleRate, minT, maxT );
+    int st = dm->getDataFullTimeRange( binFile, sampleRate, minT, maxT );
     if ( !st ) {
       if ( xMax > maxT ) xMax = maxT;
       if ( xMin < minT ) xMin = minT;
     }
     else {
-      this->bd->dspErrMsg( st );
+      this->dm->dspErrMsg( st );
     }
     
   }

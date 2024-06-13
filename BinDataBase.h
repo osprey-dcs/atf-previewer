@@ -22,28 +22,20 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #include <utility>
 #include <memory>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
 
 #include <QString>
-#include <QtCharts/QLineSeries>
-#include <QSharedPointer>
 
-#include "LineSeriesBuilderSimple.h"
-#include "LineSeriesBuilderMinMax.h"
-#include "LineSeriesBuilderSimpleFillUnder.h"
-#include "LineSeriesBuilderMinMaxFillUnder.h"
 #include "Cnst.h"
 #include "ErrHndlr.h"
-
-extern "C" {
-#include <math.h>
-#include <fftw3.h>
-};
 
 class BinDataBase : public ErrHndlr {
 
   public:
   
-  static const int NumErrs = 7;
+  static const int NumErrs = 8;
   static const int ESuccess = 0;
   static const int EFileOpen = 1;
   static const int EFileRead = 2;
@@ -51,6 +43,7 @@ class BinDataBase : public ErrHndlr {
   static const int ESampleSize = 4;
   static const int EMax = 5;
   static const int ERange = 6;
+  static const int ENoFile = 7;
   inline static const std::string errMsgs[NumErrs] {
     { "Success" },
     { "File open failure: " },
@@ -58,15 +51,17 @@ class BinDataBase : public ErrHndlr {
     { "Illegal sample rate: " },
     { "Data set size too small" },
     { "Failure to read data size from file: " },
-    { "Index out of range" }
+    { "Index out of range" },
+    { "File not open" }
   };
   
   using TwoDIntPtr = int(*)[5];
 
-  std::shared_ptr<LineSeriesBuilderBase> slsb;
-  std::shared_ptr<LineSeriesBuilderBase> lsb;
-  std::shared_ptr<LineSeriesBuilderBase> sfulsb;
-  std::shared_ptr<LineSeriesBuilderBase> fulsb;
+  std::filebuf oneFb;
+  bool isOpenRead = false;
+  int64_t version[3];
+  int64_t numBytes;
+  int64_t oneOffset = 0l;
 
   BinDataBase ();
   virtual ~BinDataBase ();
@@ -77,7 +72,17 @@ class BinDataBase : public ErrHndlr {
   virtual BinDataBase& operator= ( BinDataBase& ) = delete;
   virtual BinDataBase& operator= ( BinDataBase&& ) = delete;
 
-  virtual int newFile( QString filename );
+  virtual int openRead ( const std::string& name );
+
+  virtual int closeFile ( void );
+
+  virtual int readVersion ( int64_t& major, int64_t& minor, int64_t& release );
+
+  virtual int readNumBytes ( int64_t& num );
+
+  virtual int64_t getHeaderSize( void );
+
+  virtual int newFile ( QString filename );
 
   virtual void initMaxBufSize( int64_t max );
 
@@ -92,90 +97,12 @@ class BinDataBase : public ErrHndlr {
 
   virtual int getMaxElements ( QString filename, int sigIndex, int64_t& max );
 
-  virtual int genLineSeries ( QString filename,
-                     int sigIndex,
-                     double slope,
-                     double intercept,
-                     int plotAreaWidthPixels,
-                     double startTimeInSec,
-                     double endTimeInSec,
-                     double dataTimeIncrementInSec,
-                     int64_t& numPts,
-                     QtCharts::QLineSeries& qls,
-                     double& miny,
-                     double& maxy,
-                     int64_t maxFft,
-                     int64_t& numFft,
-                     fftw_complex *array  );
+  virtual void seekToReadOffset( int64_t offset );
+  
+  virtual int64_t readTraceData( int *buf, int64_t readSizeInbytes );
 
   virtual int64_t readTraceData( std::filebuf& fb, int *buf, int64_t readSizeInbytes );
 
-  virtual void updateLineSeries (
-    int64_t readOpCount,
-    QPointF *pts,
-    double slope,
-    double intercept,
-    double& timeStep,
-    int plotAreaWidthPixels,
-    double startTimeInSec,
-    double endTimeInSec,
-    double dataTimeIncrementInSec,
-    int64_t numBytesToProcess,
-    int *buf,
-    LineSeriesBuilderBase *lsb,
-    double& miny,
-    double &maxy );
-
-  virtual int genFftFillUnderLineSeriesFromBuffer (
-    int num,
-    fftw_complex *buf,
-    double sampleRate,
-    int plotAreaWidthPixels,
-    QtCharts::QLineSeries& qls,
-    double& minx,
-    double& maxx,
-    double& miny,
-    double& maxy );
-
-  virtual int genFftFillUnderLineSeriesFromBufferByFreq (
-    int num,
-    fftw_complex *buf,
-    double sampleRate,
-    int plotAreaWidthPixels,
-    double freqMin,
-    double freqMax,
-    QtCharts::QLineSeries& qls,
-    double& minx,
-    double& maxx,
-    double& miny,
-    double& maxy );
-
-virtual int genFftLineSeriesFromBuffer (
- int num,
- fftw_complex *buf,
- double sampleRate,
- int plotAreaWidthPixels,
- QtCharts::QLineSeries& qls,
- double& minx,
- double& maxx,
- double& miny,
- double& maxy,
- bool suppressZeros=false );
-
-virtual int genFftLineSeriesFromBufferByFreq (
- int num,
- fftw_complex *buf,
- double sampleRate,
- int plotAreaWidthPixels,
- double freqMin,
- double freqMax,
- QtCharts::QLineSeries& qls,
- double& minx,
- double& maxx,
- double& miny,
- double& maxy,
- bool suppressZeros=false );
-  
 };
 
 #endif //VIEWER_BINDATABASE_H

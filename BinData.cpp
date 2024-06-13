@@ -23,11 +23,6 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <fstream>
 #include <cmath>
 
-#include <QList>
-#include <QPointF>
-#include <QLineSeries>
-#include <QDebug>
-
 #include "BinData.h"
 
 BinData::BinData() {
@@ -63,193 +58,17 @@ int BinData::getMaxElements ( QString filename, int sigIndex, int64_t& max ) {
   return 0;
 
 }
-    
-int BinData::genLineSeries ( QString filename,
-                            int sigIndex,
-                            double slope,
-                            double intercept,
-                            int plotAreaWidthPixels,
-                            double startTimeInSec,
-                            double endTimeInSec,
-                            double dataTimeIncrementInSec,
-                            int64_t& numPts,
-                            QtCharts::QLineSeries& qls,
-                            double& miny,
-                            double& maxy,
-                            int64_t maxFft,
-                            int64_t& numFft,
-                            fftw_complex *fftArray ) {
-    
-  //std::cout << "BinData::genLineSeries" << std::endl;
-  //std::cout << "maxFft = " <<  maxFft << std::endl;
-  //std::cout << "sigIndex = " <<  sigIndex << std::endl;
-  //std::cout << "plotAreaWidthPixels = " <<  plotAreaWidthPixels << std::endl;
-  //std::cout << "x0 = " << startTimeInSec << ", x1 = " << endTimeInSec << std::endl;
-  //std::cout << "dataTimeIncrementInSec = " << dataTimeIncrementInSec << std::endl;
-  //std::cout << "qls address = " <<  &qls << std::endl;
-  //std::cout << std::endl;
 
-  std::filebuf fb;
-  const unsigned int version[] { 1, 0, 0 };
+int64_t BinData::readTraceData (
+ int *buf,
+ int64_t readSizeInbytes ) {
 
-  auto result = fb.open( filename.toStdString(), std::ios::in | std::ios::binary );
-  if ( !result ) {
-    //qWarning() << __func__ << "Unable to open:" << filename;
-    return ERRINFO(EFileOpen,filename.toStdString());
+  if ( !isOpenRead ) {
+    return ENoFile;
   }
 
-  // read version
-  fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
-  fb.sgetn( (char *) version, sizeof(version) );
-
-  // read numSigbytes
-  int64_t numSigbytes;
-  fb.pubseekoff( (int64_t) sizeof( version ), std::ios::beg, std::ios::in );
-  fb.sgetn((char *) &numSigbytes, sizeof(numSigbytes));
-
-  unsigned int headerSize = sizeof(numSigbytes) + sizeof(version);
-  int64_t offset = headerSize;
-
-  int64_t startingpoint = round( startTimeInSec / dataTimeIncrementInSec );
-  if ( startingpoint > numSigbytes/sizeof(int) ) {
-    fb.close();
-    return ERRINFO(ERange,"");
-  }
-
-  int64_t endingpoint = round( endTimeInSec / dataTimeIncrementInSec );
-  if ( endingpoint > numSigbytes/sizeof(int) ) {
-    endingpoint = numSigbytes/sizeof(int);
-  }
-
-  int64_t totalpoints = endingpoint - startingpoint + 1;
-  if ( totalpoints > numSigbytes/sizeof(int) ) totalpoints = numSigbytes/sizeof(int);
-
-  int64_t startingOffset = startingpoint * sizeof(int);
-  //std::cout << "startingOffset: " <<  startingOffset<< std::endl;
-  //std::cout << "offset 2: " << offset << std::endl;
-
-  offset += startingOffset;
-  //std::cout << "offset 3: " << offset << std::endl;
-
-  //std::cout << "totalpoints: " << totalpoints << std::endl;
-  //std::cout << "plotAreaWidthPixels * 5: " << plotAreaWidthPixels * 5 << std::endl;
-
-  int i, ifft = 0;
-
-  //std::cout << "x0 = " << startTimeInSec << ", x1 = " << endTimeInSec << std::endl;
-  //std::cout << "dataTimeIncrementInSec = " << dataTimeIncrementInSec << std::endl;
-
-  if ( totalpoints < ( plotAreaWidthPixels * 5 ) ) { // build simple line series
-
-    this->slsb->setXPixelWidth( plotAreaWidthPixels );
-    this->slsb->setXAxisLimits( startTimeInSec, endTimeInSec );
-    this->slsb->setLineSeries( &qls );
-    this->slsb->startNewSeries();
-
-    // read data in maximum chunks of 4000 bytes (1000 ints)
-    int64_t numBytesRead;
-    int *buf = new int[1000];
-    int64_t numReadOps = (totalpoints * sizeof(int)) / 4000;
-    int64_t finalReadSize = (totalpoints * sizeof(int)) % 4000;
-    //std::cout << "finalReadSize 1: " << finalReadSize << std::endl;
-    int64_t iread;
-    QPointF pts[4];
-    double timeStep = startTimeInSec;
-    numPts = 0;
-    for (iread = 0; iread < numReadOps; iread++) {
-      fb.pubseekoff(offset, std::ios::beg, std::ios::in);
-      numBytesRead = readTraceData(fb, buf, 4000);
-      updateLineSeries(iread, pts, slope, intercept, timeStep, plotAreaWidthPixels, startTimeInSec, endTimeInSec,
-                       dataTimeIncrementInSec, numBytesRead, buf, slsb.get(), miny, maxy);
-      for ( i=0; ( i<1000 && ifft<(maxFft-1) ); i++, ifft++ ) {
-        fftArray[ifft][0] = slope * (double) buf[i] + intercept;
-        fftArray[ifft][1] = 0.0;
-      }
-      numFft = ifft;
-      offset += 4000;
-      numPts += numBytesRead / sizeof(int);
-      //std::cout << "numBytesRead: " << numBytesRead << std::endl;
-    }
-    if (finalReadSize) {
-      //std::cout << "finalReadSize 2: " << finalReadSize << std::endl;
-      fb.pubseekoff(offset, std::ios::beg, std::ios::in);
-      numBytesRead = readTraceData(fb, buf, finalReadSize);
-      int n = numBytesRead / sizeof( int );
-      updateLineSeries(iread, pts, slope, intercept, timeStep, plotAreaWidthPixels, startTimeInSec, endTimeInSec,
-                       dataTimeIncrementInSec, numBytesRead, buf, slsb.get(), miny, maxy);
-      for ( i=0; ( i<n && ifft<(maxFft-1) ); i++, ifft++ ) {
-        fftArray[ifft][0] = slope * (double) buf[i] + intercept;
-        fftArray[ifft][1] = 0.0;
-      }
-      numFft = ifft;
-      offset += finalReadSize;
-      numPts += numBytesRead / sizeof(int);
-    }
-
-    delete[] buf;
-    buf = nullptr;
-
-  }
-  else { // build line series with first, min, max, and last
-
-    this->lsb->setXPixelWidth( plotAreaWidthPixels );
-    this->lsb->setXAxisLimits( startTimeInSec, endTimeInSec );
-    this->lsb->setLineSeries( &qls );
-    this->lsb->startNewSeries();
-      
-    // read data in maximum chunks of 4000 bytes (1000 ints)
-    int64_t numBytesRead;
-    int *buf = new int[1000];
-    int64_t numReadOps = (totalpoints * sizeof(int)) / 4000;
-    int64_t finalReadSize = (totalpoints * sizeof(int)) % 4000;
-    //std::cout << "finalReadSize 1: " << finalReadSize << std::endl;
-    int64_t iread;
-    QPointF pts[4];
-    double timeStep = startTimeInSec;
-    numPts += 0;
-    for (iread = 0; iread < numReadOps; iread++) {
-      fb.pubseekoff(offset, std::ios::beg, std::ios::in);
-      numBytesRead = readTraceData(fb, buf, 4000);
-      updateLineSeries(iread, pts, slope, intercept, timeStep, plotAreaWidthPixels, startTimeInSec, endTimeInSec,
-                       dataTimeIncrementInSec, numBytesRead, buf, lsb.get(), miny, maxy);
-      for ( i=0; ( i<1000 && ifft<(maxFft-1) ); i++, ifft++ ) {
-        fftArray[ifft][0] = slope * (double) buf[i] + intercept;
-        fftArray[ifft][1] = 0.0;
-      }
-      numFft = ifft;
-      offset += 4000;
-      numPts += numBytesRead / sizeof(int);
-      //std::cout << "numBytesRead: " << numBytesRead << std::endl;
-    }
-    if (finalReadSize) {
-      //std::cout << "finalReadSize 2: " << finalReadSize << std::endl;
-      fb.pubseekoff(offset, std::ios::beg, std::ios::in);
-      numBytesRead = readTraceData(fb, buf, finalReadSize);
-      int n = numBytesRead / sizeof( int );
-      updateLineSeries(iread, pts, slope, intercept, timeStep, plotAreaWidthPixels, startTimeInSec, endTimeInSec,
-                       dataTimeIncrementInSec, numBytesRead, buf, lsb.get(), miny, maxy);
-      for ( i=0; ( i<n && ifft<(maxFft-1) ); i++, ifft++ ) {
-        fftArray[ifft][0] = slope * (double) buf[i] + intercept;
-        fftArray[ifft][1] = 0.0;
-      }
-      numFft = ifft;
-      offset += finalReadSize;
-      numPts += numBytesRead / sizeof(int);
-    }
-
-    delete[] buf;
-    buf = nullptr;
-
-  }
-
-  if ( Cnst::UseHanning ) {
-    for ( i=0; i<numFft; i++ ) {
-      fftArray[ifft][0] *= 0.5 * ( 1.0 - cos( 2 * M_PI * i / ( maxFft ) ) );
-    }
-  }
-
-  fb.close();
-  return 0;
+  int64_t n = oneFb.sgetn( reinterpret_cast<char *>( buf ), readSizeInbytes );
+  return n;
 
 }
 
@@ -258,80 +77,8 @@ int64_t BinData::readTraceData (
  int *buf,
  int64_t readSizeInbytes ) {
 
-  //std::cout << "read " << readSizeInbytes << " bytes" << std::endl;
-
-  int n = fb.sgetn( reinterpret_cast<char *>( buf ), readSizeInbytes );
+  int64_t n = fb.sgetn( reinterpret_cast<char *>( buf ), readSizeInbytes );
   return n;
 
 }
 
-static const int firstp = 0;
-static const int lastp = 1;
-static const int minp = 2;
-static const int maxp = 3;
-
-void BinData::updateLineSeries(
-  int64_t readOpCount,
-  QPointF *pts,
-  double slope,
-  double intercept,
-  double& timeStep,
-  int plotAreaWidthPixels,
-  double startTimeInSec,
-  double endTimeInSec,
-  double dataTimeIncrementInSec,
-  int64_t numBytesToProcess,
-  int *buf,
-  LineSeriesBuilderBase *ls,
-  double& miny,
-  double& maxy ) {
-
-    double binSize;
-
-    if (numBytesToProcess < 1) {
-      return;
-    }
-
-    double deltaTimeInSec = endTimeInSec - startTimeInSec;
-    if (deltaTimeInSec != 0.0) {
-      binSize = deltaTimeInSec / plotAreaWidthPixels;
-    }
-
-    //std::cout << "deltaTimeInSec = " << deltaTimeInSec << std::endl;
-    //std::cout << "plotAreaWidthPixels = " << plotAreaWidthPixels << std::endl;
-    //std::cout << "binSize = " << binSize << std::endl;
-
-    int num = numBytesToProcess / sizeof(int);
-    double time = startTimeInSec + readOpCount * 1000 * dataTimeIncrementInSec;
-    //std::cout << "startTimeInSec = " << startTimeInSec << std::endl;
-    //std::cout << "readOpCount = " << readOpCount << std::endl;
-    //std::cout << "dataTimeIncrementInSec = " << dataTimeIncrementInSec << std::endl;
-    //std::cout << "time = " << time << std::endl;
-
-  //std::cout << "numBytesToProcess = " << numBytesToProcess << std::endl;
-  //std::cout << "num = " << num << std::endl;
-
-  if ( readOpCount == 0 ) {
-    miny = maxy = slope * buf[0] + intercept;
-  }
-
-  for ( int i=0; i<num; i++ ) {
-
-    //std::cout << "i: " << i << "   point is " << time << ", " << buf[i] << std::endl;
-
-    double v = slope * (double) buf[i] + intercept;
-
-    ls->addPoint( time, v );
-
-    time += dataTimeIncrementInSec;
-
-    maxy = std::fmax( maxy, v );
-    miny = std::fmin( miny, v );
-
-  }
-
-  //std::cout << "ls->show()" << std::endl;
-  //ls->show();
-  //std::cout << "end ls->show()" << std::endl;
-
-}

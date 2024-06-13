@@ -31,8 +31,8 @@ class Cnst {
   static const int NumCols {1};
 
   //inline static const std::string defaultDir {"/home/osprey/viewerData/"};
-  inline static const std::string BinRoot {"output/"};
-  inline static const std::string HdrRoot {"output/"};
+  inline static const std::string BinRoot {"fileReformatter2/output/"};
+  inline static const std::string HdrRoot {"fileReformatter2/output/"};
   inline static const std::string HdrExtension {"hdr"};
   inline static const std::string Filter {"*.hdr"};
   inline static const std::string BinExtension {"j"};

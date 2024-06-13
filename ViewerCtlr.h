@@ -47,6 +47,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "UserPrefsFac.h"
 #include "DataHeader.h"
 #include "DataHeaderFac.h"
+#include "DataMediatorFac.h"
 #include "BinData.h"
 #include "BinDataFac.h"
 #include "ViewerSlider.h"
@@ -118,6 +119,8 @@ public:
   double sampleRate;
   DataHeaderFac dhf;
   std::shared_ptr<DataHeader> dh;
+  DataMediatorFac dmf;
+  std::shared_ptr<DataMediator> dm;
   BinDataFac bdf;
   std::shared_ptr<BinDataBase> bd;
   fftw_complex *fftIn;
