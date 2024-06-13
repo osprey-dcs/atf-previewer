@@ -33,7 +33,7 @@ BinData::~BinData() {
 
 }
 
-int BinData::getMaxElements ( std::string filename, int sigIndex, int64_t& max ) {
+int BinData::getMaxElements ( std::string filename, int64_t& max ) {
 
   std::filebuf fb;
   

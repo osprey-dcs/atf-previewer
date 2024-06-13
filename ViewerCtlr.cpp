@@ -579,7 +579,7 @@ void ViewerCtlr::process(void ) {
 
         mainWindow->setWhat( "Reading file..." );
 
-        stat = this->dm->getMaxElements( binFile.toStdString(), sigIndex, this->curMaxElements );
+        stat = this->dm->getMaxElements( binFile.toStdString(), this->curMaxElements );
         if ( stat ) {
           this->dm->dspErrMsg( stat );
           this->curMaxElements = 0;
@@ -1768,7 +1768,7 @@ int ViewerCtlr::csvExport ( void ) {
       else {
 
         int64_t maxEle;
-        dm->getMaxElements ( binFile.toStdString(), 0, maxEle );
+        dm->getMaxElements ( binFile.toStdString(), maxEle );
         minByte = 0;
         maxByte = maxEle * sizeof(int);
         recRange = maxByte - minByte;
@@ -1989,7 +1989,7 @@ int ViewerCtlr::uff58bExport ( void ) {
     else {
 
       int64_t maxEle;
-      dm->getMaxElements ( binFile.toStdString(), 0, maxEle );
+      dm->getMaxElements ( binFile.toStdString(), maxEle );
       minByte = 0;
       maxByte = maxEle * sizeof(int);
 

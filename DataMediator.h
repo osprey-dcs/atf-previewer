@@ -86,7 +86,7 @@ class DataMediator : public ErrHndlr {
 
   int newFile( std::string filename );
 
-  int getMaxElements ( std::string filename, int sigIndex, int64_t& max );
+  int getMaxElements ( std::string filename, int64_t& max );
 
   int genLineSeries ( std::string filename,
                       int sigIndex,

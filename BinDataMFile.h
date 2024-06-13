@@ -51,7 +51,7 @@ class BinDataMFile : public BinDataBase {
 
   void initMaxBufSize( int64_t max );
 
-  int getMaxElements ( std::string filename, int sigIndex, int64_t& max );
+  int getMaxElements ( std::string filename, int64_t& max );
 
   int64_t readTraceData( int *buf, int64_t readSizeInbytes );
   

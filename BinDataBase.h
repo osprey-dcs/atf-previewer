@@ -72,6 +72,7 @@ class BinDataBase : public ErrHndlr {
   
   std::filebuf oneFb;
   bool isOpenRead = false;
+  bool hdrRead = false;
   int64_t oneOffset = 0l;
 
   BinDataBase ();
@@ -118,7 +119,9 @@ class BinDataBase : public ErrHndlr {
 
   virtual void outputSeekToStartOfData ( std::filebuf& fb, int64_t firstDataByte );
 
-  virtual int getMaxElements ( std::string filename, int sigIndex, int64_t& max );
+  virtual int getMaxElements ( std::string filename, int64_t& max );
+
+  virtual int64_t getMaxElements ( void );
 
   virtual void seekToReadOffset ( int64_t offset );
   

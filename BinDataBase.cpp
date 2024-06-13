@@ -80,11 +80,18 @@ int BinDataBase::readHeader ( void ) {
   oneFb.sgetn( (char *) &(dataHdr.version), sizeof(dataHdr.version) );
   oneFb.sgetn( (char *) &(dataHdr.numBytes), sizeof(dataHdr.numBytes) );
 
+  hdrRead = true;
+
   return 0;
 
 }
 
 void BinDataBase::getVersion ( int64_t& major, int64_t& minor, int64_t& release ) {
+
+  if ( !hdrRead ) {
+    major = minor = release = 0;
+    return;
+  }
 
   major = dataHdr.version[0];
   minor = dataHdr.version[1];
@@ -94,17 +101,23 @@ void BinDataBase::getVersion ( int64_t& major, int64_t& minor, int64_t& release 
 
 int64_t BinDataBase::getRecSize ( void ) {
 
+  if ( !hdrRead ) return 0;
+  
   return dataHdr.recSize;
 
 }
 
 int64_t BinDataBase::getNumBytes ( void ) {
 
+  if ( !hdrRead ) return 0;
+  
   return dataHdr.numBytes;
 
 }
 
 std::string BinDataBase::getFileType ( void ) {
+
+  if ( !hdrRead ) return "";
 
   std::string str = dataHdr.fileType;
   return str;
@@ -112,6 +125,8 @@ std::string BinDataBase::getFileType ( void ) {
 }
 
 std::string BinDataBase::getCccr ( void ) {
+
+  if ( !hdrRead ) return "";
 
   std::string str = dataHdr.cccr;
   return str;
@@ -169,7 +184,7 @@ int BinDataBase::getDataFullTimeRange( std::string filename, double sampleRate, 
 
   int64_t maxElements;
 
-  int st = this->getMaxElements( filename, 0, maxElements );
+  int st = this->getMaxElements( filename, maxElements );
   if ( st ) {
     dspErrMsg( st );
     return ERRINFO(st,"");
@@ -189,7 +204,7 @@ int BinDataBase::getRecordRangeForTime( std::string fileName, double sampleRate,
 
   int64_t maxElements;
 
-  int st = this->getMaxElements( fileName, 0, maxElements );
+  int st = this->getMaxElements( fileName, maxElements );
   if ( st ) {
     dspErrMsg( st );
     return ERRINFO(st,"");
@@ -223,9 +238,17 @@ void BinDataBase::outputSeekToStartOfData( std::filebuf &fb, int64_t firstDataBy
 
 }
 
-int BinDataBase::getMaxElements ( std::string filename, int sigIndex, int64_t& max ) {
+int BinDataBase::getMaxElements ( std::string filename, int64_t& max ) {
 
   return 0;
+
+}
+    
+int64_t BinDataBase::getMaxElements ( void ) {
+
+  if ( !hdrRead ) return 0;
+  
+  return (int64_t) ( dataHdr.numBytes / sizeof(int) );
 
 }
     

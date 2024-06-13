@@ -39,8 +39,8 @@ int DataMediator::newFile( std::string filename ) {
   return bd->newFile( filename );
 }
 
-int DataMediator::getMaxElements( std::string filename, int sigIndex, int64_t &max ) {
-  int st = bd->getMaxElements( filename, sigIndex, max );
+int DataMediator::getMaxElements( std::string filename, int64_t &max ) {
+  int st = bd->getMaxElements( filename, max );
   //std::cout << "DataMediator::getMaxElements max = " << max << std::endl;
   return st;
 }

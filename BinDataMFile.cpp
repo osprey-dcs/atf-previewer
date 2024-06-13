@@ -44,7 +44,7 @@ void BinDataMFile::initMaxBufSize( int64_t max ) {
   vdisk.setMaxSize( max );
 }
 
-int BinDataMFile::getMaxElements ( std::string filename, int sigIndex, int64_t& max ) {
+int BinDataMFile::getMaxElements ( std::string filename, int64_t& max ) {
 
   std::filebuf fb;
   
@@ -79,6 +79,8 @@ int BinDataMFile::readHeader ( void ) {
   vdisk.readN( &oneFb, 0ul, sizeof(dataHdr.version), (char *) &(dataHdr.version) );
   vdisk.readN( &oneFb, (int64_t) sizeof(dataHdr.version), sizeof(dataHdr.numBytes), (char *) &(dataHdr.numBytes) );
   oneOffset = getHeaderSize();
+
+  hdrRead = true;
 
   return 0;
 
