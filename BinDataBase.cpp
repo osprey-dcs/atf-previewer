@@ -33,10 +33,6 @@ BinDataBase::BinDataBase() : ErrHndlr( NumErrs, errMsgs ) {
   memset( (char *) &dataHdr, 0, sizeof(DataHdrType) );
   dataHdr.recSize = sizeof(int);
 
-  const char *test = "this is a test";
-  std::string str = test;
-  std::cout << "BinDataBase::BinDataBase - str = " << str << std::endl;
-
 }
 
 BinDataBase::~BinDataBase() {
