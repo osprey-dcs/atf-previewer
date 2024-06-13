@@ -23,7 +23,6 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <memory>
 #include <string>
 
-#include <QString>
 #include <QtCharts/QLineSeries>
 #include <QSharedPointer>
 
@@ -85,11 +84,11 @@ class DataMediator : public ErrHndlr {
   DataMediator& operator= ( DataMediator& ) = delete;
   DataMediator& operator= ( DataMediator&& ) = delete;
 
-  int newFile( QString filename );
+  int newFile( std::string filename );
 
-  int getMaxElements ( QString filename, int sigIndex, int64_t& max );
+  int getMaxElements ( std::string filename, int sigIndex, int64_t& max );
 
-  int genLineSeries ( QString filename,
+  int genLineSeries ( std::string filename,
                       int sigIndex,
                       double slope,
                       double intercept,
@@ -128,9 +127,9 @@ class DataMediator : public ErrHndlr {
 
   void initMaxBufSize( int64_t max );
 
-  int getDataFullTimeRange( QString filename, double sampleRate, double& minTime, double& maxTime );
+  int getDataFullTimeRange( std::string filename, double sampleRate, double& minTime, double& maxTime );
 
-  int getRecordRangeForTime( QString filename, double sampleRate, double minTime, double maxTime,
+  int getRecordRangeForTime( std::string filename, double sampleRate, double minTime, double maxTime,
                              int64_t& min, int64_t& max );
 
   void inputSeekToStartOfData( std::filebuf& fb, int64_t firstDataByte );

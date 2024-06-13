@@ -23,9 +23,6 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <utility>
 #include <memory>
 
-#include <QString>
-
-#include "Cnst.h"
 #include "VDisk.h"
 #include "BinDataBase.h"
 
@@ -44,15 +41,17 @@ class BinDataMFile : public BinDataBase {
   BinDataMFile& operator= ( BinDataMFile& ) = delete;
   BinDataMFile& operator= ( BinDataMFile&& ) = delete;
 
-  int newFile ( QString fileName );
+  int newFile ( std::string fileName );
 
+  virtual int readHeader ( void );
+  
   virtual int readVersion ( int64_t& major, int64_t& minor, int64_t& release );
 
   virtual int readNumBytes ( int64_t& num );
 
   void initMaxBufSize( int64_t max );
 
-  int getMaxElements ( QString filename, int sigIndex, int64_t& max );
+  int getMaxElements ( std::string filename, int sigIndex, int64_t& max );
 
   int64_t readTraceData( int *buf, int64_t readSizeInbytes );
   

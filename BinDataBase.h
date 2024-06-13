@@ -25,8 +25,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-
-#include <QString>
+#include <string>
 
 #include "Cnst.h"
 #include "ErrHndlr.h"
@@ -34,6 +33,10 @@ If not, see <https://www.gnu.org/licenses/>.
 class BinDataBase : public ErrHndlr {
 
   public:
+  
+  static const int NumDataVersion {3};
+  static const int NumDataFileType {16};
+  static const int NumCccr {80};
   
   static const int NumErrs = 8;
   static const int ESuccess = 0;
@@ -55,12 +58,20 @@ class BinDataBase : public ErrHndlr {
     { "File not open" }
   };
   
-  using TwoDIntPtr = int(*)[5];
+  // future header structure - atm only version and numBytes exist
+  #pragma pack(push, 1)
+  typedef struct DataHdrTag {
+    unsigned int version[NumDataVersion];
+    char fileType[NumDataFileType];
+    char cccr[NumCccr];
+    uint64_t recSize;
+    uint64_t numBytes;
+  } DataHdrType, DataHdrPtr;
 
+  DataHdrType dataHdr;
+  
   std::filebuf oneFb;
   bool isOpenRead = false;
-  int64_t version[3];
-  int64_t numBytes;
   int64_t oneOffset = 0l;
 
   BinDataBase ();
@@ -76,32 +87,44 @@ class BinDataBase : public ErrHndlr {
 
   virtual int closeFile ( void );
 
+  virtual int readHeader ( void );
+
+  virtual void getVersion ( int64_t& major, int64_t& minor, int64_t& release );
+  
+  virtual int64_t getRecSize ( void );
+  
+  virtual int64_t getNumBytes ( void );
+  
+  virtual std::string getFileType ( void );
+  
+  virtual std::string getCccr ( void );
+
   virtual int readVersion ( int64_t& major, int64_t& minor, int64_t& release );
 
   virtual int readNumBytes ( int64_t& num );
 
-  virtual int64_t getHeaderSize( void );
+  virtual int64_t getHeaderSize ( void );
 
-  virtual int newFile ( QString filename );
+  virtual int newFile ( std::string filename );
 
-  virtual void initMaxBufSize( int64_t max );
+  virtual void initMaxBufSize ( int64_t max );
 
-  virtual int getDataFullTimeRange( QString filename, double sampleRate, double& minTime, double& maxTime );
+  virtual int getDataFullTimeRange ( std::string filename, double sampleRate, double& minTime, double& maxTime );
   
-  virtual int getRecordRangeForTime( QString filename, double sampleRate, double minTime, double maxTime,
+  virtual int getRecordRangeForTime ( std::string filename, double sampleRate, double minTime, double maxTime,
                                      int64_t& min, int64_t& max );
   
-  virtual void inputSeekToStartOfData( std::filebuf& fb, int64_t firstDataByte );
+  virtual void inputSeekToStartOfData ( std::filebuf& fb, int64_t firstDataByte );
 
-  virtual void outputSeekToStartOfData( std::filebuf& fb, int64_t firstDataByte );
+  virtual void outputSeekToStartOfData ( std::filebuf& fb, int64_t firstDataByte );
 
-  virtual int getMaxElements ( QString filename, int sigIndex, int64_t& max );
+  virtual int getMaxElements ( std::string filename, int sigIndex, int64_t& max );
 
-  virtual void seekToReadOffset( int64_t offset );
+  virtual void seekToReadOffset ( int64_t offset );
   
-  virtual int64_t readTraceData( int *buf, int64_t readSizeInbytes );
+  virtual int64_t readTraceData ( int *buf, int64_t readSizeInbytes );
 
-  virtual int64_t readTraceData( std::filebuf& fb, int *buf, int64_t readSizeInbytes );
+  virtual int64_t readTraceData ( std::filebuf& fb, int *buf, int64_t readSizeInbytes );
 
 };
 

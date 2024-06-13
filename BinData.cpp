@@ -33,19 +33,18 @@ BinData::~BinData() {
 
 }
 
-int BinData::getMaxElements ( QString filename, int sigIndex, int64_t& max ) {
+int BinData::getMaxElements ( std::string filename, int sigIndex, int64_t& max ) {
 
   std::filebuf fb;
-  const unsigned int version[] { 1, 0, 0 };
   
-  auto result = fb.open( filename.toStdString(), std::ios::in | std::ios::binary );
+  auto result = fb.open( filename, std::ios::in | std::ios::binary );
   if ( !result ) {
     return ERRINFO(EMax,"");
   }
 
   // read version
   fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
-  fb.sgetn( (char *) version, sizeof(version) );
+  fb.sgetn( (char *) &(dataHdr.version), sizeof(dataHdr.version) );
 
   // get num of elements
   int64_t value;
@@ -81,4 +80,3 @@ int64_t BinData::readTraceData (
   return n;
 
 }
-

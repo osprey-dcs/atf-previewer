@@ -28,42 +28,57 @@ If not, see <https://www.gnu.org/licenses/>.
 
 BinDataMFile::BinDataMFile() {
 
+  memset( (char *) &dataHdr, 0, sizeof(DataHdrType) );
+
 }
 
 BinDataMFile::~BinDataMFile() {
 
 }
 
-int BinDataMFile::newFile( QString fileName ) {
-  return vdisk.setFile ( fileName.toStdString() );
+int BinDataMFile::newFile( std::string fileName ) {
+  return vdisk.setFile ( fileName );
 }
 
 void BinDataMFile::initMaxBufSize( int64_t max ) {
   vdisk.setMaxSize( max );
 }
 
-int BinDataMFile::getMaxElements ( QString filename, int sigIndex, int64_t& max ) {
+int BinDataMFile::getMaxElements ( std::string filename, int sigIndex, int64_t& max ) {
 
   std::filebuf fb;
-  const unsigned int version[] { 1, 0, 0 };
   
-  auto result = fb.open( filename.toStdString(), std::ios::in | std::ios::binary );
+  auto result = fb.open( filename, std::ios::in | std::ios::binary );
   if ( !result ) {
     return ERRINFO(EMax,"");
   }
 
   // read version
-  vdisk.readN( &fb, 0ul, sizeof(version), (char *) version );
+  vdisk.readN( &fb, 0ul, sizeof(dataHdr.version), (char *) &(dataHdr.version) );
   //fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
   //fb.sgetn( (char *) version, sizeof(version) );
 
   // get num of elements
   int64_t value;
-  vdisk.readN( &fb, (int64_t) sizeof( version ), sizeof(value), (char *) &value );
+  vdisk.readN( &fb, (int64_t) sizeof(dataHdr.version), sizeof(value), (char *) &value );
 
   fb.close();
 
   max = value / sizeof(int);
+
+  return 0;
+
+}
+
+int BinDataMFile::readHeader ( void ) {
+
+  if ( !isOpenRead ) {
+    return ENoFile;
+  }
+
+  vdisk.readN( &oneFb, 0ul, sizeof(dataHdr.version), (char *) &(dataHdr.version) );
+  vdisk.readN( &oneFb, (int64_t) sizeof(dataHdr.version), sizeof(dataHdr.numBytes), (char *) &(dataHdr.numBytes) );
+  oneOffset = getHeaderSize();
 
   return 0;
 
@@ -75,11 +90,12 @@ int BinDataMFile::readVersion ( int64_t& major, int64_t& minor, int64_t& release
     return ENoFile;
   }
 
-  vdisk.readN( &oneFb, 0ul, sizeof(version), (char *) version );
+  vdisk.readN( &oneFb, 0ul, sizeof(dataHdr.version), (char *) &(dataHdr.version) );
+  oneOffset = sizeof(dataHdr.version);
 
-  major = version[0];
-  minor = version[1];
-  release = version[2];
+  major = dataHdr.version[0];
+  minor = dataHdr.version[1];
+  release = dataHdr.version[2];
 
   return 0;
 
@@ -91,9 +107,10 @@ int BinDataMFile::readNumBytes ( int64_t& num ) {
     return ENoFile;
   }
   
-  vdisk.readN( &oneFb, (int64_t) sizeof( version ), sizeof(numBytes), (char *) &numBytes );
+  vdisk.readN( &oneFb, (int64_t) sizeof(dataHdr.version), sizeof(dataHdr.numBytes), (char *) &(dataHdr.numBytes) );
+  oneOffset = getHeaderSize();
 
-  num = numBytes;
+  num = dataHdr.numBytes;
 
   return 0;
 

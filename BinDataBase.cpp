@@ -17,6 +17,8 @@ If not, see <https://www.gnu.org/licenses/>.
 // Created by jws3 on 4/5/24.
 //
 
+#include <string.h> // for memset
+
 #include <list>
 #include <vector>
 #include <iostream>
@@ -27,6 +29,13 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "BinDataBase.h"
 
 BinDataBase::BinDataBase() : ErrHndlr( NumErrs, errMsgs ) {
+
+  memset( (char *) &dataHdr, 0, sizeof(DataHdrType) );
+  dataHdr.recSize = sizeof(int);
+
+  const char *test = "this is a test";
+  std::string str = test;
+  std::cout << "BinDataBase::BinDataBase - str = " << str << std::endl;
 
 }
 
@@ -40,6 +49,8 @@ int BinDataBase::openRead( const std::string& name ) {
   if ( !result ) {
     return ERRINFO(EFileOpen,name);
   }
+
+  newFile( name );
 
   isOpenRead = true;
 
@@ -59,6 +70,54 @@ int BinDataBase::closeFile ( void ) {
 
 }
 
+int BinDataBase::readHeader ( void ) {
+
+  if ( !isOpenRead ) {
+    return ENoFile;
+  }
+
+  oneFb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
+  oneFb.sgetn( (char *) &(dataHdr.version), sizeof(dataHdr.version) );
+  oneFb.sgetn( (char *) &(dataHdr.numBytes), sizeof(dataHdr.numBytes) );
+
+  return 0;
+
+}
+
+void BinDataBase::getVersion ( int64_t& major, int64_t& minor, int64_t& release ) {
+
+  major = dataHdr.version[0];
+  minor = dataHdr.version[1];
+  release = dataHdr.version[2];
+
+}
+
+int64_t BinDataBase::getRecSize ( void ) {
+
+  return dataHdr.recSize;
+
+}
+
+int64_t BinDataBase::getNumBytes ( void ) {
+
+  return dataHdr.numBytes;
+
+}
+
+std::string BinDataBase::getFileType ( void ) {
+
+  std::string str = dataHdr.fileType;
+  return str;
+
+}
+
+std::string BinDataBase::getCccr ( void ) {
+
+  std::string str = dataHdr.cccr;
+  return str;
+
+}
+
 int BinDataBase::readVersion ( int64_t& major, int64_t& minor, int64_t& release ) {
 
   if ( !isOpenRead ) {
@@ -66,11 +125,11 @@ int BinDataBase::readVersion ( int64_t& major, int64_t& minor, int64_t& release 
   }
 
   oneFb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
-  oneFb.sgetn( (char *) version, sizeof(version) );
+  oneFb.sgetn( (char *) &(dataHdr.version), sizeof(dataHdr.version) );
 
-  major = version[0];
-  minor = version[1];
-  release = version[2];
+  major = dataHdr.version[0];
+  minor = dataHdr.version[1];
+  release = dataHdr.version[2];
 
   return 0;
 
@@ -82,10 +141,10 @@ int BinDataBase::readNumBytes ( int64_t& num ) {
     return ENoFile;
   }
   
-  oneFb.pubseekoff( (int64_t) sizeof( version ), std::ios::beg, std::ios::in );
-  oneFb.sgetn((char *) &numBytes, sizeof(numBytes));
+  oneFb.pubseekoff( (int64_t) sizeof(dataHdr.version), std::ios::beg, std::ios::in );
+  oneFb.sgetn( (char *) &(dataHdr.numBytes), sizeof(dataHdr.numBytes) );
 
-  num = numBytes;
+  num = dataHdr.numBytes;
 
   return 0;
 
@@ -93,18 +152,18 @@ int BinDataBase::readNumBytes ( int64_t& num ) {
 
 int64_t BinDataBase::getHeaderSize( void ) {
 
-  return (int64_t) ( sizeof(numBytes) + sizeof(version) );
+  return (int64_t) ( sizeof(dataHdr.version) + sizeof(dataHdr.numBytes) );
 
 }
 
-int BinDataBase::newFile( QString filename ) {
+int BinDataBase::newFile( std::string filename ) { // BinDataMFile class uses this
   return 0;
 }
 
 void BinDataBase::initMaxBufSize( int64_t max ) {
 }
 
-int BinDataBase::getDataFullTimeRange( QString filename, double sampleRate, double& minTime, double& maxTime ) {
+int BinDataBase::getDataFullTimeRange( std::string filename, double sampleRate, double& minTime, double& maxTime ) {
 
   if ( sampleRate <= 0.0 ) return ERRINFO(ESampleRate,"");
 
@@ -123,7 +182,7 @@ int BinDataBase::getDataFullTimeRange( QString filename, double sampleRate, doub
 
 }
   
-int BinDataBase::getRecordRangeForTime( QString fileName, double sampleRate, double minTime, double maxTime,
+int BinDataBase::getRecordRangeForTime( std::string fileName, double sampleRate, double minTime, double maxTime,
                                         int64_t& min, int64_t& max ) {
 
   if ( sampleRate == 0.0 ) return ERRINFO(ESampleRate,"");
@@ -164,7 +223,7 @@ void BinDataBase::outputSeekToStartOfData( std::filebuf &fb, int64_t firstDataBy
 
 }
 
-int BinDataBase::getMaxElements ( QString filename, int sigIndex, int64_t& max ) {
+int BinDataBase::getMaxElements ( std::string filename, int sigIndex, int64_t& max ) {
 
   return 0;
 

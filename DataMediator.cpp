@@ -35,11 +35,11 @@ DataMediator::DataMediator( const std::string& name ) : ErrHndlr( NumErrs, errMs
 
 DataMediator::~DataMediator () {}
 
-int DataMediator::newFile( QString filename ) {
+int DataMediator::newFile( std::string filename ) {
   return bd->newFile( filename );
 }
 
-int DataMediator::getMaxElements( QString filename, int sigIndex, int64_t &max ) {
+int DataMediator::getMaxElements( std::string filename, int sigIndex, int64_t &max ) {
   int st = bd->getMaxElements( filename, sigIndex, max );
   //std::cout << "DataMediator::getMaxElements max = " << max << std::endl;
   return st;
@@ -55,7 +55,7 @@ int64_t DataMediator::readTraceData( std::filebuf& fb, int *buf, int64_t readSiz
   return bd->readTraceData( fb, buf, readSizeInbytes );
 }
 
-int DataMediator::genLineSeries(QString filename, int sigIndex, double slope, double intercept, int plotAreaWidthPixels,
+int DataMediator::genLineSeries( std::string filename, int sigIndex, double slope, double intercept, int plotAreaWidthPixels,
                                 double startTimeInSec, double endTimeInSec, double dataTimeIncrementInSec,
                                 int64_t &numPts, QtCharts::QLineSeries &qls, double &miny, double &maxy, int64_t maxFft,
                                 int64_t &numFft, fftw_complex *fftArray ) {
@@ -63,7 +63,7 @@ int DataMediator::genLineSeries(QString filename, int sigIndex, double slope, do
   
   //std::cout << "DataMediator::genLineSeries" << std::endl;
 
-  int st = bd->openRead( filename.toStdString() );
+  int st = bd->openRead( filename );
   if ( st ) {
     bd->dspErrMsg( st );
     return st;
@@ -269,11 +269,11 @@ void DataMediator::initMaxBufSize( int64_t max ) {
   bd->initMaxBufSize( max );
 }
 
-int DataMediator::getDataFullTimeRange( QString filename, double sampleRate, double& minTime, double& maxTime ) {
+int DataMediator::getDataFullTimeRange( std::string filename, double sampleRate, double& minTime, double& maxTime ) {
   return bd->getDataFullTimeRange( filename, sampleRate, minTime, maxTime );
 }
 
-int DataMediator::getRecordRangeForTime( QString filename, double sampleRate, double minTime, double maxTime,
+int DataMediator::getRecordRangeForTime( std::string filename, double sampleRate, double minTime, double maxTime,
                                          int64_t& min, int64_t& max ) {
 
   return bd->getRecordRangeForTime( filename, sampleRate, minTime, maxTime,

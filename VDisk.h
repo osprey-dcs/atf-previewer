@@ -5,6 +5,7 @@
 #ifndef UNTITLED_VDISK_H
 #define UNTITLED_VDISK_H
 
+#include <string.h> // for memcpy
 
 #include <string>
 #include <memory>
