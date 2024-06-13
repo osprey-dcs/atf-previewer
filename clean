@@ -1,0 +1,1 @@
+~/clion-2023.3.4/bin/cmake/linux/x64/bin/cmake --build cmake-build-debug --target clean
