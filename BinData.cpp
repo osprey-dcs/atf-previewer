@@ -33,31 +33,6 @@ BinData::~BinData() {
 
 }
 
-int BinData::getMaxElements ( std::string filename, int64_t& max ) {
-
-  std::filebuf fb;
-  
-  auto result = fb.open( filename, std::ios::in | std::ios::binary );
-  if ( !result ) {
-    return ERRINFO(EMax,"");
-  }
-
-  // read version
-  fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
-  fb.sgetn( (char *) &(dataHdr.version), sizeof(dataHdr.version) );
-
-  // get num of elements
-  int64_t value;
-  fb.sgetn((char *) &value, sizeof(value));
- 
-  fb.close();
-
-  max = value / sizeof(int);
-
-  return 0;
-
-}
-
 int64_t BinData::readTraceData (
  int *buf,
  int64_t readSizeInbytes ) {

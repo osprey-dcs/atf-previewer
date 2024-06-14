@@ -72,9 +72,15 @@ int BinDataBase::readHeader ( void ) {
     return ENoFile;
   }
 
-  oneFb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
-  oneFb.sgetn( (char *) &(dataHdr.version), sizeof(dataHdr.version) );
-  oneFb.sgetn( (char *) &(dataHdr.numBytes), sizeof(dataHdr.numBytes) );
+  return readHeader( oneFb );
+
+}
+
+int BinDataBase::readHeader ( std::filebuf& fb ) {
+
+  fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
+  fb.sgetn( (char *) &(dataHdr.version), sizeof(dataHdr.version) );
+  fb.sgetn( (char *) &(dataHdr.numBytes), sizeof(dataHdr.numBytes) );
 
   hdrRead = true;
 
@@ -167,20 +173,21 @@ int64_t BinDataBase::getHeaderSize( void ) {
 
 }
 
-int BinDataBase::newFile( std::string filename ) { // BinDataMFile class uses this
-  return 0;
+int BinDataBase::newFile( std::string fileName ) { // BinDataMFile class uses this
+  int64_t max;
+  return getMaxElements( fileName, max ); // do this so header is read
 }
 
 void BinDataBase::initMaxBufSize( int64_t max ) {
 }
 
-int BinDataBase::getDataFullTimeRange( std::string filename, double sampleRate, double& minTime, double& maxTime ) {
+int BinDataBase::getDataFullTimeRange( std::string fileName, double sampleRate, double& minTime, double& maxTime ) {
 
   if ( sampleRate <= 0.0 ) return ERRINFO(ESampleRate,"");
 
   int64_t maxElements;
 
-  int st = this->getMaxElements( filename, maxElements );
+  int st = this->getMaxElements( fileName, maxElements );
   if ( st ) {
     dspErrMsg( st );
     return ERRINFO(st,"");
@@ -234,12 +241,35 @@ void BinDataBase::outputSeekToStartOfData( std::filebuf &fb, int64_t firstDataBy
 
 }
 
-int BinDataBase::getMaxElements ( std::string filename, int64_t& max ) {
+int BinDataBase::getMaxElements ( std::string fileName, int64_t& max ) {
 
-  return 0;
+  std::filebuf fb;
+  
+  auto result = fb.open( fileName, std::ios::in | std::ios::binary );
+  if ( !result ) {
+    return ERRINFO(EMax,"");
+  }
+
+  int st = readHeader( fb );
+
+  fb.close();
+
+  max = dataHdr.numBytes / sizeof(int);
+
+  return st;
 
 }
     
+int BinDataBase::getMaxElements ( std::filebuf& fb, int64_t& max ) {
+
+  int st = readHeader( fb );
+
+  max = dataHdr.numBytes / sizeof(int);
+
+  return st;
+
+}
+
 int64_t BinDataBase::getMaxElements ( void ) {
 
   if ( !hdrRead ) return 0;

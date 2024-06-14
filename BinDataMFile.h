@@ -43,15 +43,17 @@ class BinDataMFile : public BinDataBase {
 
   int newFile ( std::string fileName );
 
-  virtual int readHeader ( void );
-  
-  virtual int readVersion ( int64_t& major, int64_t& minor, int64_t& release );
-
-  virtual int readNumBytes ( int64_t& num );
-
   void initMaxBufSize( int64_t max );
 
-  int getMaxElements ( std::string filename, int64_t& max );
+  int getMaxElements ( std::string fileName, int64_t& max );
+  int getMaxElements ( std::filebuf& fb, int64_t& max );
+
+  int readHeader ( std::filebuf& fb );
+  int readHeader ( void );
+  
+  int readVersion ( int64_t& major, int64_t& minor, int64_t& release );
+
+  int readNumBytes ( int64_t& num );
 
   int64_t readTraceData( int *buf, int64_t readSizeInbytes );
   

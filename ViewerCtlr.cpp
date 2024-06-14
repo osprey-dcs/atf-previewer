@@ -108,8 +108,8 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw, const QString& file
   this->dm = this->dmf.createDataMediator( Cnst::BinDataName );
   this->dm->initMaxBufSize( Cnst::MaxMFileBufSize );
   
-  this->bd = this->bdf.createBinData( Cnst::BinDataName );
-  this->bd->initMaxBufSize( Cnst::MaxMFileBufSize );
+  //this->bd = this->bdf.createBinData( Cnst::BinDataName );
+  //this->bd->initMaxBufSize( Cnst::MaxMFileBufSize );
 
   this->fftIn = new fftw_complex[Cnst::MaxFftSize+1];
   this->fftOut = nullptr;

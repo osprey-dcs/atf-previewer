@@ -37,6 +37,8 @@ BinDataMFile::~BinDataMFile() {
 }
 
 int BinDataMFile::newFile( std::string fileName ) {
+  int64_t max;
+  int st = getMaxElements( fileName, max ); // do this so header is read
   return vdisk.setFile ( fileName );
 }
 
@@ -44,29 +46,32 @@ void BinDataMFile::initMaxBufSize( int64_t max ) {
   vdisk.setMaxSize( max );
 }
 
-int BinDataMFile::getMaxElements ( std::string filename, int64_t& max ) {
+int BinDataMFile::getMaxElements ( std::string fileName, int64_t& max ) {
 
   std::filebuf fb;
   
-  auto result = fb.open( filename, std::ios::in | std::ios::binary );
+  auto result = fb.open( fileName, std::ios::in | std::ios::binary );
   if ( !result ) {
     return ERRINFO(EMax,"");
   }
 
-  // read version
-  vdisk.readN( &fb, 0ul, sizeof(dataHdr.version), (char *) &(dataHdr.version) );
-  //fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
-  //fb.sgetn( (char *) version, sizeof(version) );
-
-  // get num of elements
-  int64_t value;
-  vdisk.readN( &fb, (int64_t) sizeof(dataHdr.version), sizeof(value), (char *) &value );
+  int st = readHeader( fb );
 
   fb.close();
 
-  max = value / sizeof(int);
+  max = dataHdr.numBytes / sizeof(int);
 
-  return 0;
+  return st;
+
+}
+
+int BinDataMFile::getMaxElements ( std::filebuf& fb, int64_t& max ) {
+
+  int st = readHeader( fb );
+
+  max = dataHdr.numBytes / sizeof(int);
+
+  return st;
 
 }
 
@@ -76,8 +81,16 @@ int BinDataMFile::readHeader ( void ) {
     return ENoFile;
   }
 
-  vdisk.readN( &oneFb, 0ul, sizeof(dataHdr.version), (char *) &(dataHdr.version) );
-  vdisk.readN( &oneFb, (int64_t) sizeof(dataHdr.version), sizeof(dataHdr.numBytes), (char *) &(dataHdr.numBytes) );
+  int st = readHeader( oneFb );
+
+  return st;
+
+}
+
+int BinDataMFile::readHeader ( std::filebuf& fb ) {
+
+  vdisk.readN( &fb, 0ul, sizeof(dataHdr.version), (char *) &(dataHdr.version) );
+  vdisk.readN( &fb, (int64_t) sizeof(dataHdr.version), sizeof(dataHdr.numBytes), (char *) &(dataHdr.numBytes) );
   oneOffset = getHeaderSize();
 
   hdrRead = true;
@@ -125,6 +138,11 @@ int64_t BinDataMFile::readTraceData (
   if ( !isOpenRead ) {
     return ENoFile;
   }
+
+  if ( ( oneOffset + readSizeInbytes ) > dataHdr.numBytes ) {
+    readSizeInbytes = dataHdr.numBytes - oneOffset;
+    if ( readSizeInbytes <= 0 ) return 0;
+  }
   
   int64_t n = vdisk.readN( &oneFb, oneOffset, readSizeInbytes, (char *) buf );
   oneOffset += readSizeInbytes;
@@ -137,6 +155,13 @@ int64_t BinDataMFile::readTraceData (
  int *buf,
  int64_t readSizeInbytes ) {
 
+  std::cout << "readSizeInbytes 1 = " << readSizeInbytes << std::endl;
+  if ( ( oneOffset + readSizeInbytes ) > dataHdr.numBytes ) {
+    readSizeInbytes = dataHdr.numBytes - oneOffset;
+    if ( readSizeInbytes <= 0 ) return 0;
+  }
+  std::cout << "readSizeInbytes 2 = " << readSizeInbytes << std::endl;
+  
   int64_t n = vdisk.readN( &fb, oneOffset, readSizeInbytes, (char *) buf );
   oneOffset += readSizeInbytes;
   return n;

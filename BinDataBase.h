@@ -88,6 +88,7 @@ class BinDataBase : public ErrHndlr {
 
   virtual int closeFile ( void );
 
+  virtual int readHeader ( std::filebuf& fb );
   virtual int readHeader ( void );
 
   virtual void getVersion ( int64_t& major, int64_t& minor, int64_t& release );
@@ -106,21 +107,21 @@ class BinDataBase : public ErrHndlr {
 
   virtual int64_t getHeaderSize ( void );
 
-  virtual int newFile ( std::string filename );
+  virtual int newFile ( std::string fileName );
 
   virtual void initMaxBufSize ( int64_t max );
 
-  virtual int getDataFullTimeRange ( std::string filename, double sampleRate, double& minTime, double& maxTime );
+  virtual int getDataFullTimeRange ( std::string fileName, double sampleRate, double& minTime, double& maxTime );
   
-  virtual int getRecordRangeForTime ( std::string filename, double sampleRate, double minTime, double maxTime,
+  virtual int getRecordRangeForTime ( std::string fileName, double sampleRate, double minTime, double maxTime,
                                      int64_t& min, int64_t& max );
   
   virtual void inputSeekToStartOfData ( std::filebuf& fb, int64_t firstDataByte );
 
   virtual void outputSeekToStartOfData ( std::filebuf& fb, int64_t firstDataByte );
 
-  virtual int getMaxElements ( std::string filename, int64_t& max );
-
+  virtual int getMaxElements ( std::string fileName, int64_t& max );
+  virtual int getMaxElements ( std::filebuf& fb, int64_t& max );
   virtual int64_t getMaxElements ( void );
 
   virtual void seekToReadOffset ( int64_t offset );
