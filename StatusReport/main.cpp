@@ -9,9 +9,8 @@
 #include <QDebug>
 #include <QString>
 
-#include "DataHeader.h"
-#include "BinFileType.h"
-#include "FileConverterFac.h"
+#include "StatusFileType.h"
+#include "StatusFileFac.h"
 #include "FileUtil.h"
 
 static const char *version = "0.0.1";
@@ -71,88 +70,158 @@ int main ( int argc, char **argv ) {
 
   if ( !chassisSet || ( argc < ( optind + 1 ) || ( argc > ( optind + 1 ) ) ) ) {
     std::cout << "Usage: " << argv[0] <<
-    " --chassis # (1-32) [--summary] [--verbose]" << std::endl;
+    " --chassis # (1-32) [--summary] [--verbose] chassisFileName" << std::endl;
     std::cout << "       " << argv[0] <<
     " --version" << std::endl;
     return -1;
   }
 
   i = optind;
-  char *dataFile = strdup( argv[ i++ ] );
+  char *fileName = strdup( argv[ i++ ] );
 
-  std::cout << "dataFile = " << dataFile << std::endl;
-
-  return 0;
-
-  QString inputRawDataFile( dataFile );
+  QString statusFile( fileName );
   QString chassis( chassisArg );
   if ( !chassis.toInt() ) {
     std::cout << "Illegal chassis argument\n";
     return -1;
   }
   int chassisNum = chassis.toInt();
-  QString outputJsonFile( "file.1" );
-  QString simpleName = FileUtil::extractFileName( outputJsonFile );
-  QString outFileDir = FileUtil::extractDir( outputJsonFile );
-  QString outBinFileRoot = simpleName;
 
   if ( verboseSet ) {
-    std::cout << "         output hdr file = " << outputJsonFile.toStdString() << std::endl;
-    std::cout << "  input binary data file = " << inputRawDataFile.toStdString() << std::endl;
-    std::cout << "output dir and file root = " << outBinFileRoot.toStdString() << std::endl;
+    std::cout << "input status file = " << statusFile.toStdString() << std::endl;
   }
 
   int st;
 
-  std::shared_ptr<DataHeader> dh = std::make_shared<DataHeader>();
-  dh = nullptr;
-
-  QString inputRawDataFileType;
-  std::shared_ptr<BinFileType> bft = std::shared_ptr<BinFileType>( new BinFileType() );
-  st = bft->getRawBinFileType( inputRawDataFile, inputRawDataFileType );
+  QString statusFileType;
+  std::shared_ptr<StatusFileType> sft = std::shared_ptr<StatusFileType>( new StatusFileType() );
+  st = sft->getStatusFileType( statusFile, statusFileType );
   if ( st ) {
-    bft->dspErrMsg( st );
+    sft->dspErrMsg( st );
     return st;
   }
-  if ( verboseSet ) std::cout << "inputRawDataFileType = " << inputRawDataFileType.toStdString() << std::endl;
+  if ( verboseSet ) std::cout << "statusFileType = " << statusFileType.toStdString() << std::endl;
 
-  FileConverterFac fcf;
-  std::shared_ptr<FileConverter> fc = fcf.getFileConverter( inputRawDataFileType );
-  if ( !fc ) {
-    fcf.dspErrMsg();
-    return fcf.mostRecentError;
+  StatusFileFac sff;
+  std::shared_ptr<StatusFileBase> sf = sff.createStatusFile( statusFileType.toStdString() );
+  if ( !sf ) {
+    std::cout << "createStatusFile failed" << std::endl;
+    return -1;
   }
 
-  std::list<int> chanList;
-  st = fc->getRawBinFileChanList( inputRawDataFile, chanList );
+  st = sf->openRead( statusFile.toStdString() );
   if ( st ) {
-    fc->dspErrMsg( st );
+    sf->dspErrMsg( st );
     return st;
   }
 
-  if ( verboseSet ) {
-    std::cout << "channels: ";
-    for ( int ival : chanList ) {
-      std::cout << ival << " ";
-    }
+  st = sf->readHeader();
+  if ( st ) {
+    sf->dspErrMsg( st );
+    return st;
+  }
+
+  int64_t recSize = sf->getRecSize();
+  int64_t numEle = sf->getMaxElements();
+  int buf[PsnStatusFile::NumStatusFields];
+  int prev[PsnStatusFile::NumStatusFields];
+
+  if ( statusFileType == "PSN Status" ) {
+
     std::cout << std::endl;
+
+    if ( summarySet ) {
+
+      sf->getSummaryRecord( buf );
+
+      std::cout << std::setfill(' ') << std::setw(10) << std::right << "status" << "   ";
+      std::cout << std::setfill(' ') << std::setw(10) << std::right << "LOLO" << "   ";
+      std::cout << std::setfill(' ') << std::setw(10) << std::right << "LO" << "   ";
+      std::cout << std::setfill(' ') << std::setw(10) << std::right << "HI" << "   ";
+      std::cout << std::setfill(' ') << std::setw(10) << std::right << "HIHI" << "   ";
+      std::cout << std::dec << std::endl;
+
+      std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::STATUS] << "   ";
+      std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::LOLO] << "   ";
+      std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::LO] << "   ";
+      std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::HI] << "   ";
+      std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::HIHI] << "   ";
+      std::cout << std::dec << std::endl;
+
+      return 0;
+        
+    }
+
+    bool needPrev = true;
+    double time, rcvTime;
+    int64_t n;
+    sf->inputSeekToStartOfData( 0 );
+    n = sf->readData( buf, PsnStatusFile::NumStatusFields*sizeof(int) );
+    double baseTime = (double) buf[PsnStatusFile::SECS] + ( (double) buf[PsnStatusFile::NANOSECS] ) / 1.0e9;
+    double baseRcvTime = (double) buf[PsnStatusFile::RCVSECS] + ( (double) buf[PsnStatusFile::RCVNANOSECS] ) / 1.0e9;
+
+    prev[PsnStatusFile::STATUS] = 0;
+    prev[PsnStatusFile::LOLO]   = 0;
+    prev[PsnStatusFile::LO]     = 0;
+    prev[PsnStatusFile::HI]     = 0;
+    prev[PsnStatusFile::HIHI]   = 0;
+    
+    std::cout << std::setfill(' ') << std::setw(10) << std::right << "rec" << "  ";
+    std::cout << std::setfill(' ') << std::setw(15) << std::right << "time" << " ";
+    std::cout << std::setfill(' ') << std::setw(15) << std::right << "rcv time" << "   ";
+    std::cout << std::setfill(' ') << std::setw(10) << std::right << "status" << "   ";
+    std::cout << std::setfill(' ') << std::setw(10) << std::right << "LOLO" << "   ";
+    std::cout << std::setfill(' ') << std::setw(10) << std::right << "LO" << "   ";
+    std::cout << std::setfill(' ') << std::setw(10) << std::right << "HI" << "   ";
+    std::cout << std::setfill(' ') << std::setw(10) << std::right << "HIHI" << "   ";
+    std::cout << std::dec << std::endl;
+    
+    sf->inputSeekToStartOfData( 0 );
+    
+    for ( int i=0; i<numEle; i++ ) {
+      
+      n = sf->readData( buf, PsnStatusFile::NumStatusFields*sizeof(int) );
+
+      if ( n == ( PsnStatusFile::NumStatusFields*sizeof(int) ) ) {
+
+        if ( ( buf[PsnStatusFile::STATUS] != prev[PsnStatusFile::STATUS] ) ||
+             ( buf[PsnStatusFile::LOLO] != prev[PsnStatusFile::LOLO] ) ||
+             ( buf[PsnStatusFile::LO] != prev[PsnStatusFile::LO] ) ||
+             ( buf[PsnStatusFile::HI] != prev[PsnStatusFile::HI] ) ||
+             ( buf[PsnStatusFile::HIHI] != prev[PsnStatusFile::HIHI] ) ) {
+
+          prev[PsnStatusFile::STATUS] = buf[PsnStatusFile::STATUS];
+          prev[PsnStatusFile::LOLO]   = buf[PsnStatusFile::LOLO];
+          prev[PsnStatusFile::LO]     = buf[PsnStatusFile::LO];
+          prev[PsnStatusFile::HI]     = buf[PsnStatusFile::HI];
+          prev[PsnStatusFile::HIHI]   = buf[PsnStatusFile::HIHI];
+
+          time = (double) buf[PsnStatusFile::SECS] + ( (double) buf[PsnStatusFile::NANOSECS] ) / 1.0e9;
+          time -= baseTime;
+          rcvTime = (double) buf[PsnStatusFile::RCVSECS] + ( (double) buf[PsnStatusFile::RCVNANOSECS] ) / 1.0e9;
+          rcvTime -= baseRcvTime;
+
+          std::cout << std::setfill(' ') << std::setw(10) << std::right << i << ": ";
+          std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << std::fixed << time << " ";
+          std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << rcvTime << "   ";
+          std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::STATUS] << "   ";
+          std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::LOLO] << "   ";
+          std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::LO] << "   ";
+          std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::HI] << "   ";
+          std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::HIHI] << "   ";
+          std::cout << std::dec << std::endl;
+
+        }
+
+      }
+
+    }
+
   }
 
-  if ( verboseSet ) std::cout << "fileMap:" << std::endl;
-  std::map<int,QString> fileMap;
-  for ( int ch : chanList ) {
-    int sigIndex = ( chassisNum - 1 ) * 32 + ch;
-    // no outfiledir for the file name that gets written to the new header file
-    QString fname = fc->buildOutputFileName( sigIndex, "", simpleName );
-    fileMap[sigIndex] = fname;
-    if ( verboseSet ) std::cout << "fileMap[" << sigIndex << "] = " << fname.toStdString() << std::endl;
-  }
-
-  int startingChanIndex = ( chassisNum - 1 ) * 32 + 1;
-  st = fc->convert ( chassisNum, chanList, startingChanIndex, dh.get(), inputRawDataFile, outFileDir,
-                     simpleName, verboseSet );
+  st = sf->closeRead();
   if ( st ) {
-    fc->dspErrMsg( st );
+    sf->dspErrMsg( st );
     return st;
   }
 

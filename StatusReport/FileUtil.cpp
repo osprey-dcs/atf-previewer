@@ -154,10 +154,3 @@ QString FileUtil::getBinDir( const QString& binRoot, const QString& subDir ) {
   return binRoot1;
 
 }
-
-// Unused at the moment
-QString FileUtil::makeBinFileName( DataHeader *dh, const QString& hdrName, int sigIndex ) {
-
-  return "";
-
-}

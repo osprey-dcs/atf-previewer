@@ -20,7 +20,7 @@
 #include <QString>
 #include "ErrHndlr.h"
 
-class BinFileType : public ErrHndlr {
+class StatusFileType : public ErrHndlr {
 
 public:
 
@@ -34,16 +34,15 @@ public:
     { "File read failure: " }
   };
 
-  BinFileType();
-  BinFileType( BinFileType&& ) = delete;
-  BinFileType( BinFileType& ) = delete;
-  BinFileType( const BinFileType& ) = delete;
-  BinFileType& operator=( BinFileType&& ) = delete;
-  BinFileType& operator=( BinFileType& ) = delete;
-  BinFileType& operator=( const BinFileType& ) = delete;
-  int getRawBinFileType( const QString& rawBinFileName, QString& rawBinFileType );
+  StatusFileType();
+  StatusFileType(StatusFileType&& ) = delete;
+  StatusFileType(StatusFileType& ) = delete;
+  StatusFileType(const StatusFileType& ) = delete;
+  StatusFileType& operator=(StatusFileType&& ) = delete;
+  StatusFileType& operator=(StatusFileType& ) = delete;
+  StatusFileType& operator=(const StatusFileType& ) = delete;
+  int getStatusFileType( const QString& statusFileName, QString& statusFileType );
 
 };
-
 
 #endif //FILEREFORMATTER_BINFILETYPE_H
