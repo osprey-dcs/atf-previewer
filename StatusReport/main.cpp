@@ -121,12 +121,21 @@ int main ( int argc, char **argv ) {
     return st;
   }
 
+  int64_t major, minor, release;
+  
   int64_t recSize = sf->getRecSize();
   int64_t numEle = sf->getMaxElements();
   int buf[PsnStatusFile::NumStatusFields];
   int prev[PsnStatusFile::NumStatusFields];
 
   if ( statusFileType == "PSN Status" ) {
+
+    sf->getVersion( major, minor, release );
+    if ( major < 2 ) {
+      std::cout << "Status file version " << major << "." << minor << "." << release <<
+        " is not supported" << std::endl;
+      return -1;
+    }
 
     std::cout << std::endl;
 
