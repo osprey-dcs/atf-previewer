@@ -152,7 +152,7 @@ int main ( int argc, char **argv ) {
         
     }
 
-    bool needPrev = true;
+    bool needFirstDisplay = true;
     double time, rcvTime;
     int64_t n;
     sf->inputSeekToStartOfData( 0 );
@@ -188,7 +188,10 @@ int main ( int argc, char **argv ) {
              ( buf[PsnStatusFile::LOLO] != prev[PsnStatusFile::LOLO] ) ||
              ( buf[PsnStatusFile::LO] != prev[PsnStatusFile::LO] ) ||
              ( buf[PsnStatusFile::HI] != prev[PsnStatusFile::HI] ) ||
-             ( buf[PsnStatusFile::HIHI] != prev[PsnStatusFile::HIHI] ) ) {
+             ( buf[PsnStatusFile::HIHI] != prev[PsnStatusFile::HIHI] ) ||
+             needFirstDisplay ) {
+
+          needFirstDisplay = false;
 
           prev[PsnStatusFile::STATUS] = buf[PsnStatusFile::STATUS];
           prev[PsnStatusFile::LOLO]   = buf[PsnStatusFile::LOLO];
