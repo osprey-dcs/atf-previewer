@@ -1,18 +1,27 @@
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.22)
 project(viewer)
+
+find_package(PkgConfig)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-
 find_package(Qt5 COMPONENTS
         Core
+        OPTIONAL_COMPONENTS
         Gui
         Widgets
         Charts
-        REQUIRED)
+)
+
+if(NOT Qt5Core_FOUND)
+        message(SEND_ERROR "Missing required Qt5Core")
+endif()
+
+if(Qt5Gui_FOUND AND Qt5Widgets_FOUND AND Qt5Charts_FOUND)
+message(STATUS "Build Viewer")
 
 add_executable(viewer main.cpp
         ViewerMainWin.cpp
@@ -94,14 +103,23 @@ add_executable(viewer main.cpp
         DataMediatorFac.h
 )
 
-include_directories(/usr/include/c++/10
-        /home/osprey/fftw/include)
+pkg_check_modules(FFTW REQUIRED IMPORTED_TARGET fftw3)
 
 target_link_libraries(viewer
         Qt5::Core
         Qt5::Gui
         Qt5::Widgets
         Qt5::Charts
-        /home/osprey/fftw/lib/libfftw3.so
+        PkgConfig::FFTW
 )
 
+install(
+        TARGETS viewer
+        RUNTIME DESTINATION bin
+)
+
+else()
+        message(STATUS "Skip Viewer")
+endif()
+
+add_subdirectory(fileReformatter2)

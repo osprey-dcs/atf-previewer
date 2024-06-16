@@ -1,0 +1,17 @@
+name: Build
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+    native:
+        runs-on: "ubuntu-latest"
+        steps:
+        - uses: actions/checkout@v4
+        - name: "apt-get install"
+          run: |
+            sudo apt-get update
+            sudo apt-get -y install cmake libqt5charts5-dev libfftw3-dev
+        - name: cmake
+          run: cmake -S . -B build
+        - name: build
+          run: cmake --build build -j2 -v
