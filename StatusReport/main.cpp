@@ -13,14 +13,15 @@
 #include "StatusFileFac.h"
 #include "FileUtil.h"
 
-static const char *version = "0.0.1";
+static const char *version = "0.0.2";
 
+static const int NUMOPTIONS = 4;
 static struct option long_options[] = {
   { "version", no_argument,       0, 0 },
   { "verbose", no_argument,       0, 0 },
   { "summary", no_argument,       0, 0 },
-  { "chassis", required_argument, 0, 0 },
-  { nullptr,  0,                  0, 0 }
+  { "chan",    required_argument, 0, 0 },
+  { nullptr,   0,                 0, 0 }
 };
 
 int main ( int argc, char **argv ) {
@@ -30,25 +31,26 @@ int main ( int argc, char **argv ) {
   bool versionSet = false;
   bool verboseSet = false;
   bool summarySet = false;
-  bool chassisSet = false;
-  char *chassisArg = nullptr;
+  bool chanSet = false;
+  char *chanArg = nullptr;
 
   option_index = -1;
 
-  for ( i=0; i<3; i++ ) {
+  for ( i=0; i<NUMOPTIONS; i++ ) {
     options = getopt_long(argc, argv, "", long_options, &option_index);
     if ( ( options == -1 ) || ( option_index == -1 ) ) {
       break;
     }
-    if ( !strcmp( long_options[option_index].name, "chassis" ) ) {
-      chassisSet = true;
+    if ( !strcmp( long_options[option_index].name, "chan" ) ) {
+      chanSet = true;
       if ( optarg ) {
-        chassisArg = strdup( optarg );
+        chanArg = strdup( optarg );
       }
       else {
-        chassisArg = strdup( "unknown" );
+        chanArg = strdup( "unknown" );
       }
-    } else if ( !strcmp( long_options[option_index].name, "summary" ) ) {
+    }
+    else if ( !strcmp( long_options[option_index].name, "summary" ) ) {
       summarySet = true;
     }
     else if ( !strcmp( long_options[option_index].name, "verbose" ) ) {
@@ -68,9 +70,9 @@ int main ( int argc, char **argv ) {
     return 0;
   }
 
-  if ( !chassisSet || ( argc < ( optind + 1 ) || ( argc > ( optind + 1 ) ) ) ) {
+  if ( ( argc < ( optind + 1 ) || ( argc > ( optind + 1 ) ) ) ) {
     std::cout << "Usage: " << argv[0] <<
-    " --chassis # (1-32) [--summary] [--verbose] chassisFileName" << std::endl;
+    " [--summary] [--verbose] [--chan # (1-32)] chassisFileName" << std::endl;
     std::cout << "       " << argv[0] <<
     " --version" << std::endl;
     return -1;
@@ -80,12 +82,25 @@ int main ( int argc, char **argv ) {
   char *fileName = strdup( argv[ i++ ] );
 
   QString statusFile( fileName );
-  QString chassis( chassisArg );
-  if ( !chassis.toInt() ) {
-    std::cout << "Illegal chassis argument\n";
-    return -1;
+  QString chan( chanArg );
+  int chanNum;
+  
+  if ( chanSet ) {
+    
+    if ( !chan.toInt() ) {
+      std::cout << "Illegal chan argument\n";
+      return -1;
+    }
+    chanNum = chan.toInt();
+
+    if ( ( chanNum < 1 ) || ( chanNum > 32 ) ) {
+      std::cout << "Illegal chan argument\n";
+      return -1;
+    }
+
   }
-  int chassisNum = chassis.toInt();
+
+  if ( verboseSet && chanSet ) std::cout << "chanNum = " << chanNum << std::endl;
 
   if ( verboseSet ) {
     std::cout << "input status file = " << statusFile.toStdString() << std::endl;
@@ -175,6 +190,8 @@ int main ( int argc, char **argv ) {
     prev[PsnStatusFile::HI]     = 0;
     prev[PsnStatusFile::HIHI]   = 0;
     
+    if ( chanSet ) std::cout << "       channel " << chanNum << std::endl;
+            
     std::cout << std::setfill(' ') << std::setw(10) << std::right << "rec" << "  ";
     std::cout << std::setfill(' ') << std::setw(15) << std::right << "time" << " ";
     std::cout << std::setfill(' ') << std::setw(15) << std::right << "rcv time" << "   ";
@@ -213,15 +230,43 @@ int main ( int argc, char **argv ) {
           rcvTime = (double) buf[PsnStatusFile::RCVSECS] + ( (double) buf[PsnStatusFile::RCVNANOSECS] ) / 1.0e9;
           rcvTime -= baseRcvTime;
 
-          std::cout << std::setfill(' ') << std::setw(10) << std::right << i << ": ";
-          std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << std::fixed << time << " ";
-          std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << rcvTime << "   ";
-          std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::STATUS] << "   ";
-          std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::LOLO] << "   ";
-          std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::LO] << "   ";
-          std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::HI] << "   ";
-          std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::HIHI] << "   ";
-          std::cout << std::dec << std::endl;
+          if ( chanSet ) {
+            
+            uint lolo = ( buf[PsnStatusFile::LOLO] & ( (uint) 1 << (chanNum-1) ) ) > 0;
+            uint lo = ( buf[PsnStatusFile::LO] & ( (uint) 1 << (chanNum-1) ) ) > 0;
+            uint hi = ( buf[PsnStatusFile::HI] & ( (uint) 1 << (chanNum-1) ) ) > 0;
+            uint hihi = ( buf[PsnStatusFile::HIHI] & ( (uint) 1 << (chanNum-1) ) ) > 0;
+
+            std::cout << std::setfill(' ') << std::setw(10) << std::right << i << ": ";
+            std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << std::fixed << time << " ";
+            std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << rcvTime << "   ";
+            std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::STATUS] <<
+              std::dec << std::setfill(' ') <<"   ";
+            std::cout << "  " << std::setw(8) << std::right << lolo << "   ";
+            std::cout << "  " << std::setw(8) << std::right << lo << "   ";
+            std::cout << "  " << std::setw(8) << std::right << hi << "   ";
+            std::cout << "  " << std::setw(8) << std::right << hihi << "   ";
+            std::cout << std::dec << std::endl;
+
+          }
+          else {
+            
+            uint lolo = buf[PsnStatusFile::LOLO];
+            uint lo = buf[PsnStatusFile::LO];
+            uint hi = buf[PsnStatusFile::HI];
+            uint hihi = buf[PsnStatusFile::HIHI];
+
+            std::cout << std::setfill(' ') << std::setw(10) << std::right << i << ": ";
+            std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << std::fixed << time << " ";
+            std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << rcvTime << "   ";
+            std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::STATUS] << "   ";
+            std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::LOLO] << "   ";
+            std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::LO] << "   ";
+            std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::HI] << "   ";
+            std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::HIHI] << "   ";
+            std::cout << std::dec << std::endl;
+
+          }
 
         }
 
