@@ -25,7 +25,9 @@ add_executable(StatusReport main.cpp
         StatusFileBase.cpp
         StatusFileBase.h
         PsnStatusFile.cpp
-        PsnStatusFile.h)
+        PsnStatusFile.h
+        StatusDisplay.cpp
+        StatusDisplay.h)
 target_link_libraries(StatusReport
         Qt5::Core
 )
