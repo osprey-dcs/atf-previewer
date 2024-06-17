@@ -12,16 +12,18 @@
 #include "StatusFileType.h"
 #include "StatusFileFac.h"
 #include "FileUtil.h"
+#include "StatusDisplay.h"
 
-static const char *version = "0.0.2";
+static const char *version = "0.0.3";
 
-static const int NUMOPTIONS = 4;
+static const int NUMOPTIONS = 5;
 static struct option long_options[] = {
-  { "version", no_argument,       0, 0 },
-  { "verbose", no_argument,       0, 0 },
-  { "summary", no_argument,       0, 0 },
-  { "chan",    required_argument, 0, 0 },
-  { nullptr,   0,                 0, 0 }
+  { "version",  no_argument,       0, 0 },
+  { "verbose",  no_argument,       0, 0 },
+  { "summary",  no_argument,       0, 0 },
+  { "showkey", no_argument,        0, 0 },
+  { "chan",     required_argument, 0, 0 },
+  { nullptr,    0,                 0, 0 }
 };
 
 int main ( int argc, char **argv ) {
@@ -31,6 +33,7 @@ int main ( int argc, char **argv ) {
   bool versionSet = false;
   bool verboseSet = false;
   bool summarySet = false;
+  bool showkeySet = false;
   bool chanSet = false;
   char *chanArg = nullptr;
 
@@ -53,6 +56,9 @@ int main ( int argc, char **argv ) {
     else if ( !strcmp( long_options[option_index].name, "summary" ) ) {
       summarySet = true;
     }
+    else if ( !strcmp( long_options[option_index].name, "showkey" ) ) {
+      showkeySet = true;
+    }
     else if ( !strcmp( long_options[option_index].name, "verbose" ) ) {
       verboseSet = true;
     }
@@ -72,7 +78,7 @@ int main ( int argc, char **argv ) {
 
   if ( ( argc < ( optind + 1 ) || ( argc > ( optind + 1 ) ) ) ) {
     std::cout << "Usage: " << argv[0] <<
-    " [--summary] [--verbose] [--chan # (1-32)] chassisFileName" << std::endl;
+    " [--summary] [--showkey] [--verbose] [--chan # (1-32)] chassisFileName" << std::endl;
     std::cout << "       " << argv[0] <<
     " --version" << std::endl;
     return -1;
@@ -107,7 +113,16 @@ int main ( int argc, char **argv ) {
   }
 
   int st;
+  StatusDisplay sdsp;
+  std::string statusLabels;
 
+  if ( showkeySet ) {
+    sdsp.displayKey();
+  }
+  else {
+    std::cout << std::endl;
+  }
+  
   QString statusFileType;
   std::shared_ptr<StatusFileType> sft = std::shared_ptr<StatusFileType>( new StatusFileType() );
   st = sft->getStatusFileType( statusFile, statusFileType );
@@ -152,20 +167,20 @@ int main ( int argc, char **argv ) {
       return -1;
     }
 
-    std::cout << std::endl;
-
     if ( summarySet ) {
 
       sf->getSummaryRecord( buf );
 
-      std::cout << std::setfill(' ') << std::setw(10) << std::right << "status" << "   ";
+      std::cout << std::setfill(' ') << std::setw(18) << std::right << "status" << "    ";
       std::cout << std::setfill(' ') << std::setw(10) << std::right << "LOLO" << "   ";
       std::cout << std::setfill(' ') << std::setw(10) << std::right << "LO" << "   ";
       std::cout << std::setfill(' ') << std::setw(10) << std::right << "HI" << "   ";
       std::cout << std::setfill(' ') << std::setw(10) << std::right << "HIHI" << "   ";
       std::cout << std::dec << std::endl;
 
-      std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::STATUS] << "   ";
+      statusLabels = sdsp.getLabels( buf[PsnStatusFile::STATUS] );
+      std::cout << "[" << std::setw(15) << std::right << statusLabels << "]    ";
+
       std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::LOLO] << "   ";
       std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::LO] << "   ";
       std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::HI] << "   ";
@@ -195,7 +210,7 @@ int main ( int argc, char **argv ) {
     std::cout << std::setfill(' ') << std::setw(10) << std::right << "rec" << "  ";
     std::cout << std::setfill(' ') << std::setw(15) << std::right << "time" << " ";
     std::cout << std::setfill(' ') << std::setw(15) << std::right << "rcv time" << "   ";
-    std::cout << std::setfill(' ') << std::setw(10) << std::right << "status" << "   ";
+    std::cout << std::setfill(' ') << std::setw(18) << std::right << "status" << "    ";
     std::cout << std::setfill(' ') << std::setw(10) << std::right << "LOLO" << "   ";
     std::cout << std::setfill(' ') << std::setw(10) << std::right << "LO" << "   ";
     std::cout << std::setfill(' ') << std::setw(10) << std::right << "HI" << "   ";
@@ -239,9 +254,14 @@ int main ( int argc, char **argv ) {
 
             std::cout << std::setfill(' ') << std::setw(10) << std::right << i << ": ";
             std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << std::fixed << time << " ";
-            std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << rcvTime << "   ";
-            std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::STATUS] <<
-              std::dec << std::setfill(' ') <<"   ";
+            std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << rcvTime << "   " <<
+              std::dec << std::setfill(' ');
+
+            statusLabels = sdsp.getLabels( buf[PsnStatusFile::STATUS] );
+            std::cout << "[" << std::setw(15) << std::right << statusLabels << "]    ";
+
+            //std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::STATUS] <<
+            //  std::dec << std::setfill(' ') <<"   ";
             std::cout << "  " << std::setw(8) << std::right << lolo << "   ";
             std::cout << "  " << std::setw(8) << std::right << lo << "   ";
             std::cout << "  " << std::setw(8) << std::right << hi << "   ";
@@ -258,8 +278,13 @@ int main ( int argc, char **argv ) {
 
             std::cout << std::setfill(' ') << std::setw(10) << std::right << i << ": ";
             std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << std::fixed << time << " ";
-            std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << rcvTime << "   ";
-            std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::STATUS] << "   ";
+            std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << rcvTime << "   " <<
+              std::dec << std::setfill(' ');
+
+            statusLabels = sdsp.getLabels( buf[PsnStatusFile::STATUS] );
+            std::cout << "[" << std::setw(15) << std::right << statusLabels << "]    ";
+
+            //std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::STATUS] << "   ";
             std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::LOLO] << "   ";
             std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::LO] << "   ";
             std::cout << std::hex << "0x" << std::setfill('0') << std::setw(8) << std::right << buf[PsnStatusFile::HI] << "   ";
