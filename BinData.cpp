@@ -41,7 +41,15 @@ int64_t BinData::readTraceData (
     return ENoFile;
   }
 
-  int64_t n = oneFb.sgetn( reinterpret_cast<char *>( buf ), readSizeInbytes );
+  int64_t n;
+  try {
+    n = oneFb.sgetn( reinterpret_cast<char *>( buf ), readSizeInbytes );
+  }
+  catch ( const std::exception& e ) {
+    int err = ERRINFO(EFileRead,"");
+    return 0;
+  }
+
   return n;
 
 }
@@ -51,7 +59,15 @@ int64_t BinData::readTraceData (
  int *buf,
  int64_t readSizeInbytes ) {
 
-  int64_t n = fb.sgetn( reinterpret_cast<char *>( buf ), readSizeInbytes );
+  int64_t n;
+  try {
+    n = fb.sgetn( reinterpret_cast<char *>( buf ), readSizeInbytes );
+  }
+  catch ( const std::exception& e ) {
+    int err = ERRINFO(EFileRead,"");
+    return 0;
+  }
+
   return n;
 
 }

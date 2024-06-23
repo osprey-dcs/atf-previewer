@@ -34,7 +34,7 @@ public:
 
     static const int NumErrs = 4;
     static const int ESuccess = 0;
-    static const int EInFileOpen = 1;
+    static const int EFileOpen = 1;
     static const int ETypeD = 2;
     static const int ETypeS = 3;
     inline static const std::string errMsgs[NumErrs] {

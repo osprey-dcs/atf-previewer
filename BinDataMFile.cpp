@@ -24,6 +24,8 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <fstream>
 #include <cmath>
 
+#include <QString>
+
 #include "BinDataMFile.h"
 
 BinDataMFile::BinDataMFile() {
@@ -49,10 +51,17 @@ void BinDataMFile::initMaxBufSize( int64_t max ) {
 int BinDataMFile::getMaxElements ( std::string fileName, int64_t& max ) {
 
   std::filebuf fb;
-  
-  auto result = fb.open( fileName, std::ios::in | std::ios::binary );
-  if ( !result ) {
-    return ERRINFO(EMax,"");
+
+  try {
+    auto result = fb.open( fileName, std::ios::in | std::ios::binary );
+    if ( !result ) {
+      return ERRINFO(EMax,"");
+    }
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QStringLiteral("file name is %1, %2").arg(fileName.c_str()).arg(e.what());
+    fb.close();
+    return ERRINFO(EMax,qmsg.toStdString());
   }
 
   int st = readHeader( fb );

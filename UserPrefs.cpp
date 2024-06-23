@@ -99,13 +99,19 @@ UserPrefs::UserPrefs() : ErrHndlr( NumErrs, errMsgs ) {
     jd.setObject(jo);
 
     QFile outf{ filename };
-    bool result = outf.open( QIODevice::WriteOnly );
-    if ( result ) {
+    try {
+      bool result = outf.open( QIODevice::WriteOnly );
+      if ( result ) {
         outf.write(jd.toJson(QJsonDocument::Indented));
         outf.close();
+      }
+      else {
+        return ERRINFO(EFileOpen,filename.toStdString());
+      }
     }
-    else {
-      return ERRINFO(EInFileOpen,filename.toStdString());
+    catch ( const std::exception& e ) {
+      QString qmsg = QStringLiteral("file name is %1, %2").arg(filename).arg(e.what());
+      return ERRINFO(EFileOpen,qmsg.toStdString());
     }
 
     return 0;
@@ -117,13 +123,19 @@ UserPrefs::UserPrefs() : ErrHndlr( NumErrs, errMsgs ) {
     QString contents;
 
     QFile inf( QString( UserPrefs::filename ) );
-    bool result = inf.open( QIODevice::ReadOnly );
-    if ( result ) {
-      contents = inf.readAll();
-      inf.close();
+    try {
+      bool result = inf.open( QIODevice::ReadOnly );
+      if ( result ) {
+        contents = inf.readAll();
+        inf.close();
+      }
+      else {
+        return ERRINFO(EFileOpen,filename.toStdString());
+      }
     }
-    else {
-      return ERRINFO(EInFileOpen,filename.toStdString());
+    catch ( const std::exception& e ) {
+      QString qmsg = QStringLiteral("file name is %1, %2").arg(filename).arg(e.what());
+      return ERRINFO(EFileOpen,qmsg.toStdString());
     }
 
     jd = QJsonDocument::fromJson(contents.toUtf8());

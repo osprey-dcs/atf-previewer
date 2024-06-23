@@ -17,16 +17,18 @@ class VDisk : public ErrHndlr {
 
 public:
 
-  static const int NumErrs = 4;
+  static const int NumErrs = 5;
   static const int ESuccess = 0;
   static const int EStat = 1;
   static const int ENoFile = 2;
   static const int EValue = 3;
+  static const int ERead = 4;
   inline static const std::string errMsgs[NumErrs] {
     { "Success" },
     { "File stat failure: " },
     { "No file specified" },
-    { "Zero file length" }
+    { "Zero file length" },
+    { "File read failure" }
   };
   
   VDisk ();

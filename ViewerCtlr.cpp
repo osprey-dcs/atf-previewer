@@ -1705,11 +1705,22 @@ int ViewerCtlr::csvExport ( void ) {
 
       QString bfname = FileUtil::makeBinFileName( dh.get(), this->fileName, sigIndex );
       std::filebuf fb;
-      auto result = fb.open( bfname.toStdString(), std::ios::in | std::ios::binary );
-      if ( result ) {
-        atLeastOneSignal = true;
-        fb.close();
-        numGoodSignalsFound++;
+      try {
+        auto result = fb.open( bfname.toStdString(), std::ios::in | std::ios::binary );
+        if ( result ) {
+          atLeastOneSignal = true;
+          fb.close();
+          numGoodSignalsFound++;
+        }
+        else {
+          int err = ERRINFO(EFileOpen,bfname.toStdString());
+          this->dspErrMsg( err );
+        }
+      }
+      catch ( const std::exception& e ) {
+        QString qmsg = QStringLiteral("file name is %1, %2").arg(bfname).arg(e.what());
+        int err = ERRINFO(EFileOpen,qmsg.toStdString());
+        this->dspErrMsg( err );
       }
       
     }
@@ -1722,7 +1733,14 @@ int ViewerCtlr::csvExport ( void ) {
 
   // open export file
   QString exportFileName = mainWindow->exportDialog->exportFileName;
-  fbExport.open( exportFileName.toStdString() );
+  try {
+    fbExport.open( exportFileName.toStdString() );
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QStringLiteral("file name is %1, %2").arg(exportFileName).arg(e.what());
+    int err = ERRINFO(EFileOpen,qmsg.toStdString());
+    this->dspErrMsg( err );
+  }
 
   QString binFile;
   
@@ -1780,11 +1798,17 @@ int ViewerCtlr::csvExport ( void ) {
     }
     
     //std::fbin = open input bin files and count numSignals
-    auto result2 = fbInput[numSignals].open( binFile.toStdString(), std::ios::in | std::ios::binary );
-    if ( !result2 ) {
-      fbExport.close();
-      closeAll( fbInput, numSignals-1 );
-      return ERRINFO(EFileOpen,binFile.toStdString());
+    try {
+      auto result2 = fbInput[numSignals].open( binFile.toStdString(), std::ios::in | std::ios::binary );
+      if ( !result2 ) {
+        fbExport.close();
+        closeAll( fbInput, numSignals-1 );
+        return ERRINFO(EFileOpen,binFile.toStdString());
+      }
+    }
+    catch ( const std::exception& e ) {
+      QString qmsg = QString("file name is %s, %s").arg(binFile).arg(e.what());
+      return ERRINFO(EFileOpen,qmsg.toStdString());
     }
 
     numSignals++;
@@ -1798,6 +1822,7 @@ int ViewerCtlr::csvExport ( void ) {
   QString inputCsvFileName = "InputCsvFileName";
   st = csv->writeHeader( fbExport, id, desc, startTime, endTime, inputCsvFileName, simpleName );
   if ( st ) {
+    csv->dspErrMsg( st );
     fbExport.close();
     closeAll( fbInput, numSignals );
     return ERRINFO(EFileWrite,"");
@@ -1818,8 +1843,20 @@ int ViewerCtlr::csvExport ( void ) {
   }
 
   st = csv->writeSignalProperties( fbExport, signalIndices, numSignals );
+  if ( st ) {
+    csv->dspErrMsg( st );
+    fbExport.close();
+    closeAll( fbInput, numSignals );
+    return ERRINFO(EFileWrite,"");
+  }
 
   st = csv->writeSignalNames( fbExport, names, numSignals );
+  if ( st ) {
+    csv->dspErrMsg( st );
+    fbExport.close();
+    closeAll( fbInput, numSignals );
+    return ERRINFO(EFileWrite,"");
+  }
 
   // seek to start of binary data for input files
   for ( int i=0; i<numSignals; i++ ) {
@@ -1932,11 +1969,22 @@ int ViewerCtlr::uff58bExport ( void ) {
 
       QString bfname = FileUtil::makeBinFileName( dh.get(), this->fileName, sigIndex );
       std::filebuf fb;
-      auto result = fb.open( bfname.toStdString(), std::ios::in | std::ios::binary );
-      if ( result ) {
-        atLeastOneSignal = true;
-        fb.close();
-        numGoodSignalsFound++;
+      try {
+        auto result = fb.open( bfname.toStdString(), std::ios::in | std::ios::binary );
+        if ( result ) {
+          atLeastOneSignal = true;
+          fb.close();
+          numGoodSignalsFound++;
+        }
+        else {
+          int err = ERRINFO(EFileOpen,bfname.toStdString());
+          this->dspErrMsg( err );
+        }
+      }
+      catch ( const std::exception& e ) {
+        QString qmsg = QStringLiteral("file name is %1, %2").arg(bfname).arg(e.what());
+        int err = ERRINFO(EFileOpen,qmsg.toStdString());
+        this->dspErrMsg( err );
       }
       
     }
@@ -1949,11 +1997,17 @@ int ViewerCtlr::uff58bExport ( void ) {
 
   // open export bin file
   QString exportFileName = mainWindow->exportDialog->exportFileName;
-  auto result = fbExport.open( exportFileName.toStdString(), std::ios::out | std::ios::binary );
-  if ( !result ) {
-    //qWarning()<<__func__<<"Unable to open for writing"<<exportFileName;
-    return ERRINFO(EFileOpen,exportFileName.toStdString());
+  try{
+    auto result = fbExport.open( exportFileName.toStdString(), std::ios::out | std::ios::binary );
+    if ( !result ) {
+      //qWarning()<<__func__<<"Unable to open for writing"<<exportFileName;
+      return ERRINFO(EFileOpen,exportFileName.toStdString());
+    }
   }
+  catch ( const std::exception& e ) {
+      QString qmsg = QString("file name is %s, %s").arg(exportFileName).arg(e.what());
+      return ERRINFO(EFileOpen,qmsg.toStdString());
+    }
 
   // write header and data to the uff58b file for each signal in list
   for ( int sigIndex : sigNumList ) {
@@ -2053,11 +2107,17 @@ int ViewerCtlr::uff58bExport ( void ) {
     st = uff58b->setDataCharacteristics( 11, 0, 0, 0, 0, "NONE", "NONE" ); // unused
 
     //std::fbin = open input bin file
-    result = fbInput.open( binFile.toStdString(), std::ios::in | std::ios::binary );
-    if ( !result ) {
-      //qWarning()<<__func__<<"Unable to open for reading"<<binFile;
-      fbExport.close();
-      return ERRINFO(EFileOpen,binFile.toStdString());
+    try {
+      auto result = fbInput.open( binFile.toStdString(), std::ios::in | std::ios::binary );
+      if ( !result ) {
+        //qWarning()<<__func__<<"Unable to open for reading"<<binFile;
+        fbExport.close();
+        return ERRINFO(EFileOpen,binFile.toStdString());
+      }
+    }
+    catch ( const std::exception& e ) {
+      QString qmsg = QString("file name is %s, %s").arg(binFile).arg(e.what());
+      return ERRINFO(EFileOpen,qmsg.toStdString());
     }
 
     //qWarning() << __func__ << "processing input file: " << binFile << " ...";

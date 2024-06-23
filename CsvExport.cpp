@@ -4,7 +4,8 @@
 
 #include "CsvExport.h"
 
-CsvExport::CsvExport ( const QString& headerFile ) {
+CsvExport::CsvExport ( const QString& headerFile ) :
+  ErrHndlr ( DataHeader::NumErrs, DataHeader::errMsgs ) {
 
   hdrFile = headerFile;
   dh = dhf.createDataHeader();
@@ -24,14 +25,17 @@ int CsvExport::writeHeader( std::ofstream &fb, QString &id, QString &desc,
                             QString &startTime, QString &endTime,
                             QString &inputCsvFileName, QString &headerFileName ) {
 
-  std::stringstream strm;
-
-  fb << "\"Acquistion ID\", \"" << id.toStdString() << "\"" << std::endl;
-  fb << "\"StartTime\", \"" << startTime.toStdString() << "\"" << std::endl;
-  fb << "\"EndTime\", \"" << endTime.toStdString() << "\"" << std::endl;
-  fb << "\"Description\", \"" << desc.toStdString() << "\"" << std::endl;
-  fb << "\"InputCSVFile\", \"" << inputCsvFileName.toStdString()<< "\"" << std::endl;
-  fb << "\"HeaderFile\", \"" << headerFileName.toStdString()<< "\"" << std::endl;
+  try {
+    fb << "\"Acquistion ID\", \"" << id.toStdString() << "\"" << std::endl;
+    fb << "\"StartTime\", \"" << startTime.toStdString() << "\"" << std::endl;
+    fb << "\"EndTime\", \"" << endTime.toStdString() << "\"" << std::endl;
+    fb << "\"Description\", \"" << desc.toStdString() << "\"" << std::endl;
+    fb << "\"InputCSVFile\", \"" << inputCsvFileName.toStdString()<< "\"" << std::endl;
+    fb << "\"HeaderFile\", \"" << headerFileName.toStdString()<< "\"" << std::endl;
+  }
+  catch ( const std::exception& e ) {
+    return ERRINFO(EWriteFailure,e.what());
+  }
 
   return 0;
   
@@ -41,30 +45,36 @@ int CsvExport::writeSignalProperties( std::ofstream &fb, int *signalIndices, int
 
  DataHeader::DataHeaderIndexMapType indexMap = dh->getIndexMap();
 
- for ( int i=0; i<numSignals; i++ ) {
+ try {
+   
+   for ( int i=0; i<numSignals; i++ ) {
 
-   fb << "\"NumSignals\", " << "\"" << numSignals << "\"" << std::endl;
+     fb << "\"NumSignals\", " << "\"" << numSignals << "\"" << std::endl;
 
-   fb << "\"Signal\", " << "\"" << signalIndices[i] << "\"" << std::endl;
-   fb <<  "\"Name\", " << "\"" << std::get<DataHeader::SIGNAME>( indexMap[signalIndices[i]] ).toStdString() << "\"" << std::endl;
-   fb <<  "\"Chassis\", " << "\"" << std::get<DataHeader::ADDRESS_CHASSIS >( indexMap[signalIndices[i]] ) << "\"" << std::endl;
-   fb <<  "\"Channel\", " << "\"" << std::get<DataHeader::ADDRESS_CHANNEL >( indexMap[signalIndices[i]] ) << "\"" << std::endl;
-   fb <<  "\"Desc\", " << "\"" << std::get<DataHeader::DESC>( indexMap[signalIndices[i]] ).toStdString() << "\"" << std::endl;
+     fb << "\"Signal\", " << "\"" << signalIndices[i] << "\"" << std::endl;
+     fb <<  "\"Name\", " << "\"" << std::get<DataHeader::SIGNAME>( indexMap[signalIndices[i]] ).toStdString() << "\"" << std::endl;
+     fb <<  "\"Chassis\", " << "\"" << std::get<DataHeader::ADDRESS_CHASSIS >( indexMap[signalIndices[i]] ) << "\"" << std::endl;
+     fb <<  "\"Channel\", " << "\"" << std::get<DataHeader::ADDRESS_CHANNEL >( indexMap[signalIndices[i]] ) << "\"" << std::endl;
+     fb <<  "\"Desc\", " << "\"" << std::get<DataHeader::DESC>( indexMap[signalIndices[i]] ).toStdString() << "\"" << std::endl;
      
-   fb << "\"Units\", " << "\"" << std::get<DataHeader::EGU>( indexMap[signalIndices[i]] ).toStdString() << "\"" << std::endl;
-   fb <<  "\"Slope\", " << "\"" << std::get<DataHeader::SLOPE>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
-   fb <<  "\"Intercept\", " << "\"" << std::get<DataHeader::INTERCEPT>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
-   fb <<  "\"Type\", " << "\"" << std::get<DataHeader::TYPE>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
-   fb <<  "\"YLabel\", " << "\"" << std::get<DataHeader::YAXISLABEL>( indexMap[signalIndices[i]] ).toStdString() << "\"" << std::endl;
+     fb << "\"Units\", " << "\"" << std::get<DataHeader::EGU>( indexMap[signalIndices[i]] ).toStdString() << "\"" << std::endl;
+     fb <<  "\"Slope\", " << "\"" << std::get<DataHeader::SLOPE>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
+     fb <<  "\"Intercept\", " << "\"" << std::get<DataHeader::INTERCEPT>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
+     fb <<  "\"Type\", " << "\"" << std::get<DataHeader::TYPE>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
+     fb <<  "\"YLabel\", " << "\"" << std::get<DataHeader::YAXISLABEL>( indexMap[signalIndices[i]] ).toStdString() << "\"" << std::endl;
      
-   fb << "\"RespNode\", " << "\"" << std::get<DataHeader::RESPONSENODE>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
-   fb <<  "\"RespDir\", " << "\"" << std::get<DataHeader::RESPONSEDIRECTION>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
-   fb <<  "\"RefNode\", " << "\"" << std::get<DataHeader::REFERENCENODE>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
-   fb <<  "\"RefDir\", " << "\"" << std::get<DataHeader::REFERENCEDIRECTION >( indexMap[signalIndices[i]] ) << "\"" << std::endl;
-   fb <<  "\"Coupling\", " << "\"" << std::get<DataHeader::COUPLING>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
+     fb << "\"RespNode\", " << "\"" << std::get<DataHeader::RESPONSENODE>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
+     fb <<  "\"RespDir\", " << "\"" << std::get<DataHeader::RESPONSEDIRECTION>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
+     fb <<  "\"RefNode\", " << "\"" << std::get<DataHeader::REFERENCENODE>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
+     fb <<  "\"RefDir\", " << "\"" << std::get<DataHeader::REFERENCEDIRECTION >( indexMap[signalIndices[i]] ) << "\"" << std::endl;
+     fb <<  "\"Coupling\", " << "\"" << std::get<DataHeader::COUPLING>( indexMap[signalIndices[i]] ) << "\"" << std::endl;
 
-   fb << "\"DataFileName\", " << "\"" << std::get<DataHeader::DATA_FILENAME >( indexMap[signalIndices[i]] ).toStdString() << "\"" << std::endl;
+     fb << "\"DataFileName\", " << "\"" << std::get<DataHeader::DATA_FILENAME >( indexMap[signalIndices[i]] ).toStdString() << "\"" << std::endl;
 
+   }
+ }
+ catch ( const std::exception& e ) {
+   return ERRINFO(EWriteFailure,e.what());
  }
 
  return 0;
@@ -73,19 +83,22 @@ int CsvExport::writeSignalProperties( std::ofstream &fb, int *signalIndices, int
 
 int CsvExport::writeSignalNames( std::ofstream &fb, QString *names, int numNames ) {
 
-  std::stringstream strm;
-
-  fb << "Rec, Time, ";
+  try {
   
-  for ( int i=0; i<numNames; i++ ) {
+    fb << "Rec, Time, ";
+  
+    for ( int i=0; i<numNames; i++ ) {
 
-    fb << names[i].toStdString() << ", ";
+      fb << names[i].toStdString() << ", ";
+
+    }
+
+    fb << std::endl;
 
   }
-
-  fb << std::endl;
-
-  //nr = fb.sputn( (const char *) (strm.str().c_str()), strm.str().size() );
+  catch ( const std::exception& e ) {
+    return ERRINFO(EWriteFailure,e.what());
+  }
 
   return 0;
 
@@ -93,24 +106,26 @@ int CsvExport::writeSignalNames( std::ofstream &fb, QString *names, int numNames
 
 int CsvExport::writeData( std::ofstream& fb, int64_t rec, double time, double *buf, int64_t n ) {
 
-  int nr;
-  std::stringstream strm;
-
   // write 1 row of data
 
-  fb << std::left << rec << ", ";
-  fb << std::left << std::setprecision(8) << time << ", ";
+  try {
   
-  for ( int i=0; i<n; i++ ) {
+    fb << std::left << rec << ", ";
+    fb << std::left << std::setprecision(8) << time << ", ";
+  
+    for ( int i=0; i<n; i++ ) {
 
-    fb << std::left << std::setprecision(8) << buf[i] << ", ";
+      fb << std::left << std::setprecision(8) << buf[i] << ", ";
+
+    }
+
+    fb << std::endl;
 
   }
+  catch ( const std::exception& e ) {
+    return ERRINFO(EWriteFailure,e.what());
+  }
 
-  fb << std::endl;
-
-  //nr = fb.sputn( (const char *) (strm.str().c_str()), strm.str().size() );
-
-  return nr;
+  return 0;
 
 }

@@ -26,6 +26,8 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <fstream>
 #include <cmath>
 
+#include <QString>
+
 #include "BinDataBase.h"
 
 BinDataBase::BinDataBase() : ErrHndlr( NumErrs, errMsgs ) {
@@ -41,9 +43,15 @@ BinDataBase::~BinDataBase() {
 
 int BinDataBase::openRead( const std::string& name ) {
 
-  auto result = oneFb.open( name, std::ios::in | std::ios::binary );
-  if ( !result ) {
-    return ERRINFO(EFileOpen,name);
+  try {
+    auto result = oneFb.open( name, std::ios::in | std::ios::binary );
+    if ( !result ) {
+      return ERRINFO(EFileOpen,name);
+    }
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QString("file name is %s, %s").arg(name.c_str()).arg(e.what());
+    return ERRINFO(EFileOpen,qmsg.toStdString());
   }
 
   newFile( name );
@@ -78,9 +86,14 @@ int BinDataBase::readHeader ( void ) {
 
 int BinDataBase::readHeader ( std::filebuf& fb ) {
 
-  fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
-  fb.sgetn( (char *) &(dataHdr.version), sizeof(dataHdr.version) );
-  fb.sgetn( (char *) &(dataHdr.numBytes), sizeof(dataHdr.numBytes) );
+  try {
+    fb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
+    fb.sgetn( (char *) &(dataHdr.version), sizeof(dataHdr.version) );
+    fb.sgetn( (char *) &(dataHdr.numBytes), sizeof(dataHdr.numBytes) );
+  }
+  catch ( const std::exception& e ) {
+    return ERRINFO(EFileRead,e.what());
+  }
 
   hdrRead = true;
 
@@ -141,8 +154,13 @@ int BinDataBase::readVersion ( int64_t& major, int64_t& minor, int64_t& release 
     return ENoFile;
   }
 
-  oneFb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
-  oneFb.sgetn( (char *) &(dataHdr.version), sizeof(dataHdr.version) );
+  try {
+    oneFb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
+    oneFb.sgetn( (char *) &(dataHdr.version), sizeof(dataHdr.version) );
+  }
+  catch ( const std::exception& e ) {
+    return ERRINFO(EFileRead,e.what());
+  }
 
   major = dataHdr.version[0];
   minor = dataHdr.version[1];
@@ -157,9 +175,14 @@ int BinDataBase::readNumBytes ( int64_t& num ) {
   if ( !isOpenRead ) {
     return ENoFile;
   }
-  
-  oneFb.pubseekoff( (int64_t) sizeof(dataHdr.version), std::ios::beg, std::ios::in );
-  oneFb.sgetn( (char *) &(dataHdr.numBytes), sizeof(dataHdr.numBytes) );
+
+  try {
+    oneFb.pubseekoff( (int64_t) sizeof(dataHdr.version), std::ios::beg, std::ios::in );
+    oneFb.sgetn( (char *) &(dataHdr.numBytes), sizeof(dataHdr.numBytes) );
+  }
+  catch ( const std::exception& e ) {
+    return ERRINFO(EFileRead,e.what());
+  }
 
   num = dataHdr.numBytes;
 
@@ -245,9 +268,15 @@ int BinDataBase::getMaxElements ( std::string fileName, int64_t& max ) {
 
   std::filebuf fb;
   
-  auto result = fb.open( fileName, std::ios::in | std::ios::binary );
-  if ( !result ) {
-    return ERRINFO(EMax,"");
+  try {
+    auto result = fb.open( fileName, std::ios::in | std::ios::binary );
+    if ( !result ) {
+      return ERRINFO(EMax,"");
+    }
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QString("file name is %s, %s").arg(fileName.c_str()).arg(e.what());
+    return ERRINFO(EMax,qmsg.toStdString());
   }
 
   int st = readHeader( fb );

@@ -18,11 +18,20 @@
 
 #include "ExportDialog.h"
 #include "DataHeaderFac.h"
+#include "ErrHndlr.h"
 #include "Cnst.h"
 
-class CsvExport {
+class CsvExport : public ErrHndlr {
 
 public:
+
+  static const int NumErrs = 2;
+  static const int ESuccess = 0;
+  static const int EWriteFailure = 1;
+  inline static const std::string errMsgs[NumErrs] {
+    { "Success" },
+    { "Output file write failure: " }
+  };
 
   explicit CsvExport ( const QString& qs );
 

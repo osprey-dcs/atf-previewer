@@ -168,8 +168,15 @@ int VDisk::readN( std::filebuf *fb, int64_t start, int64_t length, char *outBuf,
 int VDisk::readFile( std::filebuf *fb, int64_t start, int64_t sizeInBytes,
                     char *outBuf ) {
 
-  fb->pubseekoff( start, std::ios::beg, std::ios::in );
-  int64_t n = fb->sgetn( (char *) outBuf, sizeInBytes );
+  int64_t n;
+  try {
+    fb->pubseekoff( start, std::ios::beg, std::ios::in );
+    n = fb->sgetn( (char *) outBuf, sizeInBytes );
+  }
+  catch ( const std::exception& e ) {
+    int err = ERRINFO(ERead,e.what());
+    return 0;
+  }
 
   return n;
 

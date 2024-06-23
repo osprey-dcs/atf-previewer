@@ -4,7 +4,8 @@
 
 #include "Uff58bExport.h"
 
-Uff58bExport::Uff58bExport ( const QString& headerFile ) {
+Uff58bExport::Uff58bExport ( const QString& headerFile ) :
+  ErrHndlr ( DataHeader::NumErrs, DataHeader::errMsgs ) {
 
   hdrFile = headerFile;
   dh = dhf.createDataHeader();
@@ -200,16 +201,28 @@ int Uff58bExport::writeHeader( std::filebuf &fb ) {
 
   // write spacer: -1 as I6
   n = writeSpacer( fb );
+  if ( n == 0 ) {
+    return ERRINFO(this->mostRecentError,"");
+    this->dspErrMsg( this->mostRecentError );
+  }
   //std::cout << "1 Uff58bExport::writeHeader - spacer n = " << n << std::endl;
 
   // write uff58bIdLine
   //int n = fb.sputn( uff58bIdLine.toStdString().c_str(), uff58bIdLine.size() );
   n = writeBinary( fb, uff58bIdLine.toStdString().c_str(), uff58bIdLine.size() );
+  if ( n == 0 ) {
+    return ERRINFO(this->mostRecentError,"");
+    this->dspErrMsg( this->mostRecentError );
+  }
   //std::cout << "1 Uff58bExport::writeHeader - n = " << n << std::endl;
 
   for ( int i = 0; i<11; i++ ) {
     //write headerLines1thru11[i]
     int n = writeBinary( fb, headerLines1thru11[i].toStdString().c_str(), headerLines1thru11[i].size() );
+    if ( n == 0 ) {
+      return ERRINFO(this->mostRecentError,"");
+      this->dspErrMsg( this->mostRecentError );
+    }
     //std::cout << "header " << i << ", n = " << n << std::endl;
   }
   
@@ -220,8 +233,16 @@ int Uff58bExport::writeHeader( std::filebuf &fb ) {
 int64_t Uff58bExport::writeBinary( std::filebuf &fb, double *buf, int64_t numBytes ) {
 
   // write binary file in chunks
-  
-  int64_t n = fb.sputn( (char *) buf, numBytes );
+
+  int64_t n;
+  try {
+    n = fb.sputn( (char *) buf, numBytes );
+  }
+  catch ( const std::exception& e ) {
+    int err = ERRINFO(EWriteFailure,e.what());
+    this->dspErrMsg(err);
+    return 0;
+  }
 
   return n;
 
@@ -229,7 +250,15 @@ int64_t Uff58bExport::writeBinary( std::filebuf &fb, double *buf, int64_t numByt
 
 int64_t Uff58bExport::writeBinary( std::filebuf &fb, float *buf, int64_t numBytes ) {
 
-  int64_t n = fb.sputn( (char *) buf, numBytes );
+  int64_t n;
+  try {
+    n = fb.sputn( (char *) buf, numBytes );
+  }
+  catch ( const std::exception& e ) {
+    int err = ERRINFO(EWriteFailure,e.what());
+    this->dspErrMsg(err);
+    return 0;
+  }
 
   return n;
 
@@ -237,7 +266,15 @@ int64_t Uff58bExport::writeBinary( std::filebuf &fb, float *buf, int64_t numByte
 
 int64_t Uff58bExport::writeBinary( std::filebuf &fb, char *buf, int64_t numBytes ) {
 
-  int n = fb.sputn( (char *) buf, numBytes );
+  int64_t n;
+  try {
+    n = fb.sputn( (char *) buf, numBytes );
+  }
+  catch ( const std::exception& e ) {
+    int err = ERRINFO(EWriteFailure,e.what());
+    this->dspErrMsg(err);
+    return 0;
+  }
   
   return n;
 
@@ -245,8 +282,16 @@ int64_t Uff58bExport::writeBinary( std::filebuf &fb, char *buf, int64_t numBytes
 
 int64_t Uff58bExport::writeBinary( std::filebuf &fb, const char *buf, int64_t numBytes ) {
 
-  int n = fb.sputn( (char *) buf, numBytes );
-
+  int64_t n;
+  try {
+    n = fb.sputn( (char *) buf, numBytes );
+  }
+  catch ( const std::exception& e ) {
+    int err = ERRINFO(EWriteFailure,e.what());
+    this->dspErrMsg(err);
+    return 0;
+  }
+  
   return n;
 
 }
