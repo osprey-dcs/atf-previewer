@@ -28,7 +28,11 @@ int StatusFileBase::closeWrite(void) {
   return 0;
 }
 
-int StatusFileBase::readHeader(void) {
+int64_t StatusFileBase::readHeader(void) {
+  return 0;
+}
+
+int64_t StatusFileBase::writeHeader(void) {
   return 0;
 }
 
@@ -59,6 +63,24 @@ std::string StatusFileBase::getCccr(void) {
 void StatusFileBase::getSummaryRecord( int *rec ) {
 }
 
+void StatusFileBase::setVersion(int64_t &major, int64_t &minor, int64_t &release) {
+}
+
+void StatusFileBase::setRecSize ( int64_t recSize ) {
+}
+
+void StatusFileBase::setNumBytes ( int64_t numBytes ) {
+}
+
+void StatusFileBase::setFileType ( const std::string& fileType ) {
+}
+
+void StatusFileBase::setCccr ( const std::string& cccr ) {
+}
+
+void StatusFileBase::setSummaryRecord( int *rec ) {
+}
+
 int64_t StatusFileBase::getHeaderSize(void) {
   return 0;
 }
@@ -84,5 +106,12 @@ void StatusFileBase::seekToReadOffset(int64_t offset) {
 }
 
 int64_t StatusFileBase::readData(int *buf, int64_t readSizeInbytes) {
+  return 0;
+}
+
+void StatusFileBase::seekToWriteOffset ( int64_t offset ) {
+}
+
+int64_t StatusFileBase::writeData ( int *buf, int64_t readSizeInbytes ) {
   return 0;
 }

@@ -11,10 +11,9 @@
 
 #include "StatusFileType.h"
 #include "StatusFileFac.h"
-#include "FileUtil.h"
 #include "StatusDisplay.h"
 
-static const char *version = "0.0.3";
+static const char *version = "0.0.4";
 
 static const int NUMOPTIONS = 5;
 static struct option long_options[] = {
@@ -76,11 +75,20 @@ int main ( int argc, char **argv ) {
     return 0;
   }
 
+  bool abort = false;
   if ( ( argc < ( optind + 1 ) || ( argc > ( optind + 1 ) ) ) ) {
+    abort = true;
+  }
+  else if ( !chanSet && !summarySet ) {
+    abort = true;
+  }
+
+  if ( abort ) {
     std::cout << "Usage: " << argv[0] <<
-    " [--summary] [--showkey] [--verbose] [--chan # (1-32)] chassisFileName" << std::endl;
+    " ( --summary || --chan # (1-32) ) [--showkey] chassisFileName" << std::endl;
     std::cout << "       " << argv[0] <<
     " --version" << std::endl;
+    std::cout << std::endl << "       --showkey displays a description of status bit names" << std::endl << std::endl;
     return -1;
   }
 
@@ -145,9 +153,9 @@ int main ( int argc, char **argv ) {
     return st;
   }
 
-  st = sf->readHeader();
-  if ( st ) {
-    sf->dspErrMsg( st );
+  int64_t num = sf->readHeader();
+  if ( num == 0 ) {
+    sf->dspErrMsg( PsnStatusFile::EFileRead );
     return st;
   }
 
@@ -196,6 +204,8 @@ int main ( int argc, char **argv ) {
     int64_t n;
     sf->inputSeekToStartOfData( 0 );
     n = sf->readData( buf, PsnStatusFile::NumStatusFields*sizeof(int) );
+    if ( n == 0 ) sf->dspErrMsg( PsnStatusFile::EFileRead );
+
     double baseTime = (double) buf[PsnStatusFile::SECS] + ( (double) buf[PsnStatusFile::NANOSECS] ) / 1.0e9;
     double baseRcvTime = (double) buf[PsnStatusFile::RCVSECS] + ( (double) buf[PsnStatusFile::RCVNANOSECS] ) / 1.0e9;
 
@@ -207,7 +217,7 @@ int main ( int argc, char **argv ) {
     
     if ( chanSet ) std::cout << "       channel " << chanNum << std::endl;
             
-    std::cout << std::setfill(' ') << std::setw(10) << std::right << "rec" << "  ";
+    std::cout << std::setfill(' ') << std::setw(10) << std::right << "rec";
     std::cout << std::setfill(' ') << std::setw(15) << std::right << "time" << " ";
     std::cout << std::setfill(' ') << std::setw(15) << std::right << "rcv time" << "   ";
     std::cout << std::setfill(' ') << std::setw(18) << std::right << "status" << "    ";
@@ -222,6 +232,7 @@ int main ( int argc, char **argv ) {
     for ( int i=0; i<numEle; i++ ) {
       
       n = sf->readData( buf, PsnStatusFile::NumStatusFields*sizeof(int) );
+      if ( n == 0 ) sf->dspErrMsg( PsnStatusFile::EFileRead );
 
       if ( n == ( PsnStatusFile::NumStatusFields*sizeof(int) ) ) {
 
@@ -252,7 +263,7 @@ int main ( int argc, char **argv ) {
             uint hi = ( buf[PsnStatusFile::HI] & ( (uint) 1 << (chanNum-1) ) ) > 0;
             uint hihi = ( buf[PsnStatusFile::HIHI] & ( (uint) 1 << (chanNum-1) ) ) > 0;
 
-            std::cout << std::setfill(' ') << std::setw(10) << std::right << i << ": ";
+            std::cout << std::setfill(' ') << std::setw(10) << std::right << i;
             std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << std::fixed << time << " ";
             std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << rcvTime << "   " <<
               std::dec << std::setfill(' ');
@@ -276,7 +287,7 @@ int main ( int argc, char **argv ) {
             uint hi = buf[PsnStatusFile::HI];
             uint hihi = buf[PsnStatusFile::HIHI];
 
-            std::cout << std::setfill(' ') << std::setw(10) << std::right << i << ": ";
+            std::cout << std::setfill(' ') << std::setw(10) << std::right << i;
             std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << std::fixed << time << " ";
             std::cout << std::dec << std::setw(15) << std::setprecision(5) << std::right << rcvTime << "   " <<
               std::dec << std::setfill(' ');

@@ -42,6 +42,7 @@ public:
   } PsnStatusHdrType, PsnStatusHdrPtr;
 
   PsnStatusHdrType statusHdr;
+  PsnStatusHdrType outStatusHdr;
 
   // declared in base class
   //std::filebuf readFb;
@@ -67,7 +68,8 @@ public:
   int closeRead ( void );
   int closeWrite ( void );
 
-  int readHeader ( void );
+  int64_t readHeader ( void );
+  int64_t writeHeader(void);
 
   void getVersion ( int64_t& major, int64_t& minor, int64_t& release );
   int64_t getRecSize ( void );
@@ -76,6 +78,14 @@ public:
   std::string getFileType ( void );
   std::string getCccr ( void );
   void getSummaryRecord( int *rec );
+
+  void setVersion(int64_t &major, int64_t &minor, int64_t &release);
+  void setRecSize ( int64_t recSize );
+  void setNumBytes ( int64_t numBytes );
+  void setMaxElements ( int64_t maxEle );
+  void setFileType ( const std::string& fileType );
+  void setCccr ( const std::string& cccr );
+  void setSummaryRecord( int *rec );
 
   int64_t getHeaderSize ( void );
 
@@ -90,6 +100,10 @@ public:
   void seekToReadOffset ( int64_t offset );
 
   int64_t readData ( int *buf, int64_t readSizeInbytes );
+
+  void seekToWriteOffset ( int64_t offset );
+
+  int64_t writeData ( int *buf, int64_t readSizeInbytes );
 
 };
 

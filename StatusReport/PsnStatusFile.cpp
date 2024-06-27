@@ -3,13 +3,18 @@
 //
 
 #include <string.h> // for memset
+#include <exception>
+
+#include <QString>
 
 #include "PsnStatusFile.h"
 
 PsnStatusFile::PsnStatusFile() {
 
   memset( (char *) &statusHdr, 0, sizeof(PsnStatusHdrType) );
+  memset( (char *) &outStatusHdr, 0, sizeof(PsnStatusHdrType) );
   statusHdr.recSize = sizeof(int) * NumStatusFields;
+  outStatusHdr.recSize = sizeof(int) * NumStatusFields;
 
 }
 
@@ -19,9 +24,15 @@ PsnStatusFile::~PsnStatusFile() {
 
 int PsnStatusFile::openRead(const std::string &name) {
 
-  auto result = readFb.open( name, std::ios::in | std::ios::binary );
-  if ( !result ) {
-    return ERRINFO(EFileOpen,name);
+  try {
+    auto result = readFb.open( name, std::ios::in | std::ios::binary );
+    if ( !result ) {
+      return ERRINFO(EFileOpen,name);
+    }
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QStringLiteral("file name is %s, %s").arg(name.c_str()).arg(e.what());
+    return ERRINFO(EFileOpen,qmsg.toStdString());
   }
 
   isOpenRead = true;
@@ -32,9 +43,15 @@ int PsnStatusFile::openRead(const std::string &name) {
 
 int PsnStatusFile::openWrite(const std::string &name) {
 
-  auto result = writeFb.open( name, std::ios::in | std::ios::binary );
-  if ( !result ) {
-    return ERRINFO(EFileOpen,name);
+  try {
+    auto result = writeFb.open( name, std::ios::in | std::ios::binary );
+    if ( !result ) {
+      return ERRINFO(EFileOpen,name);
+    }
+  }
+  catch ( const std::exception& e ) {
+    QString qmsg = QStringLiteral("file name is %s, %s").arg(name.c_str()).arg(e.what());
+    return ERRINFO(EFileOpen,qmsg.toStdString());
   }
 
   isOpenWrite = true;
@@ -67,11 +84,23 @@ int PsnStatusFile::closeWrite ( void ) {
   
 }
 
-int PsnStatusFile::readHeader ( void ) {
+int64_t PsnStatusFile::readHeader ( void ) {
 
-  readFb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
-  int64_t num = readFb.sgetn( (char *) &statusHdr, sizeof(PsnStatusHdrType) );
-  //std::cout << "num = " << num << std::endl;
+  if ( !isOpenRead ) {
+    return 0;
+  }
+
+  int64_t num;
+  
+  try {
+    readFb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
+    num = readFb.sgetn( (char *) &statusHdr, sizeof(PsnStatusHdrType) );
+    //std::cout << "num = " << num << std::endl;
+  }
+  catch ( const std::exception& e ) {
+    std::cout << "PsnStatusFile::readHeader - " << e.what() << std::endl;
+    return 0;
+  }
 
   /*
   std::cout << "version = ";
@@ -91,8 +120,31 @@ int PsnStatusFile::readHeader ( void ) {
 
   hdrRead = true;
   
-  return 0;
+  return num;
   
+}
+
+int64_t PsnStatusFile::writeHeader(void) {
+
+  if ( !isOpenWrite ) {
+    return 0;
+  }
+
+  int64_t num;
+  
+  try {
+    readFb.pubseekoff( 0ul, std::ios::beg, std::ios::in );
+    num = writeFb.sputn( (char *) &outStatusHdr, sizeof(PsnStatusHdrType) );
+  }
+  catch ( const std::exception& e ) {
+    std::cout << "PsnStatusFile::writeHeader - " << e.what() << std::endl;
+    return 0;
+  }
+
+  hdrWritten = true;
+  
+  return num;
+
 }
 
 void PsnStatusFile::getVersion(int64_t &major, int64_t &minor, int64_t &release) {
@@ -173,6 +225,48 @@ void PsnStatusFile::getSummaryRecord( int *rec ) {
 
 }
 
+void PsnStatusFile::setVersion(int64_t &major, int64_t &minor, int64_t &release) {
+
+    major = outStatusHdr.version[0];
+    minor = outStatusHdr.version[1];
+    release = outStatusHdr.version[2];
+
+}
+  
+void PsnStatusFile::setRecSize ( int64_t recSize ) {
+
+  outStatusHdr.recSize = recSize;
+
+}
+
+void PsnStatusFile::setNumBytes ( int64_t numBytes ) {
+
+  outStatusHdr.numBytes = numBytes;
+
+}
+
+void PsnStatusFile::setFileType ( const std::string& fileType ) {
+
+  strncpy( outStatusHdr.fileType, fileType.c_str(), PsnStatusFile::NumStatusFileType );
+  outStatusHdr.fileType[PsnStatusFile::NumStatusFileType] = 0;
+
+}
+
+void PsnStatusFile::setCccr ( const std::string& cccr ) {
+
+  strncpy( outStatusHdr.cccr, cccr.c_str(), PsnStatusFile::NumCccr );
+  outStatusHdr.cccr[PsnStatusFile::NumCccr] = 0;
+
+}
+
+void PsnStatusFile::setSummaryRecord( int *rec ) {
+
+  for ( int i=0; i<NumStatusFields; i++ ) {
+    rec[i] = outStatusHdr.summaryValues[i];
+  }
+  
+}
+
 int64_t PsnStatusFile::getHeaderSize(void) {
 
   return sizeof(PsnStatusHdrType);
@@ -215,9 +309,44 @@ void PsnStatusFile::seekToReadOffset(int64_t offset) {
 
 int64_t PsnStatusFile::readData(int *buf, int64_t readSizeInbytes) {
 
+  int64_t num;
+  
   if ( isOpenRead ) {
-    int64_t num = readFb.sgetn( (char *) buf, readSizeInbytes );
-    return num;
+    try {
+      num = readFb.sgetn( (char *) buf, readSizeInbytes );
+      return num;
+    }
+    catch ( const std::exception& e ) {
+      std::cout << "PsnStatusFile::readData - " << e.what() << std::endl;
+      return 0;
+    }
+  }
+  
+  return 0;
+
+}
+
+void PsnStatusFile::seekToWriteOffset ( int64_t offset ) {
+
+  if ( isOpenWrite ) {
+    writeFb.pubseekoff( offset, std::ios::beg, std::ios::out );
+  }
+
+}
+
+int64_t PsnStatusFile::writeData ( int *buf, int64_t writeSizeInbytes ) {
+
+  int64_t num;
+  
+  if ( isOpenWrite ) {
+    try {
+      num = writeFb.sputn( (char *) buf, writeSizeInbytes );
+      return num;
+    }
+    catch ( const std::exception& e ) {
+      std::cout << "PsnStatusFile::writeData - " << e.what() << std::endl;
+      return 0;
+    }
   }
   
   return 0;

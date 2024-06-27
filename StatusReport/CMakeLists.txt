@@ -14,8 +14,8 @@ find_package(Qt5 COMPONENTS
 add_executable(StatusReport main.cpp
         StatusFileType.cpp
         StatusFileType.h
-        FileUtil.cpp
-        FileUtil.h
+#        FileUtil.cpp
+#        FileUtil.h
         DspErr.cpp
         DspErr.h
         ErrHndlr.cpp

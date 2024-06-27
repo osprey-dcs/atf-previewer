@@ -9,7 +9,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
-#include <strstream>
+#include <sstream>
 
 /*
 Bit 4: Calibration factors are invalid.
