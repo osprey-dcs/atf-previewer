@@ -12,22 +12,23 @@ find_package(Qt5 COMPONENTS
         REQUIRED)
 
 add_executable(StatusReport main.cpp
-        StatusFileType.cpp
-        StatusFileType.h
-#        FileUtil.cpp
-#        FileUtil.h
-        DspErr.cpp
-        DspErr.h
-        ErrHndlr.cpp
-        ErrHndlr.h
-        StatusFileFac.cpp
-        StatusFileFac.h
-        StatusFileBase.cpp
-        StatusFileBase.h
-        PsnStatusFile.cpp
-        PsnStatusFile.h
+        ../common/StatusFileType.cpp
+        ../common/StatusFileType.h
+        ../common/DspErr.cpp
+        ../common/DspErr.h
+        ../common/ErrHndlr.cpp
+        ../common/ErrHndlr.h
+        ../common/StatusFileFac.cpp
+        ../common/StatusFileFac.h
+        ../common/StatusFileBase.cpp
+        ../common/StatusFileBase.h
+        ../common/PsnStatusFile.cpp
+        ../common/PsnStatusFile.h
         StatusDisplay.cpp
         StatusDisplay.h)
+
+include_directories(../common)
+      
 target_link_libraries(StatusReport
         Qt5::Core
 )
