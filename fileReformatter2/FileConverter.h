@@ -38,7 +38,7 @@ public:
     { "Unexpected quantity, internal error failure" },
     { "File read failure: " },
     { "File write failure: " },
-    { "Sequence number failure" }
+    { "Sequence number failure: " }
   };
 
   FileConverter();

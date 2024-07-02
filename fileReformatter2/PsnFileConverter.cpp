@@ -177,7 +177,8 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
 
       if ( !firstSeqNum ) {
         if ( seq != prevSeqNum+1 ) {
-          return ERRINFO(ESequence,"");
+          QString qmsg = QStringLiteral("prev seq = %1, cur seq = %2").arg(prevSeqNum).arg(seq);
+          return ERRINFO(ESequence,qmsg.toStdString());
         }
         prevSeqNum = seq;
       }
@@ -204,7 +205,8 @@ int PsnFileConverter::convert ( int chassisIndex, std::list<int>& chanList, int 
 
       if ( !firstSeqNum ) {
         if ( seq != prevSeqNum+1 ) {
-          return ERRINFO(ESequence,"");
+          QString qmsg = QStringLiteral("prev seq = %1, cur seq = %2").arg(prevSeqNum).arg(seq);
+          return ERRINFO(ESequence,qmsg.toStdString());
         }
         prevSeqNum = seq;
       }
