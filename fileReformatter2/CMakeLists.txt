@@ -1,21 +1,26 @@
 add_executable(FileReformatter2 main.cpp
-        BinFileType.cpp
-        DataHeader.cpp
+        ../common/BinFileType.cpp
+        ../common/BinFileType.h
+        ../common/DataHeader.cpp
+        ../common/DataHeader.h
         FileConverter.cpp
         FileConverter.h
         FileUtil.cpp
+        FileUtil.h
         PsnFileConverter.cpp
         PsnFileConverter.h
         FileConverterFac.cpp
-        DataHeaderFac.cpp
-        DataHeaderFac.h
-        DspErr.cpp
-        DspErr.h
-        ErrHndlr.cpp
-        ErrHndlr.h)
+        FileConverterFac.h
+        ../common/DataHeaderFac.cpp
+        ../common/DataHeaderFac.h
+        ../common/DspErr.cpp
+        ../common/DspErr.h
+        ../common/ErrHndlr.cpp
+        ../common/ErrHndlr.h)
 target_link_libraries(FileReformatter2
         Qt5::Core
 )
+include_directories(../common)
 install(
         TARGETS FileReformatter2
         RUNTIME DESTINATION bin
