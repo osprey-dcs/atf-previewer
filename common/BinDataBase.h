@@ -27,7 +27,6 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <fstream>
 #include <string>
 
-#include "Cnst.h"
 #include "ErrHndlr.h"
 
 class BinDataBase : public ErrHndlr {

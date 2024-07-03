@@ -40,14 +40,14 @@ add_executable(viewer main.cpp
         ViewerGraph.h
         ViewerGraphLogY.cpp
         ViewerGraphLogY.h
-        DataHeader.cpp
-        DataHeader.h
-        DataHeaderFac.cpp
-        DataHeaderFac.h
-        BinDataFac.cpp
-        BinDataFac.h
-        BinData.cpp
-        BinData.h
+        common/DataHeader.cpp
+        common/DataHeader.h
+        common/DataHeaderFac.cpp
+        common/DataHeaderFac.h
+        common/BinDataFac.cpp
+        common/BinDataFac.h
+        common/BinData.cpp
+        common/BinData.h
         Combo.cpp
         Combo.h
         Cnst.h
@@ -76,11 +76,12 @@ add_executable(viewer main.cpp
         ShortcutDialog.cpp
         ShortcutDialog.h
         FileUtil.cpp
-        BinDataBase.cpp
-        BinDataBase.h
-        BinDataMFile.cpp
-        BinDataMFile.h
-        VDisk.cpp
+        common/BinDataBase.cpp
+        common/BinDataBase.h
+        common/BinDataMFile.cpp
+        common/BinDataMFile.h
+        common/VDisk.cpp
+        common/VDisk.h
         ExportDialog.cpp
         ExportDialog.h
         ChanSelector.cpp
@@ -93,15 +94,17 @@ add_executable(viewer main.cpp
         RoiSelector.h
         Tunable.cpp
         Tunable.h
-        DspErr.cpp
-        DspErr.h
-        ErrHndlr.cpp
-        ErrHndlr.h
+        common/DspErr.cpp
+        common/DspErr.h
+        common/ErrHndlr.cpp
+        common/ErrHndlr.h
         DataMediator.cpp
         DataMediator.h
         DataMediatorFac.cpp
         DataMediatorFac.h
-)
+        )
+
+include_directories(common)
 
 pkg_check_modules(FFTW REQUIRED IMPORTED_TARGET fftw3)
 
