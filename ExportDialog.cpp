@@ -196,7 +196,7 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
         "All files ( *.* )" } );
   }
   else {
-    fileSelect->setDefaultSuffix( "cvs" );
+    fileSelect->setDefaultSuffix( "csv" );
     fileSelect->setNameFilters( { "Export files ( *.csv )",
         "All files ( *.* )" } );
   }

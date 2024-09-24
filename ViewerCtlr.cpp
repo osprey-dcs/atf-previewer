@@ -1737,9 +1737,12 @@ int ViewerCtlr::csvExport ( void ) {
   // open export file
   QString exportFileName = mainWindow->exportDialog->exportFileName;
   try {
-    //fbExport.open( exportFileName.toStdString() );
-    //fbExport.rdbuf()->pubsetbuf( buf, BufSize );
+    //f = nullptr;
     f = fopen( exportFileName.toStdString().c_str(), "w" );
+    if ( !f ) {
+      fbExport.open( exportFileName.toStdString() );
+      fbExport.rdbuf()->pubsetbuf( buf, BufSize );
+    }
   }
   catch ( const std::exception& e ) {
     QString qmsg = QStringLiteral("file name is %1, %2").arg(exportFileName).arg(e.what());
@@ -1806,8 +1809,12 @@ int ViewerCtlr::csvExport ( void ) {
     try {
       auto result2 = fbInput[numSignals].open( binFile.toStdString(), std::ios::in | std::ios::binary );
       if ( !result2 ) {
-        //fbExport.close();
-        fclose( f );
+        if ( f ) {
+          fclose( f );
+        }
+        else {
+          fbExport.close();
+        }
         closeAll( fbInput, numSignals-1 );
         return ERRINFO(EFileOpen,binFile.toStdString());
       }
@@ -1829,8 +1836,12 @@ int ViewerCtlr::csvExport ( void ) {
   st = csv->writeHeader( f, fbExport, id, desc, startTime, endTime, inputCsvFileName, simpleName );
   if ( st ) {
     csv->dspErrMsg( st );
-    //fbExport.close();
-    fclose( f );
+    if ( f ) {
+      fclose( f );
+    }
+    else {
+      fbExport.close();
+    }
     closeAll( fbInput, numSignals );
     return ERRINFO(EFileWrite,"");
   }
@@ -1852,8 +1863,12 @@ int ViewerCtlr::csvExport ( void ) {
   st = csv->writeSignalProperties( f, fbExport, signalIndices, numSignals );
   if ( st ) {
     csv->dspErrMsg( st );
-    //fbExport.close();
-    fclose( f );
+    if ( f ) {
+      fclose( f );
+    }
+    else {
+      fbExport.close();
+    }
     closeAll( fbInput, numSignals );
     return ERRINFO(EFileWrite,"");
   }
@@ -1861,8 +1876,12 @@ int ViewerCtlr::csvExport ( void ) {
   st = csv->writeSignalNames( f, fbExport, names, numSignals );
   if ( st ) {
     csv->dspErrMsg( st );
-    //fbExport.close();
-    fclose( f );
+    if ( f ) {
+      fclose( f );
+    }
+    else {
+      fbExport.close();
+    }
     closeAll( fbInput, numSignals );
     return ERRINFO(EFileWrite,"");
   }
@@ -1946,8 +1965,12 @@ int ViewerCtlr::csvExport ( void ) {
   closeAll( fbInput, numSignals );
 
   // close export file
-  //fbExport.close();
-  fclose( f );
+  if ( f ) {
+    fclose( f );
+  }
+  else {
+    fbExport.close();
+  }
 
   // close (hide) export dialog
   this->mainWindow->exportDialog->close();
