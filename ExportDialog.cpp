@@ -1,6 +1,9 @@
 //
 // Created by jws3 on 5/9/24.
 //
+// update 9/21/2024
+//   o add progress bar
+//
 
 #include <QSharedPointer>
 
@@ -131,8 +134,25 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   hl1 = new QHBoxLayout();
   hl2 = new QHBoxLayout();
 
-  gl->addLayout( hl1, 8, 1, Qt::AlignLeft );
+  gl->addLayout( hl1, 8, 1, Qt::AlignTop );
   gl->addLayout( hl2, 8, 2, Qt::AlignLeft );
+
+  progressLabel = new QLabel( "Progress");
+  progress = new QProgressBar();
+  progress->setRange( 0.0, 100.0 );
+  progress->setValue( 0.0 );
+
+  hl1->addWidget( progressLabel, 0 );
+  hl2->addWidget( progress, 9 );
+  //hl2->addStretch( 9 );
+
+  // ----------------------------------------------
+
+  hl1 = new QHBoxLayout();
+  hl2 = new QHBoxLayout();
+
+  gl->addLayout( hl1, 9, 1, Qt::AlignLeft );
+  gl->addLayout( hl2, 9, 2, Qt::AlignLeft );
 
   ok = new QPushButton( "OK" );
   cancel = new QPushButton( "Cancel" );
@@ -141,6 +161,8 @@ ExportDialog::ExportDialog ( QWidget *parent, const Qt::WindowFlags &f) : QDialo
   hl2->addWidget( cancel, 0 );
   hl2->addStretch( 9 );
 
+  // ----------------------------------------------
+  
   fileSelect = new QFileDialog( nullptr, "Select File", "", "" );
   fileSelect->setAcceptMode( QFileDialog::AcceptSave );
   fileSelect->setLabelText(QFileDialog::Accept, "Export" );
@@ -234,6 +256,7 @@ void ExportDialog::open ( void ) {
   int parentX = this->refWidget->pos().x();
   int parentY = this->refWidget->pos().y();
 
+  this->progress->setValue( 0.0 );
   this->move( parentX + 100, parentY + 100 );
   this->show();
 
@@ -355,8 +378,8 @@ void ExportDialog::exportFileSelected( const QString& file ) {
   }
   
   up->update();
-  
-  close();
+
+  //close();
 
 }
 

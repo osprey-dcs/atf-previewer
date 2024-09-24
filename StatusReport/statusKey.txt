@@ -1,0 +1,9 @@
+>     Bit 4: Calibration factors are invalid.
+>     Bit 3: Packet transmission overrun
+>     Bit 2: Packet building overrun
+>     Bit 1: Time of day (Seconds/Nanosecods fields) may be invalid
+>     Bit 0: System clock PLL unlocked
+
+Please note that bit 4 is so far always set, and should be ignored.
+This firmware feature is not currently used.
+

@@ -18,6 +18,7 @@
 #include <QTextEdit>
 #include <QString>
 #include <QFileDialog>
+#include <QProgressBar>
 
 #include "UserPrefsFac.h"
 #include "Cnst.h"
@@ -66,6 +67,8 @@ public:
   QLabel *chanSelectLabel;
   QTextEdit *chanSelectTextEdit;
   QString chanSelect;
+  QLabel *progressLabel;
+  QProgressBar *progress;
   QPushButton *ok;
   QPushButton *cancel;
 

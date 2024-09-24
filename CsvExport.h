@@ -9,6 +9,8 @@
 #ifndef VIEWER_CSVEXPORT_H
 #define VIEWER_CSVEXPORT_H
 
+#include <stdio.h>
+
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -39,15 +41,15 @@ public:
 
   int setOutFile ( const QString& qs );
 
-  int writeHeader( std::ofstream &fb, QString &id, QString &desc,
+  int writeHeader( FILE *f, std::ofstream &fb, QString &id, QString &desc,
                    QString &startTime, QString &endTime,
                    QString &inputCsvFileName, QString &headerFileName );
 
-  int writeSignalProperties( std::ofstream &fb, int *signalIndices, int numSignals );
+  int writeSignalProperties( FILE *f, std::ofstream &fb, int *signalIndices, int numSignals );
   
-  int writeSignalNames( std::ofstream &fb, QString *names, int numNames );
+  int writeSignalNames( FILE *f, std::ofstream &fb, QString *names, int numNames );
   
-  int writeData( std::ofstream &fb, int64_t rec, double time, double *buf, int64_t numBytes );
+  int writeData( FILE *f, std::ofstream &fb, int64_t rec, double time, double *buf, int64_t numBytes );
   
   DataHeaderFac dhf;
   std::shared_ptr<DataHeader> dh;

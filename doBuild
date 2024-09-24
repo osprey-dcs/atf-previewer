@@ -13,5 +13,5 @@ echo ""
 echo ""
 
 echo "run as:"
-echo "  /home/osprey/viewer/cmake-build-debug/viewer &"
+echo "  /home/osprey/atf-previewer/cmake-build-debug/viewer &"
 echo ""

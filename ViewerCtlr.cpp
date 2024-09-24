@@ -18,6 +18,7 @@ If not, see <https://www.gnu.org/licenses/>.
 //
 
 #include <unistd.h>
+#include <stdio.h>
 
 #include <array>
 #include <fstream>
@@ -1662,17 +1663,19 @@ static void zero( int *val, int n ) {
 
 int ViewerCtlr::csvExport ( void ) {
 
-  //std::cout << "ViewerCtlr::doCsvExport" << std::endl;
-
   if ( !haveHeader ) {
     //std::cout << "No header file is open\n";
     return ERRINFO(EHdr,"");
   }
 
+  const int BufSize = 2000000;
+  char *buf = new char[BufSize+1];
+  
   int st, i, ii, numSignals;
   QString str;
   std::filebuf fbInput[Cnst::MaxSignals+1];
   std::ofstream fbExport;
+  FILE *f;
   int signalIndices[Cnst::MaxSignals+1];
 
   QString simpleName = FileUtil::extractFileName( this->fileName ) + "." + Cnst::HdrExtension.c_str();
@@ -1734,7 +1737,9 @@ int ViewerCtlr::csvExport ( void ) {
   // open export file
   QString exportFileName = mainWindow->exportDialog->exportFileName;
   try {
-    fbExport.open( exportFileName.toStdString() );
+    //fbExport.open( exportFileName.toStdString() );
+    //fbExport.rdbuf()->pubsetbuf( buf, BufSize );
+    f = fopen( exportFileName.toStdString().c_str(), "w" );
   }
   catch ( const std::exception& e ) {
     QString qmsg = QStringLiteral("file name is %1, %2").arg(exportFileName).arg(e.what());
@@ -1801,7 +1806,8 @@ int ViewerCtlr::csvExport ( void ) {
     try {
       auto result2 = fbInput[numSignals].open( binFile.toStdString(), std::ios::in | std::ios::binary );
       if ( !result2 ) {
-        fbExport.close();
+        //fbExport.close();
+        fclose( f );
         closeAll( fbInput, numSignals-1 );
         return ERRINFO(EFileOpen,binFile.toStdString());
       }
@@ -1820,10 +1826,11 @@ int ViewerCtlr::csvExport ( void ) {
   QString startTime = dh->getString( "AcquisitionStartDate" );
   QString endTime = dh->getString( "AcquisitionEndDate" );
   QString inputCsvFileName = "InputCsvFileName";
-  st = csv->writeHeader( fbExport, id, desc, startTime, endTime, inputCsvFileName, simpleName );
+  st = csv->writeHeader( f, fbExport, id, desc, startTime, endTime, inputCsvFileName, simpleName );
   if ( st ) {
     csv->dspErrMsg( st );
-    fbExport.close();
+    //fbExport.close();
+    fclose( f );
     closeAll( fbInput, numSignals );
     return ERRINFO(EFileWrite,"");
   }
@@ -1842,18 +1849,20 @@ int ViewerCtlr::csvExport ( void ) {
     names[i] = std::get<DataHeader::SIGNAME>( indexMap[ii] );
   }
 
-  st = csv->writeSignalProperties( fbExport, signalIndices, numSignals );
+  st = csv->writeSignalProperties( f, fbExport, signalIndices, numSignals );
   if ( st ) {
     csv->dspErrMsg( st );
-    fbExport.close();
+    //fbExport.close();
+    fclose( f );
     closeAll( fbInput, numSignals );
     return ERRINFO(EFileWrite,"");
   }
 
-  st = csv->writeSignalNames( fbExport, names, numSignals );
+  st = csv->writeSignalNames( f, fbExport, names, numSignals );
   if ( st ) {
     csv->dspErrMsg( st );
-    fbExport.close();
+    //fbExport.close();
+    fclose( f );
     closeAll( fbInput, numSignals );
     return ERRINFO(EFileWrite,"");
   }
@@ -1877,7 +1886,23 @@ int ViewerCtlr::csvExport ( void ) {
   int64_t rec = 0;
   double time = minT;
 
+  int maxMs = 250;
+  int updateCount = 0;
+  int updateThreshold = fmax( numFullOps / 3600, 100 );
+
   for ( i=0; i<numFullOps; i++ ) {
+
+    if ( ++updateCount > updateThreshold ) {
+
+      updateCount = 0;
+
+      //std::cout << "i = " << i << "   progress value = " << (double) i / (double) numFullOps * 100.0 << std::endl;
+      this->mainWindow->exportDialog->progress->setValue( (double) i / (double) numFullOps * 100.0 );
+
+      //std::cout << "loop processEvents" << std::endl;
+      QApplication::processEvents(QEventLoop::AllEvents, maxMs);
+
+    }
 
     for ( int ii=0; ii<numSignals; ii++ ) {
       nr[ii] += this->dm->readTraceData( fbInput[ii], intBuf[ii], 100 );
@@ -1887,7 +1912,7 @@ int ViewerCtlr::csvExport ( void ) {
       for ( int ii=0; ii<numSignals; ii++ ) {
         outBuf[ii] = (double) intBuf[ii][iii] * slope[ii] + intercept[ii];
       }
-      nw += csv->writeData( fbExport, rec, time, outBuf, numSignals );
+      nw += csv->writeData( f, fbExport, rec, time, outBuf, numSignals );
       rec++;
       time += timeInc;
     }
@@ -1897,6 +1922,11 @@ int ViewerCtlr::csvExport ( void ) {
   // perform final op
   if ( numRemaining ) {
 
+    this->mainWindow->exportDialog->progress->setValue( 100.0 );
+      
+    //std::cout << "final processEvents" << std::endl;
+    QApplication::processEvents(QEventLoop::AllEvents, maxMs);
+
     for ( int ii=0; ii<numSignals; ii++ ) {
       nr[ii] += this->dm->readTraceData( fbInput[ii], intBuf[ii], numRemaining );
     }
@@ -1905,7 +1935,7 @@ int ViewerCtlr::csvExport ( void ) {
       for ( int ii=0; ii<numSignals; ii++ ) {
         outBuf[ii] = (double) intBuf[ii][iii] * slope[ii] + intercept[ii];
       }
-      nw += csv->writeData( fbExport, rec, time, outBuf, numSignals );
+      nw += csv->writeData( f, fbExport, rec, time, outBuf, numSignals );
       rec++;
       time += timeInc;
     }
@@ -1916,7 +1946,11 @@ int ViewerCtlr::csvExport ( void ) {
   closeAll( fbInput, numSignals );
 
   // close export file
-  fbExport.close();
+  //fbExport.close();
+  fclose( f );
+
+  // close (hide) export dialog
+  this->mainWindow->exportDialog->close();
   
   std::cout << "CSV export complete." << std::endl;
 
@@ -2151,8 +2185,24 @@ int ViewerCtlr::uff58bExport ( void ) {
 
     nr = nw = 0;
     
+    int maxMs = 250;
+    int updateCount = 0;
+    int updateThreshold = fmax( numFullOps / 3600, 100 );
+
     //read and write binary files in chunks
     for ( size_t i=0; i<numFullOps; i++ ) {
+
+      if ( ++updateCount > updateThreshold ) {
+
+        updateCount = 0;
+
+        //std::cout << "i = " << i << "   progress value = " << (double) i / (double) numFullOps * 100.0 << std::endl;
+        this->mainWindow->exportDialog->progress->setValue( (double) i / (double) numFullOps * 100.0 );
+
+        //std::cout << "loop processEvents" << std::endl;
+        QApplication::processEvents(QEventLoop::AllEvents, maxMs);
+
+      }
 
       nr += this->dm->readTraceData( fbInput, intBuf.data(), intBuf.size() );
 
@@ -2167,6 +2217,11 @@ int ViewerCtlr::uff58bExport ( void ) {
     // perform final op
     if ( numRemaining ) {
 
+      this->mainWindow->exportDialog->progress->setValue( 100.0 );
+      
+      //std::cout << "final processEvents" << std::endl;
+      QApplication::processEvents(QEventLoop::AllEvents, maxMs);
+    
       nr += this->dm->readTraceData( fbInput, intBuf.data(), numRemaining );
 
       for ( size_t ii=0; ii<numRemaining; ii++ ) {
@@ -2186,6 +2241,9 @@ int ViewerCtlr::uff58bExport ( void ) {
   // close export file
   fbExport.close();
 
+  // close (hide) export dialog
+  this->mainWindow->exportDialog->close();
+  
   std::cout << "UFF58b export complete." << std::endl;
 
   //delete[] intBuf; intBuf = nullptr;
