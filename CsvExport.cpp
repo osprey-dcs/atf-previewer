@@ -73,8 +73,6 @@ int CsvExport::writeSignalProperties( std::ofstream &fb, int *signalIndices, int
 
 int CsvExport::writeSignalNames( std::ofstream &fb, QString *names, int numNames ) {
 
-  std::stringstream strm;
-
   fb << "Rec, Time, ";
   
   for ( int i=0; i<numNames; i++ ) {
@@ -85,16 +83,11 @@ int CsvExport::writeSignalNames( std::ofstream &fb, QString *names, int numNames
 
   fb << std::endl;
 
-  //nr = fb.sputn( (const char *) (strm.str().c_str()), strm.str().size() );
-
   return 0;
 
 }
 
 int CsvExport::writeData( std::ofstream& fb, int64_t rec, double time, double *buf, int64_t n ) {
-
-  int nr;
-  std::stringstream strm;
 
   // write 1 row of data
 
@@ -109,8 +102,6 @@ int CsvExport::writeData( std::ofstream& fb, int64_t rec, double time, double *b
 
   fb << std::endl;
 
-  //nr = fb.sputn( (const char *) (strm.str().c_str()), strm.str().size() );
-
-  return nr;
+  return 0;
 
 }
