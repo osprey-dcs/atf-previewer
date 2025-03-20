@@ -56,7 +56,7 @@ int Uff58bExport::set80CharRec ( int recNum, QString line ) {
     line = "NONE";
   }
 
-  if ( recNum < 1 ) recNum == 1;
+  if ( recNum < 1 ) recNum = 1;
   if ( recNum > 5 ) recNum = 5;
 
   recNum -= 1;
@@ -143,7 +143,7 @@ int Uff58bExport::setDataCharacteristics( int recNum, int dataType, int lengthUn
                                           int forceUnitsExponent, int tempUnitsExponent,
                                           QString axisLabel, QString axisUnitsLabel ) {
 
-  if ( recNum < 8 ) recNum == 8;
+  if ( recNum < 8 ) recNum = 8;
   if ( recNum > 11 ) recNum = 11;
 
   recNum -= 1;
