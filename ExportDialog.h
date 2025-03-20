@@ -30,7 +30,7 @@ class ExportDialog : public QDialog {
 public:
   ExportDialog(QWidget *parent, const Qt::WindowFlags &f);
   virtual ~ExportDialog() override;
-  void open ( void );
+  void open ( void ) override;
   void close ( void );
 
   UserPrefs *up;

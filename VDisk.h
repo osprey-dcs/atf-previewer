@@ -38,10 +38,10 @@ public:
 
   int64_t maxSize;
   int64_t fileSizeInBytes;
-  int64_t maxBufSizeInButes;
-  int64_t bufSizeInBytes;
-  int64_t mapSizeInBytes;
-  int64_t mapSizeInBlocks;
+  int64_t maxBufSizeInButes = 0;
+  int64_t bufSizeInBytes = 0;
+  int64_t mapSizeInBytes = 0;
+  int64_t mapSizeInBlocks = 0;
   std::shared_ptr<char[]> map; // 0=not filled, 1=filled by file data,
                                // represents one unit of storage
   std::shared_ptr<char[]> buf;
