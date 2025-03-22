@@ -1741,7 +1741,10 @@ int ViewerCtlr::csvExport ( void ) {
 
     // get binary file name from fileName and signal + extension
     binFile = FileUtil::makeBinFileName( dh.get(), fileName, sigIndex );
-
+    if(binFile.isEmpty()) {
+      qWarning()<<"skip"<<sigIndex;
+      continue;
+    }
     //std::cout << "binFile = " << binFile.toStdString() << std::endl;
     
     signalIndices[numSignals] = sigIndex;
