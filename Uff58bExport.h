@@ -23,12 +23,14 @@ class Uff58bExport : public ErrHndlr {
 
 public:
 
-  static const int NumErrs = 2;
+  static const int NumErrs = 3;
   static const int ESuccess = 0;
   static const int EWriteFailure = 1;
+  static const int EWriteSpacerFailure = 2;
   inline static const std::string errMsgs[NumErrs] {
     { "Success" },
-    { "Output file write failure: " }
+    { "Output file write failure: " },
+    { "Uff58b spacer write failure" }
   };
   
   static const int LITTLE = 1;
