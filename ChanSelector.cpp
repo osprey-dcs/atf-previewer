@@ -27,7 +27,6 @@ int ChanSelector::setText( QString s ) {
   const int FindDigitOrCommaOrDashOrEnd = 2;
   const int FindEndDigit = 3;
   const int FindDigitOrCommaOrEnd = 4;
-  const int ElimTextEditNewLine = 5;
 
   int state, startDigit, endDigit, error;
 
@@ -39,11 +38,17 @@ int ChanSelector::setText( QString s ) {
 
   //std::cout<<  "ChanSelector::setText, text = " << text.toStdString() << std::endl;
 
-  for ( auto c : text ) {
+  QChar c;
+  for ( auto c1 : text ) {
 
+    //std::cout << "state = " << state << "  c1 = " << c1.toLatin1() << "  error = " << error << std::endl;
+
+    if ( c1.isSpace() ) continue;
+    
+    c = c1;
+    //std::cout << "state = " << state << "  c = " << c.toLatin1() << "  error = " << error << std::endl;
+    
     if ( error ) break;
-
-    //std::cout << "state = " << state << std::endl;
 
     switch ( state ) {
 
@@ -52,11 +57,7 @@ int ChanSelector::setText( QString s ) {
         startDigit = 0;
         endDigit = 0;
 
-        if ( c == "\\" ) {
-          state = ElimTextEditNewLine;
-          break;
-        }
-        else if ( c.isDigit() ) {
+        if ( c.isDigit() ) {
           startDigit = c.digitValue();
           state = FindDigitOrCommaOrDashOrEnd;
           break;
@@ -70,17 +71,15 @@ int ChanSelector::setText( QString s ) {
 
       case FindDigitOrCommaOrDashOrEnd:
 
-        if ( c == "\\" ) {
-          state = ElimTextEditNewLine;
-          break;
-        }
-        else if ( c.isDigit() ) {
+        if ( c.isDigit() ) {
           startDigit = startDigit * 10 + c.digitValue();
           break;
         }
-        else if ( c == "," ) {
+        else if ( c.toLatin1() == ',' ) {
           if ( ( startDigit > 0 ) && ( startDigit <= Cnst::MaxSigIndex+1 ) ) {
             chanSet.insert( startDigit );
+            startDigit = 0;
+            endDigit = 0;
           }
           else {
             error = 3;
@@ -88,7 +87,7 @@ int ChanSelector::setText( QString s ) {
           state = FindStartDigit;
           break;
         }
-        else if ( c == "-" ) {
+        else if ( c.toLatin1() == '-' ) {
           endDigit = 0;
           state = FindEndDigit;
           break;
@@ -102,11 +101,7 @@ int ChanSelector::setText( QString s ) {
 
       case FindEndDigit:
 
-        if ( c == "\\" ) {
-          state = ElimTextEditNewLine;
-          break;
-        }
-        else if ( c.isDigit() ) {
+        if ( c.isDigit() ) {
           endDigit = c.digitValue();
           state = FindDigitOrCommaOrEnd;
           break;
@@ -120,17 +115,11 @@ int ChanSelector::setText( QString s ) {
 
       case FindDigitOrCommaOrEnd:
 
-        if ( c == "\\" ) {
-          state = ElimTextEditNewLine;
-          break;
-        }
-        else if ( c.isDigit() ) {
+        if ( c.isDigit() ) {
           endDigit = endDigit * 10 + c.digitValue();
           break;
         }
-        if ( c == "," ) {
-          //std::cout << "startDigit = " << startDigit << std::endl;
-          //std::cout << "endDigit = " << endDigit << std::endl;
+        if ( c.toLatin1() == ',' ) {
           for ( int i=startDigit; i<=endDigit; i++ ) {
             if ( ( i > 0 ) && ( i <= Cnst::MaxSigIndex+1 ) ) {
               chanSet.insert( i );
@@ -139,10 +128,11 @@ int ChanSelector::setText( QString s ) {
               error = 3;
             }
           }
+          startDigit = 0;
+          endDigit = 0;
           state = FindStartDigit;
           break;
         }
-        //else if ( !c.isSpace() ) {
         else {
           error = 1;
           break;
@@ -150,29 +140,21 @@ int ChanSelector::setText( QString s ) {
 
         break;
 
-    case ElimTextEditNewLine:
-
-      if ( c != "n" ) {
-        error = 4;
-        break;
-      }
-
-      break;
-
     default:
       // do nothing
       break;
 
     }
 
+    //std::cout << "end switch, state = " << state << "  error = " << error << std::endl; 
+
   }
 
   // this is the end of data state
 
-  if ( state == ElimTextEditNewLine ) {
-    error = 4;
-  }
-  else if ( state == FindStartDigit )  {
+  //std::cout << "end state = " << state << std::endl;
+
+  if ( state == FindStartDigit )  {
     chanSet.clear();
     chans.clear();
     error = 2; // list is empty
@@ -183,6 +165,8 @@ int ChanSelector::setText( QString s ) {
   else if ( state == FindDigitOrCommaOrDashOrEnd ) {
     if ( ( startDigit > 0 ) && ( startDigit <= Cnst::MaxSigIndex+1 ) ) {
       chanSet.insert( startDigit );
+      startDigit = 0;
+      endDigit = 0;
     }
     else {
       error = 3;
@@ -197,6 +181,8 @@ int ChanSelector::setText( QString s ) {
         error = 3;
       }
     }
+    startDigit = 0;
+    endDigit = 0;
   }
 
   if ( error ) {

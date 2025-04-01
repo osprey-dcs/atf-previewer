@@ -17,11 +17,10 @@ add_executable(FileReformatter2 main.cpp
         ../common/DspErr.h
         ../common/ErrHndlr.cpp
         ../common/ErrHndlr.h)
-
 target_link_libraries(FileReformatter2
         Qt5::Core
 )
-
+include_directories(../common)
 install(
         TARGETS FileReformatter2
         RUNTIME DESTINATION bin

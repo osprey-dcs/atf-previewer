@@ -1702,6 +1702,8 @@ int ViewerCtlr::csvExport ( void ) {
   
   for ( int sigIndex : sigNumList ) {
 
+    //std::cout << "sigIndex = " << sigIndex << std::endl;
+
     QString sigNameFromMap = std::get<DataHeader::SIGNAME>( indexMap[sigIndex] );
 
     if ( !sigNameFromMap.isEmpty() ) {

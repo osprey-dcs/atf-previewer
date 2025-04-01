@@ -5,7 +5,8 @@
 #include "Uff58bExport.h"
 
 Uff58bExport::Uff58bExport ( const QString& headerFile ) :
-  ErrHndlr ( DataHeader::NumErrs, DataHeader::errMsgs ) {
+  //???ErrHndlr ( DataHeader::NumErrs, DataHeader::errMsgs ) {
+  ErrHndlr ( Uff58bExport::NumErrs, Uff58bExport::errMsgs ) {
 
   hdrFile = headerFile;
   dh = dhf.createDataHeader();
@@ -191,7 +192,7 @@ int Uff58bExport::writeSpacer( std::filebuf &fb ) {
   int64_t n = writeBinary( fb, s.c_str(), 7 );
   //std::cout << "Uff58bExport::writeSpacer - n = " << n << std::endl;
 
-  return 0;
+  return n;
 
 }
 
@@ -201,18 +202,20 @@ int Uff58bExport::writeHeader( std::filebuf &fb ) {
 
   // write spacer: -1 as I6
   n = writeSpacer( fb );
-  if ( n == 0 ) {
-    return ERRINFO(this->mostRecentError,"");
-    this->dspErrMsg( this->mostRecentError );
-  }
   //std::cout << "1 Uff58bExport::writeHeader - spacer n = " << n << std::endl;
+  if ( n == 0 ) {
+    int err = ERRINFO(Uff58bExport::EWriteSpacerFailure,"");
+    this->dspErrMsg( err );
+    return err;
+  }
 
   // write uff58bIdLine
   //int n = fb.sputn( uff58bIdLine.toStdString().c_str(), uff58bIdLine.size() );
   n = writeBinary( fb, uff58bIdLine.toStdString().c_str(), uff58bIdLine.size() );
   if ( n == 0 ) {
-    return ERRINFO(this->mostRecentError,"");
-    this->dspErrMsg( this->mostRecentError );
+    int err = ERRINFO(this->mostRecentError,"");
+    this->dspErrMsg( err );
+    return err;
   }
   //std::cout << "1 Uff58bExport::writeHeader - n = " << n << std::endl;
 
@@ -220,8 +223,9 @@ int Uff58bExport::writeHeader( std::filebuf &fb ) {
     //write headerLines1thru11[i]
     int n = writeBinary( fb, headerLines1thru11[i].toStdString().c_str(), headerLines1thru11[i].size() );
     if ( n == 0 ) {
-      return ERRINFO(this->mostRecentError,"");
-      this->dspErrMsg( this->mostRecentError );
+      int err = ERRINFO(this->mostRecentError,"");
+      this->dspErrMsg( err );
+      return err;
     }
     //std::cout << "header " << i << ", n = " << n << std::endl;
   }
