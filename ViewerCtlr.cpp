@@ -303,14 +303,14 @@ int ViewerCtlr::processHeaderFile (void ) {
   }
   
   // get role 1
-  stat = this->dh->getString( "Role1Name", str );
-  if ( !stat ) {
-    this->mainWindow->setRole1( str );
-  }
-  else {
-    std::cout << "Failed to get role 1 name" << std::endl;
-    this->dh->dspErrMsg( stat );
-  }
+  //stat = this->dh->getString( "Role1Name", str );
+  //if ( !stat ) {
+  //  this->mainWindow->setRole1( str );
+  //}
+  //else {
+  //  std::cout << "Failed to get role 1 name" << std::endl;
+  //  this->dh->dspErrMsg( stat );
+  //}
   
   // get get sample rate
   sampleRate = 0;

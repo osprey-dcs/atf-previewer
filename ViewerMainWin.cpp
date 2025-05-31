@@ -77,8 +77,8 @@ ViewerMainWin::ViewerMainWin ( QApplication *_app, double _x, double _y, double 
   txEndDate = new QLabel( "" );
   lbId = new QLabel( "Acquisition Id:" );
   txId = new QLabel( "" );
-  lbRole1 = new QLabel( "Role1 Name:" );
-  txRole1 = new QLabel( "" );
+  //lbRole1 = new QLabel( "Role1 Name:" );
+  //txRole1 = new QLabel( "" );
   lbSampRate = new QLabel( "Sample Rate (Hz):" );
   txSampRate = new QLabel( "" );
   working = new QPushButton( "Ready" );
@@ -97,7 +97,7 @@ ViewerMainWin::ViewerMainWin ( QApplication *_app, double _x, double _y, double 
   graphLayout = new QVBoxLayout();
   formLayout = new QVBoxLayout();
   formRow1 = new QHBoxLayout();
-  formRow2 = new QHBoxLayout();
+  //formRow2 = new QHBoxLayout();
   vlayout = new QVBoxLayout();
   for ( int i=0; i<Cnst::NumRows; i++ ) { // 0, 3
     hlayout[i] = new QHBoxLayout();
@@ -106,7 +106,7 @@ ViewerMainWin::ViewerMainWin ( QApplication *_app, double _x, double _y, double 
   masterLayout->addLayout( formLayout );
   masterLayout->addLayout( graphLayout );
   formLayout->addLayout( formRow1 );
-  formLayout->addLayout( formRow2 );
+  //formLayout->addLayout( formRow2 );
 
   formRow1->addWidget( lbId, 0 );
   formRow1->addWidget( txId, 0 );
@@ -130,10 +130,10 @@ ViewerMainWin::ViewerMainWin ( QApplication *_app, double _x, double _y, double 
   formRow1->addWidget( lbNumFftPoints, 0 );
   formRow1->addWidget( working, 0 );
 
-  formRow2->addWidget( lbRole1, 0 );
-  formRow2->addWidget( txRole1, 0 );
+  //formRow2->addWidget( lbRole1, 0 );
+  //formRow2->addWidget( txRole1, 0 );
 
-  formRow2->addStretch( 10 );
+  //formRow2->addStretch( 10 );
 
   graphLayout->addLayout( vlayout );
   for ( int i=0; i<Cnst::NumRows; i++ ) { // 0, 3
