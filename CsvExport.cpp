@@ -129,7 +129,6 @@ int CsvExport::writeSignalProperties( FILE *f, std::ofstream &fb, int *signalInd
 int CsvExport::writeSignalNames( FILE *f, std::ofstream &fb, QString *names, int numNames ) {
 
   try {
-
     if ( f ) {
       fprintf( f, "Rec, Time, " );
     }
@@ -159,13 +158,11 @@ int CsvExport::writeSignalNames( FILE *f, std::ofstream &fb, QString *names, int
   catch ( const std::exception& e ) {
     return ERRINFO(EWriteFailure,e.what());
   }
-
   return 0;
 
 }
 
 int CsvExport::writeData( FILE *f, std::ofstream& fb, int64_t rec, double time, double *buf, int64_t n ) {
-
   // write 1 row of data
 
   try {
@@ -205,7 +202,6 @@ int CsvExport::writeData( FILE *f, std::ofstream& fb, int64_t rec, double time, 
   catch ( const std::exception& e ) {
     return ERRINFO(EWriteFailure,e.what());
   }
-
   return 0;
 
 }

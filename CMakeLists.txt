@@ -10,15 +10,12 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5 COMPONENTS
         Core
+        REQUIRED
         OPTIONAL_COMPONENTS
         Gui
         Widgets
         Charts
 )
-
-if(NOT Qt5Core_FOUND)
-        message(SEND_ERROR "Missing required Qt5Core")
-endif()
 
 if(Qt5Gui_FOUND AND Qt5Widgets_FOUND AND Qt5Charts_FOUND)
 message(STATUS "Build Viewer")
@@ -116,13 +113,14 @@ target_link_libraries(viewer
         PkgConfig::FFTW
 )
 
-install(
-        TARGETS viewer
-        RUNTIME DESTINATION bin
-)
-
 else()
         message(STATUS "Skip Viewer")
 endif()
 
+#add_subdirectory(fileReformatter)
 add_subdirectory(fileReformatter2)
+
+install(
+        TARGETS viewer
+        RUNTIME DESTINATION bin
+)

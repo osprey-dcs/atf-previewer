@@ -1,3 +1,4 @@
+
 add_executable(FileReformatter2 main.cpp
         ../common/BinFileType.cpp
         ../common/BinFileType.h
@@ -20,7 +21,6 @@ add_executable(FileReformatter2 main.cpp
 target_link_libraries(FileReformatter2
         Qt5::Core
 )
-include_directories(../common)
 install(
         TARGETS FileReformatter2
         RUNTIME DESTINATION bin
