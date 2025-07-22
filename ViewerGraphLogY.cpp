@@ -280,8 +280,8 @@ void ViewerGraphLogY::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, Q
 
   yaxis->setRange( minY, maxY );
   
-  double newMinX, newMaxX, newMinY, newMaxY;
-  int newXTicks, newYTicks;
+  double newMinX, newMaxX;
+  int newXTicks;
   getBetterAxesParams( minX, maxX, 5, newMinX, newMaxX, newXTicks, adjScales );
   xaxis->setRange( newMinX, newMaxX );
   xaxis->setTickCount( newXTicks );
@@ -327,8 +327,8 @@ void ViewerGraphLogY::setSeries ( QtCharts::QLineSeries *newQls, int sigIndex, Q
   qls->attachAxis( xaxis );
   qls->attachAxis( yaxis );
 
-  double newMinX, newMaxX, newMinY, newMaxY;
-  int newXTicks, newYTicks;
+  double newMinX, newMaxX;
+  int newXTicks;
   getBetterAxesParams( minX, maxX, 5, newMinX, newMaxX, newXTicks, adjScales );
   xaxis->setRange( newMinX, newMaxX );
   xaxis->setTickCount( newXTicks );
@@ -438,9 +438,7 @@ void ViewerGraphLogY::wheelEvent( QWheelEvent *ev ) {
   if ( numDegrees.y() < 0.0 ) forward = false;
 
   double chartXMin=0, chartXMax=0, chartYMin=0, chartYMax=0,
-    distX=0, distY=0, newXMin=0, newXMax=0, newYMin=0, newYMax=0,
-    plotW=0, plotH=0, chartXRange=1, chartYRange=1, xFact, yFact,
-    x0, y0, x1, y1;
+    distX=0, distY=0, chartXRange=1, chartYRange=1;
   
   QPointF pt = ev->position();
   int plotX = pt.x() - chart->plotArea().x();
@@ -544,9 +542,7 @@ void ViewerGraphLogY::mousePressEvent( QMouseEvent *ev ) {
   
   double chartXMin=0, chartXMax=0, chartYMin=0, chartYMax=0,
     panDistX=0, panDistY=0, zoomDistX=0, zoomDistY=0,
-    newXMin=0, newXMax=0, newYMin=0, newYMax=0,
-    plotW=0, plotH=0, chartXRange=1, chartYRange=1, xFact, yFact,
-    x0, x1, y0, y1;
+    plotW=0, plotH=0, chartXRange=1, chartYRange=1, xFact, yFact;
   bool openMenu=false;
   int plotX = ev->x() - chart->plotArea().x();
   int plotY = ev->y() - chart->plotArea().y();
@@ -639,9 +635,7 @@ void ViewerGraphLogY::mousePressEvent( QMouseEvent *ev ) {
 void ViewerGraphLogY::mouseReleaseEvent( QMouseEvent *ev ) {
   
   if ( isEmpty ) return;
-  
-  int plotX = ev->x() - chart->plotArea().x();
-  int plotY = ev->y() - chart->plotArea().y();
+
   if ( ev->button() & 2 ) return;
   if ( shiftState || ctrlState ) return;
   QtCharts::QChartView::mouseReleaseEvent( ev );
@@ -651,9 +645,7 @@ void ViewerGraphLogY::mouseReleaseEvent( QMouseEvent *ev ) {
 void ViewerGraphLogY::mouseMoveEvent( QMouseEvent *ev ) {
   
   if ( isEmpty ) return;
-  
-  int plotX = ev->x() - chart->plotArea().x();
-  int plotY = ev->y() - chart->plotArea().y();
+
   if ( shiftState || ctrlState ) return;
   QtCharts::QChartView::mouseMoveEvent( ev );
 
@@ -850,11 +842,11 @@ void ViewerGraphLogY::panVertical ( double panDist ) {
 void ViewerGraphLogY::getBetterAxesParams ( double min, double max, int ticks,
                                         double& adj_min, double& adj_max, int& num_label_ticks, bool adjScales ) {
 
-double dmin, dmax, diff, mag, norm;
+double dmin, dmax, diff, mag;
 
-int imag, inorm, imin, imax, inc1, inc2, inc5, imin1, imax1,
- imin2, imax2, imin5, imax5, best, bestInc, bestMin, bestMax, idiff, idiv,
- choice, ok;
+int imag, imin, imax, inc1, inc2, inc5, imin1, imax1,
+ imin2, imax2, imin5, imax5, best, bestMin, bestMax, idiv,
+ ok;
 
   if ( !adjScales ) {
     adj_min = min;
@@ -874,9 +866,6 @@ int imag, inorm, imin, imax, inc1, inc2, inc5, imin1, imax1,
 
   mag = log10( diff );
   imag = (int ) floor( mag ) - 1;
-
-  norm = diff * pow(10.0,-1.0*imag);
-  inorm = (int) ceil( norm );
 
   //fprintf( stderr, "mag = %-g, imag = %-d\n", mag, imag );
   //fprintf( stderr, "norm = %-d\n", inorm );
@@ -1023,31 +1012,24 @@ int imag, inorm, imin, imax, inc1, inc2, inc5, imin1, imax1,
   // find best
 
   best = abs( inc1 - 6 );
-  bestInc = inc1;
   bestMin = imin1;
   bestMax = imax1;
   idiv = inc1;
-  choice = 1;
 
   if ( abs( inc2 - 6 ) < best ) {
     best = abs( inc2 - 6 );
-    bestInc = inc2;
     bestMin = imin2;
     bestMax = imax2;
     idiv = inc2;
-    choice = 2;
   }
 
   if ( abs( inc5 - 6 ) < best ) {
     best = abs( inc5 - 6 );
-    bestInc = inc5;
     bestMin = imin5;
     bestMax = imax5;
     idiv = inc5;
-    choice = 5;
   }
 
-  idiff = ( bestMax - bestMin );
   adj_min = (double) bestMin * pow(10.0,imag);
   adj_max = (double) bestMax * pow(10.0,imag);
 

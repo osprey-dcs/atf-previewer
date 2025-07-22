@@ -74,7 +74,6 @@ VDisk::~VDisk( void ) {
 
 int VDisk::readN( std::filebuf *fb, int64_t start, int64_t length, char *outBuf,  bool showParams ) {
 
-  int st=0, n;
   bool memRead = true;
   bool fileRead = true;
   bool blockCheckAndFill = true;
@@ -134,13 +133,12 @@ int VDisk::readN( std::filebuf *fb, int64_t start, int64_t length, char *outBuf,
     if ( !map[i] ) {
       map[i] = 1;
       char *cbuf = (char *) &((this->buf.get())[i*BlockSize]);
-      n = readFile( fb, i*BlockSize, BlockSize, cbuf );
+      readFile( fb, i*BlockSize, BlockSize, cbuf );
     }
 
   }
 
   int64_t outButFileReadStart = startFile;
-  int64_t outButFileReadLen = endFile - startFile + 1;
 
   unsigned int outBufIndex = 0;
   
@@ -149,7 +147,6 @@ int VDisk::readN( std::filebuf *fb, int64_t start, int64_t length, char *outBuf,
     int64_t len = endMem - startMem + 1;
     memcpy( (void *) &(outBuf[outBufIndex]), (void *) &(buf[startMem]), len );
     outButFileReadStart = endMem;
-    outButFileReadLen = endFile - outButFileReadStart + 1;
 
     outBufIndex = len;
 
@@ -157,7 +154,7 @@ int VDisk::readN( std::filebuf *fb, int64_t start, int64_t length, char *outBuf,
 
   if ( fileRead ) {
 
-    n = readFile( fb, outButFileReadStart, endFile-outButFileReadStart+1, (char *) &(outBuf[outBufIndex]) );
+    readFile( fb, outButFileReadStart, endFile-outButFileReadStart+1, (char *) &(outBuf[outBufIndex]) );
 
   }
 

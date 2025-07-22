@@ -243,20 +243,16 @@ void ViewerGraphArea::roiSelectorChange( int id, int left, int right ) {
 
   QRectF r = graph->chart->plotArea();
   double x = r.x();
-  double y = r.y();
   double w = r.size().width();
   if ( w <= 0 ) w = 1;
-  double h = r.size().height();
 
-  double chartXMin, chartXMax, chartYMin, chartYMax;
+  double chartXMin, chartXMax;
   
   //graph->getAxesLimits( chartXMin, chartYMin,
   //                      chartXMax, chartYMax );
   
   chartXMin = graph->lastXMin;
-  chartYMin = graph->lastYMin;
   chartXMax = graph->lastXMax;
-  chartYMax = graph->lastYMax;
 
   double dleft = ( left - x ) * ( chartXMax - chartXMin ) / w + chartXMin;
 
@@ -298,10 +294,8 @@ void ViewerGraphArea::doScaleToSelection ( void ) {
 
   QRectF r = graph->chart->plotArea();
   double x = r.x();
-  double y = r.y();
   double w = r.size().width();
   if ( w <= 0 ) w = 1;
-  double h = r.size().height();
 
   int left = roiSelect->getLeft();
   int right = roiSelect->getRight();

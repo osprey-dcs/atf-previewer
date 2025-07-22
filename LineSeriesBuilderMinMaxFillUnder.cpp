@@ -177,8 +177,6 @@ double LineSeriesBuilderMinMaxFillUnder::maxY ( void ) {
 
 void LineSeriesBuilderMinMaxFillUnder::show () {
 
-  int count = 0;
-
   if ( !qls ) return;
 
   //qDebug() << "";

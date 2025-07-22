@@ -181,8 +181,6 @@ double LineSeriesBuilderMinMax::maxY ( void ) {
 
 void LineSeriesBuilderMinMax::show () {
 
-  int count = 0;
-
   if ( !qls ) return;
 
   //qDebug() << "";

@@ -52,28 +52,8 @@ static bool isTimeSeries( ViewerGraphAreaBase *vga ) {
 
 }
 
-static bool isTimeSeries( int id ) {
-  if ( id < Cnst::NumCols ) {
-    return true;
-  }
-  else {
-    return false;
-  }
-
-}
-
 static bool isFFT( ViewerGraphAreaBase *vga ) {
   if ( vga->id >= Cnst::NumCols ) {
-    return true;
-  }
-  else {
-    return false;
-  }
-
-}
-
-static bool isFFT( int id ) {
-  if ( id >= Cnst::NumCols ) {
     return true;
   }
   else {
@@ -424,10 +404,6 @@ void ViewerCtlr::process(void ) {
 
       int request = std::get<ViewerCtlr::Req>( dataReq );
       ViewerGraphAreaBase *grArea = std::get<ViewerCtlr::Vga>( dataReq );
-      int grAreaId;
-      if ( grArea ) {
-        grAreaId = grArea->id;
-      }
       int sigIndex = std::get<ViewerCtlr::SigIndex>( dataReq );
       QString reqFileName = std::get<ViewerCtlr::FileName>( dataReq );
 
@@ -540,7 +516,7 @@ void ViewerCtlr::process(void ) {
         lastDataRequestGraphArea = grArea;
 
         // get min/max time values
-        double x0, x1, y0, y1;
+        double x0, x1;
 
         // get num of pixels in x
         QSizeF size = grArea->graph->chart->size();
@@ -550,11 +526,8 @@ void ViewerCtlr::process(void ) {
 
         binFile = FileUtil::makeBinFileName( dh.get(), reqFileName, sigIndex );
 
-        double minTime=0, maxTime=1;
         x0 = Cnst::InitialMinTime;
         x1 = Cnst::InitialMaxTime;
-        y0 = Cnst::InitialMinSig;
-        y1 = Cnst::InitialMaxSig;
 
         if ( x1 == 0.0 ) { // use all data
           double minTime=0, maxTime=1;
@@ -657,7 +630,7 @@ void ViewerCtlr::process(void ) {
 
           //std::cout << "haveResetRequest for FFT" << std::endl;
 
-          double x0, x1, y0, y1;
+          double x0, x1;
           x0 = Cnst::InitialMinFreq;
           x1 = sampleRate / 2;
 
@@ -703,7 +676,7 @@ void ViewerCtlr::process(void ) {
           lastDataRequestGraphArea = grArea;
         
           // get min/max time values
-          double x0, x1, y0, y1;
+          double x0, x1;
 
           // get num of pixels in x
           QSizeF size = grArea->graph->chart->size();
@@ -715,8 +688,6 @@ void ViewerCtlr::process(void ) {
 
           x0 = Cnst::InitialMinTime;
           x1 = Cnst::InitialMaxTime;
-          y0 = Cnst::InitialMinSig;
-          y1 = Cnst::InitialMaxSig;
 
           if ( x1 == 0.0 ) { // use all data
             double minTime=0, maxTime=1;
@@ -1590,12 +1561,11 @@ void ViewerCtlr::sigNameChange1(int index, int sigIndex, QWidget *w ) {
     
     auto nameList = this->dh->getNameList();
     auto nameMap = this->dh->getNameMap();
-    int sigInfoSigIndex;
     QString sigInfoName, sigInfoEgu;
     double sigInfoSlope, sigInfoIntercept;
 
     int stat = this->dh->getSigInfoBySigIndex ( sigIndex, sigInfoName, sigInfoEgu, sigInfoSlope, sigInfoIntercept );
-    // ignore err
+    (void)stat; // ignore err
 
     std::stringstream sstitle;
     sstitle << sigInfoName.toStdString() << "  (" << sigInfoEgu.toStdString() << ")";
@@ -1671,7 +1641,7 @@ int ViewerCtlr::csvExport ( void ) {
   const int BufSize = 2000000;
   char *buf = new char[BufSize+1];
   
-  int st, i, ii, numSignals;
+  int st, i, numSignals;
   QString str;
   std::filebuf fbInput[Cnst::MaxSignals+1];
   std::ofstream fbExport;
@@ -1855,7 +1825,7 @@ int ViewerCtlr::csvExport ( void ) {
   double *outBuf = new double[100];
   int numFullOps = recRange / 100;
   int numRemaining = recRange % 100;
-  int *nr, nw;
+  int *nr;
   nr = new int[numSignals];
   QString *names = new QString[numSignals];
 
@@ -1897,7 +1867,6 @@ int ViewerCtlr::csvExport ( void ) {
   }
 
   zero( nr, numSignals );
-  nw = 0;
 
   double *slope = new double[numSignals];
   double *intercept = new double[numSignals];
@@ -1936,7 +1905,7 @@ int ViewerCtlr::csvExport ( void ) {
       for ( int ii=0; ii<numSignals; ii++ ) {
         outBuf[ii] = (double) intBuf[ii][iii] * slope[ii] + intercept[ii];
       }
-      nw += csv->writeData( f, fbExport, rec, time, outBuf, numSignals );
+      csv->writeData( f, fbExport, rec, time, outBuf, numSignals );
       rec++;
       time += timeInc;
     }
@@ -1959,7 +1928,7 @@ int ViewerCtlr::csvExport ( void ) {
       for ( int ii=0; ii<numSignals; ii++ ) {
         outBuf[ii] = (double) intBuf[ii][iii] * slope[ii] + intercept[ii];
       }
-      nw += csv->writeData( f, fbExport, rec, time, outBuf, numSignals );
+      csv->writeData( f, fbExport, rec, time, outBuf, numSignals );
       rec++;
       time += timeInc;
     }
@@ -2000,7 +1969,7 @@ int ViewerCtlr::uff58bExport ( void ) {
     return ERRINFO(EHdr,"");
   }
 
-  int st, i, ii;
+  int st;
   QString str;
   std::filebuf fbInput, fbExport;
 
@@ -2205,14 +2174,10 @@ int ViewerCtlr::uff58bExport ( void ) {
     //float *outBuf = new float[1000];
     //size_t numFullOps = recRange / 1000;
     //size_t numRemaining = recRange % 1000;
-    
-    size_t nr, nw;
 
     // seek to start of binary data for input file
     this->dm->inputSeekToStartOfData( fbInput, minByte );
 
-    nr = nw = 0;
-    
     int maxMs = 250;
     int updateCount = 0;
     int updateThreshold = fmax( numFullOps / 3600, 100 );
@@ -2232,13 +2197,13 @@ int ViewerCtlr::uff58bExport ( void ) {
 
       }
 
-      nr += this->dm->readTraceData( fbInput, intBuf.data(), intBuf.size() );
+      this->dm->readTraceData( fbInput, intBuf.data(), intBuf.size() );
 
       for ( size_t ii=0; ii<1000; ii++ ) {
         outBuf[ii] = (float) intBuf[ii] * slope + intercept;
       }
 
-      nw += uff58b->writeBinary( fbExport, outBuf.data(), outBuf.size() );
+      uff58b->writeBinary( fbExport, outBuf.data(), outBuf.size() );
 
     }
 
@@ -2250,13 +2215,13 @@ int ViewerCtlr::uff58bExport ( void ) {
       //std::cout << "final processEvents" << std::endl;
       QApplication::processEvents(QEventLoop::AllEvents, maxMs);
     
-      nr += this->dm->readTraceData( fbInput, intBuf.data(), numRemaining );
+      this->dm->readTraceData( fbInput, intBuf.data(), numRemaining );
 
       for ( size_t ii=0; ii<numRemaining; ii++ ) {
         outBuf[ii] = (float) intBuf[ii] * slope + intercept;
       }
 
-      nw += uff58b->writeBinary( fbExport, outBuf.data(), numRemaining );
+      uff58b->writeBinary( fbExport, outBuf.data(), numRemaining );
       
     }
 
@@ -2420,7 +2385,6 @@ void ViewerCtlr::havePrevViewRequest (int id, int curSigIndex, QString& curFileN
   //std::cout << "have prev view request - id = " << id << ", cur sig index = " << curSigIndex <<
   //  ", cur file = " << curFileName.toStdString() << std::endl;
 
-  double  x0, x1, y0, y1;
   ViewerGraphBase *vg = qobject_cast<ViewerGraphBase *>(sender());
 
   ViewerGraphAreaBase *vga = qobject_cast<ViewerGraphAreaBase *>( vg->parent1 );
@@ -2518,9 +2482,7 @@ void ViewerCtlr::mousePosition ( int vgaId, double x, double y ) {
   if ( isFFT( vga ) ) {
 
     double chartXMin=0, chartXMax=0, chartYMin=0, chartYMax=0,
-      distX=0, distY=0, newXMin=0, newXMax=0, newYMin=0, newYMax=0,
-      plotW=0, plotH=0, chartXRange=1, chartYRange=1, xFact, yFact,
-      x0, x1, y0, y1;
+      plotW=0, plotH=0, chartXRange=1;
 
     double sampleRate = 0.0;
     int stat = this->dh->getDouble( "SampleRate", sampleRate );
@@ -2540,7 +2502,6 @@ void ViewerCtlr::mousePosition ( int vgaId, double x, double y ) {
     vg->getAxesLimits(  chartXMin, chartYMin, chartXMax, chartYMax );
       
     if ( ( chartXMax - chartXMin ) != 0 ) chartXRange = chartXMax - chartXMin;
-    if ( ( chartYMax - chartYMin ) != 0 ) chartYRange = chartYMax - chartYMin;
     
     double onePixel = chartXRange / plotW;
 

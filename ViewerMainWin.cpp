@@ -353,12 +353,10 @@ bool ViewerMainWin::eventFilter ( QObject *obj, QEvent *event)  {
   //std::cout << "obj = " << obj << std::endl;
 
   if ( event->type() == QEvent::Move ) {
-    QMoveEvent *ev = dynamic_cast<QMoveEvent *>( event );
     //std::cout << "ViewerMainWin - moveEvent - x = " << ev->pos().x() << ", y = " << ev->pos().y() << std::endl;
     return false; // let event propagate
   }
   else if ( event->type() == QEvent::Resize ) {
-    QResizeEvent *ev1 = dynamic_cast<QResizeEvent *>( event );
     //std::cout << "ViewerMainWin - resizeEvent - w = " << ev1->size().width() << ", h = " << ev1->size().height() << std::endl;
     return false; // let event propagate
   }

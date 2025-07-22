@@ -39,9 +39,7 @@ LineSeriesBuilderSimple::~LineSeriesBuilderSimple () {
 }
 
 int LineSeriesBuilderSimple::setXPixelWidth (int w ) {
-  
-  int stat;
- 
+
   if ( w != 0 ) {
     this->xPixelWidth = static_cast<double>( w );
     //std::cout << "this->xPixelWidth = " << this->xPixelWidth << std::endl;
@@ -55,9 +53,7 @@ int LineSeriesBuilderSimple::setXPixelWidth (int w ) {
 }
 
 int LineSeriesBuilderSimple::setXAxisLimits (double min, double max ) {
-  
-  int stat;
-  
+
   double r = max - min;
   xMin = min;
   xMax = max;
