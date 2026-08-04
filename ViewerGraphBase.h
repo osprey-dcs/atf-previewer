@@ -75,13 +75,13 @@ public:
   virtual ViewerGraphBase& operator=( ViewerGraphBase& ) = delete;
   virtual ViewerGraphBase& operator=( ViewerGraphBase&& ) = delete;
   virtual void setYTitle( std::string& s );
-  virtual void enterEvent( QEvent *ev );
-  virtual void wheelEvent( QWheelEvent *ev );
-  virtual void mousePressEvent(QMouseEvent *event);
-  virtual void mouseReleaseEvent(QMouseEvent *event);
-  virtual void mouseMoveEvent( QMouseEvent *ev );
-  virtual void keyPressEvent( QKeyEvent *ev );
-  virtual void keyReleaseEvent( QKeyEvent *ev );
+  virtual void enterEvent( QEvent *ev ) override;
+  virtual void wheelEvent( QWheelEvent *ev ) override;
+  virtual void mousePressEvent(QMouseEvent *event) override;
+  virtual void mouseReleaseEvent(QMouseEvent *event) override;
+  virtual void mouseMoveEvent( QMouseEvent *ev ) override;
+  virtual void keyPressEvent( QKeyEvent *ev ) override;
+  virtual void keyReleaseEvent( QKeyEvent *ev ) override;
   virtual void getAxesLimits( double& x0, double& y0,
                               double& x1, double& y1 );
   virtual void setAxesLimits( double x0, double y0,
