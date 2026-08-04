@@ -2025,10 +2025,6 @@ int ViewerCtlr::uff58bExport ( void ) {
       continue;
     }
 
-    // build a string containing just the binary file name without the directory
-    QString simpleName = FileUtil::extractFileName( binFile );
-    simpleName = simpleName + "." + Cnst::BinExtension.c_str();
-
     double minT=0, maxT=0;
     int64_t minByte=0, maxByte=0;
 
