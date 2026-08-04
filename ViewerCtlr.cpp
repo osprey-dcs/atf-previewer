@@ -416,7 +416,8 @@ void ViewerCtlr::process(void ) {
         this->mainWindow->setWhat( "UFF58b Export..." );
         stat = uff58bExport();
         if ( stat ) {
-          exportFail.showMessage(QString("Export fails (%1)").arg(stat));
+          exportFail.showMessage(QString("Export fails (%1) : %2")
+                                 .arg(stat).arg(QString::fromStdString(arg)));
           this->dspErrMsg( stat );
         }
         this->mainWindow->setWorking( QString("Ready") );
@@ -429,7 +430,8 @@ void ViewerCtlr::process(void ) {
         this->mainWindow->setWhat( "CSV Export..." );
         stat = csvExport();
         if ( stat ) {
-          exportFail.showMessage(QString("Export fails (%1)").arg(stat));
+          exportFail.showMessage(QString("Export fails (%1) : %2")
+                                 .arg(stat).arg(QString::fromStdString(arg)));
           this->dspErrMsg( stat );
         }
         this->mainWindow->setWorking( QString("Ready") );
@@ -1703,7 +1705,7 @@ int ViewerCtlr::csvExport ( void ) {
   }
 
   if ( !atLeastOneSignal ) {
-    return ERRINFO(ESignal,"");
+    return ERRINFO(ESignal,"No channels selected");
   }
 
   // open export file
@@ -2023,7 +2025,7 @@ int ViewerCtlr::uff58bExport ( void ) {
   }
 
   if ( !atLeastOneSignal ) {
-    return ERRINFO(ESignal,"");
+    return ERRINFO(ESignal,"No channels selected");
   }
 
   // open export bin file
