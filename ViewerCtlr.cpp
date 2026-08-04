@@ -2137,11 +2137,6 @@ int ViewerCtlr::uff58bExport ( void ) {
     size_t numFullOps = recRange / intBuf.size();
     size_t numRemaining = recRange % intBuf.size();
 
-    //int32_t *intBuf = new int32_t[1000];
-    //float *outBuf = new float[1000];
-    //size_t numFullOps = recRange / 1000;
-    //size_t numRemaining = recRange % 1000;
-
     // seek to start of binary data for input file
     this->dm->inputSeekToStartOfData( fbInput, minByte );
 
@@ -2205,9 +2200,6 @@ int ViewerCtlr::uff58bExport ( void ) {
   this->mainWindow->exportDialog->close();
   
   std::cout << "UFF58b export complete." << std::endl;
-
-  //delete[] intBuf; intBuf = nullptr;
-  //delete[] outBuf; outBuf = nullptr;
   
   return 0;
   
