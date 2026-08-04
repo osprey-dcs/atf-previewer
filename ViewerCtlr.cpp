@@ -322,7 +322,6 @@ int ViewerCtlr::processHeaderFile (void ) {
 
 void ViewerCtlr::process(void ) {
 
-  int stat;
   double slope = 1.0, intercept = 0.0;
   QString binFile;
   
@@ -401,8 +400,7 @@ void ViewerCtlr::process(void ) {
         
         this->mainWindow->setWorking( QString("Working...") );
         this->mainWindow->setWhat( "UFF58b Export..." );
-        stat = uff58bExport();
-        if ( stat ) {
+        if ( auto stat = uff58bExport() ) {
           exportFail.showMessage(QString("Export fails (%1) : %2")
                                  .arg(stat).arg(QString::fromStdString(arg)));
           this->dspErrMsg( stat );
@@ -415,8 +413,7 @@ void ViewerCtlr::process(void ) {
         
         this->mainWindow->setWorking( QString("Working...") );
         this->mainWindow->setWhat( "CSV Export..." );
-        stat = csvExport();
-        if ( stat ) {
+        if ( auto stat = csvExport() ) {
           exportFail.showMessage(QString("Export fails (%1) : %2")
                                  .arg(stat).arg(QString::fromStdString(arg)));
           this->dspErrMsg( stat );
@@ -526,7 +523,7 @@ void ViewerCtlr::process(void ) {
             x1 = maxTime;
           }
           else {
-            this->dm->dspErrMsg( stat );
+            this->dm->dspErrMsg( st );
             x1 = x0 + 1.0;
           }
         }
@@ -542,22 +539,20 @@ void ViewerCtlr::process(void ) {
 
         mainWindow->setWhat( "Reading file..." );
 
-        stat = this->dm->getMaxElements( binFile.toStdString(), this->curMaxElements );
-        if ( stat ) {
+        if ( auto stat = this->dm->getMaxElements( binFile.toStdString(), this->curMaxElements ) ) {
           this->dm->dspErrMsg( stat );
           this->curMaxElements = 0;
         }
 
         QString qsdiscard, egudiscard;
-        stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
-        if ( stat ) {
+        if ( auto stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept ) ) {
           this->dh->dspErrMsg( stat );
         }
 
         //  file name, sig index, x scale width in pixels, start time in sec,
         //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
 
-        stat = this->dm->genLineSeries( binFile.toStdString(), sigIndex, slope, intercept, size.width(), x0, x1,
+        int stat = this->dm->genLineSeries( binFile.toStdString(), sigIndex, slope, intercept, size.width(), x0, x1,
                                         dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
         if ( !stat ) {
 
@@ -635,7 +630,7 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Reseting..." );
 
-          stat = this->dm->genFftLineSeriesFromBufferByFreq
+          int stat = this->dm->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
@@ -703,7 +698,7 @@ void ViewerCtlr::process(void ) {
           mainWindow->setWhat( "Reading file..." );
     
           QString qsdiscard, egudiscard;
-          stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
+          int stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
             this->dh->dspErrMsg( stat );
           }
@@ -779,7 +774,7 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Panning..." );
 
-          stat = this->dm->genFftLineSeriesFromBufferByFreq
+          int stat = this->dm->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
@@ -825,7 +820,7 @@ void ViewerCtlr::process(void ) {
           mainWindow->setWhat( "Reading file..." );
     
           QString qsdiscard, egudiscard;
-          stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
+          int stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
             this->dh->dspErrMsg( stat );
           }
@@ -896,7 +891,7 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Scaling..." );
           
-          stat = this->dm->genFftLineSeriesFromBufferByFreq
+          int stat = this->dm->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
@@ -945,7 +940,7 @@ void ViewerCtlr::process(void ) {
           mainWindow->setWhat( "Reading file..." );
     
           QString qsdiscard, egudiscard;
-          stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
+          int stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
             this->dh->dspErrMsg( stat );
           }
@@ -1023,7 +1018,7 @@ void ViewerCtlr::process(void ) {
 
           mainWindow->setWhat( "Scaling..." );
           
-          stat = this->dm->genFftLineSeriesFromBufferByFreq
+          int stat = this->dm->genFftLineSeriesFromBufferByFreq
             ( numFft, fftOut, sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
@@ -1064,7 +1059,7 @@ void ViewerCtlr::process(void ) {
             x1 = std::fmin( x1, maxTime );
           }
           else {
-            this->dm->dspErrMsg( stat );
+            this->dm->dspErrMsg( st );
           }
 
           this->haveCurTimeRange = true;
@@ -1091,7 +1086,7 @@ void ViewerCtlr::process(void ) {
           mainWindow->setWhat( "Reading file..." );
     
           QString qsdiscard, egudiscard;
-          stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
+          int stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
             this->dh->dspErrMsg( stat );
           }
@@ -1157,7 +1152,7 @@ void ViewerCtlr::process(void ) {
           x1 = std::fmin( x1, maxTime );
         }
         else {
-          this->dm->dspErrMsg( stat );
+          this->dm->dspErrMsg( st );
         }
 
         this->haveCurTimeRange = true;
@@ -1184,7 +1179,7 @@ void ViewerCtlr::process(void ) {
         mainWindow->setWhat( "Reading file..." );
     
         QString qsdiscard, egudiscard;
-        stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
+        int stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
         if ( stat ) {
           this->dh->dspErrMsg( stat );
         }
@@ -1247,7 +1242,7 @@ void ViewerCtlr::process(void ) {
             x1 = std::fmin( x1, maxTime );
           }
           else {
-            this->dm->dspErrMsg( stat );
+            this->dm->dspErrMsg( st );
           }
 
           // get num of pixels in x
@@ -1270,7 +1265,7 @@ void ViewerCtlr::process(void ) {
           mainWindow->setWhat( "Reading file..." );
     
           QString qsdiscard, egudiscard;
-          stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
+          int stat = this->dh->getSigInfoBySigIndex( sigIndex, qsdiscard, egudiscard, slope, intercept );
           if ( stat ) {
             this->dh->dspErrMsg( stat );
           }
@@ -1325,7 +1320,7 @@ void ViewerCtlr::process(void ) {
           //std::cout << "HaveScaleRequest for FFT" << std::endl;
 
           double x0, x1, y0, y1;
-          stat = grArea->graph->views.popView( x0, y0, x1, y1 );
+          int stat = grArea->graph->views.popView( x0, y0, x1, y1 );
           if ( grArea->graph->views.empty() ) {
             grArea->graph->prevViewAction->setEnabled( false );
           }
@@ -1370,7 +1365,7 @@ void ViewerCtlr::process(void ) {
           lastDataRequestGraphArea = grArea;
 
           double  x0, x1, y0, y1;
-          stat = grArea->graph->views.popView( x0, y0, x1, y1 );
+          int stat = grArea->graph->views.popView( x0, y0, x1, y1 );
           if ( grArea->graph->views.empty() ) {
             grArea->graph->prevViewAction->setEnabled( false );
           }
@@ -1455,9 +1450,8 @@ void ViewerCtlr::process(void ) {
     if ( this->haveFile ) {
       
       this->readyForData = false;
-      
-      stat = processHeaderFile();
-      if ( !stat ) {
+
+      if ( !processHeaderFile() ) {
         
         this->haveDataForFft = false;
         this->haveHeader = true;
