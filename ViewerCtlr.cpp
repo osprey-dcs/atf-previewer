@@ -1595,11 +1595,6 @@ static void closeAll ( std::filebuf *fb, int n ) {
   }
 }
 
-
-static void zero( int *val, int n ) {
-  for ( int i=0; i<n; i++ ) val[i] = n;
-}
-
 int ViewerCtlr::csvExport ( void ) {
 
   if ( !haveHeader ) {
@@ -1791,13 +1786,12 @@ int ViewerCtlr::csvExport ( void ) {
     return ERRINFO(EFileWrite,"");
   }
 
-  int (*intBuf)[100] = new int[numSignals][100];
-  double *outBuf = new double[100];
+  std::vector<std::array<int, 100>> intBuf(numSignals);
+  std::vector<double> outBuf(numSignals);
   int numFullOps = recRange / 100;
   int numRemaining = recRange % 100;
-  int *nr;
-  nr = new int[numSignals];
-  QString *names = new QString[numSignals];
+  std::vector<int> nr(numSignals);
+  std::vector<QString> names(numSignals);
 
   //std::cout << "get signal names" << std::endl;
   for ( int i=0; i<numSignals; i++ ) {
@@ -1818,7 +1812,7 @@ int ViewerCtlr::csvExport ( void ) {
     return ERRINFO(EFileWrite,"");
   }
 
-  st = csv->writeSignalNames( f, fbExport, names, numSignals );
+  st = csv->writeSignalNames( f, fbExport, names.data(), numSignals );
   if ( st ) {
     csv->dspErrMsg( st );
     if ( f ) {
@@ -1836,10 +1830,7 @@ int ViewerCtlr::csvExport ( void ) {
     this->dm->inputSeekToStartOfData( fbInput[i], minByte );
   }
 
-  zero( nr, numSignals );
-
-  double *slope = new double[numSignals];
-  double *intercept = new double[numSignals];
+  std::vector<double> slope(numSignals), intercept(numSignals);
   for ( int i=0; i<numSignals; i++ ) {
     int ii = signalIndices[i];
     slope[i] = std::get<DataHeader::SLOPE>( indexMap[ii] );
@@ -1868,14 +1859,14 @@ int ViewerCtlr::csvExport ( void ) {
     }
 
     for ( int ii=0; ii<numSignals; ii++ ) {
-      nr[ii] += this->dm->readTraceData( fbInput[ii], intBuf[ii], 100 );
+      nr[ii] += this->dm->readTraceData( fbInput[ii], intBuf[ii].data(), intBuf[ii].size() );
     }
 
     for ( int iii=0; iii<100/sizeof(int); iii++ ) {
       for ( int ii=0; ii<numSignals; ii++ ) {
         outBuf[ii] = (double) intBuf[ii][iii] * slope[ii] + intercept[ii];
       }
-      csv->writeData( f, fbExport, rec, time, outBuf, numSignals );
+      csv->writeData( f, fbExport, rec, time, outBuf.data(), numSignals );
       rec++;
       time += timeInc;
     }
@@ -1891,14 +1882,14 @@ int ViewerCtlr::csvExport ( void ) {
     QApplication::processEvents(QEventLoop::AllEvents, maxMs);
 
     for ( int ii=0; ii<numSignals; ii++ ) {
-      nr[ii] += this->dm->readTraceData( fbInput[ii], intBuf[ii], numRemaining );
+      nr[ii] += this->dm->readTraceData( fbInput[ii], intBuf[ii].data(), numRemaining );
     }
 
     for ( int iii=0; iii<numRemaining/sizeof(int); iii++ ) {
       for ( int ii=0; ii<numSignals; ii++ ) {
         outBuf[ii] = (double) intBuf[ii][iii] * slope[ii] + intercept[ii];
       }
-      csv->writeData( f, fbExport, rec, time, outBuf, numSignals );
+      csv->writeData( f, fbExport, rec, time, outBuf.data(), numSignals );
       rec++;
       time += timeInc;
     }
@@ -1920,13 +1911,6 @@ int ViewerCtlr::csvExport ( void ) {
   this->mainWindow->exportDialog->close();
   
   std::cout << "CSV export complete." << std::endl;
-
-  delete[] intBuf; intBuf = nullptr;
-  delete[] outBuf; outBuf = nullptr;
-  delete[] nr; nr = nullptr;
-  delete[] names; names = nullptr;
-  delete[] slope; slope = nullptr;
-  delete[] intercept; intercept = nullptr;
   
   return 0;
 
