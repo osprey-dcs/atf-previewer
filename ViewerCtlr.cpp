@@ -1637,7 +1637,6 @@ int ViewerCtlr::csvExport ( void ) {
   // make sure we have at least one valid signal number in the list
 
   bool atLeastOneSignal = false;
-  int numGoodSignalsFound = 0;
   
   for ( int sigIndex : sigNumList ) {
 
@@ -1654,7 +1653,6 @@ int ViewerCtlr::csvExport ( void ) {
         if ( result ) {
           atLeastOneSignal = true;
           fb.close();
-          numGoodSignalsFound++;
         }
         else {
           int err = ERRINFO(EFileOpen,bfname.toStdString());
@@ -1959,7 +1957,6 @@ int ViewerCtlr::uff58bExport ( void ) {
   // make sure we have at least one valid signal number in the list
 
   bool atLeastOneSignal = false;
-  int numGoodSignalsFound = 0;
   
   for ( int sigIndex : sigNumList ) {
 
@@ -1974,7 +1971,6 @@ int ViewerCtlr::uff58bExport ( void ) {
         if ( result ) {
           atLeastOneSignal = true;
           fb.close();
-          numGoodSignalsFound++;
         }
         else {
           int err = ERRINFO(EFileOpen,bfname.toStdString());
