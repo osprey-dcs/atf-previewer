@@ -4,14 +4,12 @@
 
 #include "Uff58bExport.h"
 
-Uff58bExport::Uff58bExport ( const QString& headerFile ) :
-  //???ErrHndlr ( DataHeader::NumErrs, DataHeader::errMsgs ) {
-  ErrHndlr ( Uff58bExport::NumErrs, Uff58bExport::errMsgs ) {
-
-  hdrFile = headerFile;
+Uff58bExport::Uff58bExport ( const QString& headerFile )
+    :ErrHndlr ( Uff58bExport::NumErrs, Uff58bExport::errMsgs )
+    ,hdrFile(headerFile)
+{
   dh = dhf.createDataHeader();
   dh->readContents( hdrFile );
-
 }
 
 Uff58bExport::~Uff58bExport () {
@@ -27,9 +25,6 @@ int Uff58bExport::set58bHeader(int64_t numBytes) {
 
   int floatFormat = IEEE_754;
 
-  char lf = 10;
-  char cr = 13;
-
   std::stringstream strm;
   strm << std::setw(6) << std::right << "58" << "b" <<
     std::setw(6) << std::right << endian <<
@@ -40,7 +35,7 @@ int Uff58bExport::set58bHeader(int64_t numBytes) {
     std::setw(6) << std::right << 0 <<
     std::setw(12) << std::right << 0 <<
     std::setw(12) << std::right << 0 <<
-    lf;
+    '\n';
 
   uff58bIdLine = strm.str().c_str();
 
@@ -63,11 +58,8 @@ int Uff58bExport::set80CharRec ( int recNum, QString line ) {
 
   recNum -= 1;
 
-  char lf = 10;
-  char cr = 13;
-
   std::stringstream strm;
-  strm << std::setw(78) << std::left << std::setfill( ' ' ) << line.toStdString() << lf;
+  strm << std::setw(78) << std::left << std::setfill( ' ' ) << line.toStdString() << '\n';
 
   headerLines1thru11[recNum] = strm.str().c_str();
   
@@ -85,9 +77,6 @@ int Uff58bExport::setDofIdentification( int funcType, int funcIdNum,
 
   if ( rspEntityName.isEmpty() ) rspEntityName = "NONE";
   if ( refEntityName.isEmpty() ) refEntityName = "NONE";
-  
-  char lf = 10;
-  char cr = 13;
 
   std::stringstream strm;
   strm << std::setw(5) << std::right << funcType <<
@@ -102,7 +91,7 @@ int Uff58bExport::setDofIdentification( int funcType, int funcIdNum,
     std::setw(10) << std::left << std::setfill( ' ' ) << refEntityName.toStdString() <<
     std::setw(10) << std::right << refNode <<
     std::setw(4) << std::right << refDir <<
-    lf;
+    '\n';
 
   int recNum = 6 - 1;
   headerLines1thru11[recNum] = strm.str().c_str();
@@ -118,9 +107,6 @@ int Uff58bExport::setDofIdentification( int funcType, int funcIdNum,
 int Uff58bExport::setDataForm( int dataType, int numEle, int xSpacing,
                                double xMin, double xInc, double zAxisVal ) {
 
-  char lf = 10;
-  char cr = 13;
-
   std::stringstream strm;
   strm << std::setw(10) << std::right << dataType <<
     std::setw(10) << std::right << numEle <<
@@ -128,7 +114,7 @@ int Uff58bExport::setDataForm( int dataType, int numEle, int xSpacing,
     std::setw(13) << std::showpoint << std::setprecision(7) << std::right << xMin <<
     std::setw(13) << std::showpoint << std::setprecision(7) << std::right << xInc <<
     std::setw(13) << std::showpoint << std::setprecision(7) << std::right << zAxisVal <<
-    "         " << lf;
+    "         \n";
 
   int recNum = 7 - 1;
   headerLines1thru11[recNum] = strm.str().c_str();
@@ -152,9 +138,6 @@ int Uff58bExport::setDataCharacteristics( int recNum, int dataType, int lengthUn
 
   if ( axisLabel.isEmpty() ) axisLabel = "NONE";
   if ( axisUnitsLabel.isEmpty() ) axisUnitsLabel = "NONE";
-  
-  char lf = 10;
-  char cr = 13;
 
   std::stringstream strm;
   strm << std::setw(10) << std::right << dataType <<
@@ -165,7 +148,7 @@ int Uff58bExport::setDataCharacteristics( int recNum, int dataType, int lengthUn
     std::setw(20) << std::left << std::setfill( ' ' ) << axisLabel.toStdString() <<
     " " <<
     std::setw(20) << std::left << std::setfill( ' ' ) << axisUnitsLabel.toStdString() <<
-    "           " << lf;
+    "           " << '\n';
 
   headerLines1thru11[recNum] = strm.str().c_str();
   
@@ -182,10 +165,7 @@ int Uff58bExport::writeSpacer( std::filebuf &fb ) {
   std::string s;
   std::stringstream strm;
 
-  char lf = 10;
-  char cr = 13;
-
-  strm << std::setw(6) << std::right << -1 << lf;
+  strm << std::setw(6) << std::right << -1 << '\n';
 
   s = strm.str();
   
