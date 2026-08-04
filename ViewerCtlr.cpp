@@ -92,8 +92,7 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) :
   //this->bd = this->bdf.createBinData( Cnst::BinDataName );
   //this->bd->initMaxBufSize( Cnst::MaxMFileBufSize );
 
-  this->fftIn = new fftw_complex[Cnst::MaxFftSize+1];
-  this->fftOut = nullptr;
+  this->fftIn.resize(Cnst::MaxFftSize+1);
   this->numPts = 0ul;
   this->numFft = 0ul;
   this->maxFft = Cnst::MaxFftSize;
@@ -187,12 +186,6 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) :
 }
 
 ViewerCtlr::~ViewerCtlr() {
-
-  if ( fftIn ) {
-    fftw_free( fftIn );
-    fftIn = nullptr;
-  }
-
 }
 
 void ViewerCtlr::enableFftButton( ViewerGraphAreaBase *vga ) {
@@ -446,11 +439,8 @@ void ViewerCtlr::process(void ) {
             std::string s = sstitle.str();
             companVga->graph->setYTitle( s );
 
-            if ( fftOut ) {
-              fftw_free( fftOut );
-            }
-            fftOut = new fftw_complex[numFft];
-            fftw_plan p = fftw_plan_dft_1d( numFft, fftIn, fftOut, FFTW_FORWARD, FFTW_ESTIMATE );
+            fftOut.resize(numFft);
+            fftw_plan p = fftw_plan_dft_1d( numFft, fftIn.idata(), fftOut.idata(), FFTW_FORWARD, FFTW_ESTIMATE );
             fftw_execute( p );
 
             fftVga = companVga;
@@ -463,7 +453,7 @@ void ViewerCtlr::process(void ) {
         
             double minx, maxx, miny, maxy;
 
-            stat = this->dm->genFftLineSeriesFromBuffer( numFft, fftOut, sampleRate, size.width(),
+            stat = this->dm->genFftLineSeriesFromBuffer( numFft, fftOut.idata(), sampleRate, size.width(),
                                                       *qls, minx, maxx, miny, maxy, true );
             if ( !stat ) {
               companVga->setInitialState();
@@ -553,7 +543,7 @@ void ViewerCtlr::process(void ) {
         //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
 
         int stat = this->dm->genLineSeries( binFile.toStdString(), sigIndex, slope, intercept, size.width(), x0, x1,
-                                        dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
+                                        dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn.idata() );
         if ( !stat ) {
 
           // if we have performed some kind of time scale adjustment and time scales are locked...
@@ -631,7 +621,7 @@ void ViewerCtlr::process(void ) {
           mainWindow->setWhat( "Reseting..." );
 
           int stat = this->dm->genFftLineSeriesFromBufferByFreq
-            ( numFft, fftOut, sampleRate, size.width(),
+            ( numFft, fftOut.idata(), sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
@@ -706,7 +696,7 @@ void ViewerCtlr::process(void ) {
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
           stat = this->dm->genLineSeries( binFile.toStdString(), sigIndex, slope, intercept, size.width(), x0, x1,
-                                          dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
+                                          dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn.idata() );
           if ( !stat ) {
 
             this->haveCurTimeRange = true;
@@ -775,7 +765,7 @@ void ViewerCtlr::process(void ) {
           mainWindow->setWhat( "Panning..." );
 
           int stat = this->dm->genFftLineSeriesFromBufferByFreq
-            ( numFft, fftOut, sampleRate, size.width(),
+            ( numFft, fftOut.idata(), sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
@@ -828,7 +818,7 @@ void ViewerCtlr::process(void ) {
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
           stat = this->dm->genLineSeries( binFile.toStdString(), sigIndex, slope, intercept, size.width(), x0, x1,
-                                        dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
+                                        dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn.idata() );
           if ( !stat ) {
           
             this->haveCurTimeRange = true;
@@ -892,7 +882,7 @@ void ViewerCtlr::process(void ) {
           mainWindow->setWhat( "Scaling..." );
           
           int stat = this->dm->genFftLineSeriesFromBufferByFreq
-            ( numFft, fftOut, sampleRate, size.width(),
+            ( numFft, fftOut.idata(), sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
@@ -948,7 +938,7 @@ void ViewerCtlr::process(void ) {
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
           stat = this->dm->genLineSeries( binFile.toStdString(), sigIndex, slope, intercept, size.width(), x0, x1,
-                                            dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
+                                            dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn.idata() );
           if ( !stat ) {
           
             this->haveCurTimeRange = true;
@@ -1019,7 +1009,7 @@ void ViewerCtlr::process(void ) {
           mainWindow->setWhat( "Scaling..." );
           
           int stat = this->dm->genFftLineSeriesFromBufferByFreq
-            ( numFft, fftOut, sampleRate, size.width(),
+            ( numFft, fftOut.idata(), sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
@@ -1094,7 +1084,7 @@ void ViewerCtlr::process(void ) {
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
           stat = this->dm->genLineSeries( binFile.toStdString(), sigIndex, slope, intercept, size.width(), x0, x1,
-                                          dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
+                                          dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn.idata() );
           if ( !stat ) {
           
             mainWindow->setNumPoints( numPts );
@@ -1187,7 +1177,7 @@ void ViewerCtlr::process(void ) {
         //  file name, sig index, x scale width in pixels, start time in sec,
         //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
         stat = this->dm->genLineSeries( binFile.toStdString(), sigIndex, slope, intercept, size.width(), x0, x1,
-                                        dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
+                                        dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn.idata() );
         if ( !stat ) {
           
           mainWindow->setNumPoints( numPts );
@@ -1273,7 +1263,7 @@ void ViewerCtlr::process(void ) {
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
           stat = this->dm->genLineSeries( binFile.toStdString(), sigIndex, slope, intercept, size.width(), x0, x1,
-                                          dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
+                                          dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn.idata() );
           
           if ( !stat ) {
           
@@ -1340,7 +1330,7 @@ void ViewerCtlr::process(void ) {
           mainWindow->setWhat( "Getting prev view..." );
           
           stat = this->dm->genFftLineSeriesFromBufferByFreq
-            ( numFft, fftOut, sampleRate, size.width(),
+            ( numFft, fftOut.idata(), sampleRate, size.width(),
               x0, x1, *qls, minx, maxx, miny, maxy, true );
           if ( !stat ) {
 
@@ -1404,7 +1394,7 @@ void ViewerCtlr::process(void ) {
           //  file name, sig index, x scale width in pixels, start time in sec,
           //  end time in sec, data time increment in sec, qls pointer, miny (returned), maxy (returned)
           stat = this->dm->genLineSeries( binFile.toStdString(), sigIndex, slope, intercept, size.width(), x0, x1,
-                                          dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn );
+                                          dataTimeIncrementInSec, numPts, *qls, miny, maxy, maxFft, numFft, fftIn.idata() );
           if ( !stat ) {
           
             this->haveCurTimeRange = true;

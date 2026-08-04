@@ -27,6 +27,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include <utility>
 #include <cmath>
 #include <memory>
+#include <exception>
 
 #include <QList>
 #include <QPointF>
@@ -56,6 +57,23 @@ If not, see <https://www.gnu.org/licenses/>.
 extern "C" {
 #include <math.h>
 #include <fftw3.h>
+};
+
+struct FFTWDealloc {
+    void operator()(fftw_complex *p) const { fftw_free(p); }
+};
+
+struct complex_vector : public std::unique_ptr<fftw_complex, FFTWDealloc> {
+    complex_vector() = default;
+    fftw_complex* idata() { return this->get(); }
+    const fftw_complex* idata() const { return this->get(); }
+    void resize(size_t n) {
+        auto ptr(fftw_alloc_complex(n));
+        if(!ptr)
+            throw std::bad_alloc();
+        this->reset(ptr);
+    }
+    fftw_complex& operator[](size_t i) { return this->get()[i]; }
 };
 
 class ViewerCtlr : public QObject, public ErrHndlr {
@@ -123,8 +141,7 @@ public:
   std::shared_ptr<DataMediator> dm;
   BinDataFac bdf;
   std::shared_ptr<BinDataBase> bd;
-  fftw_complex *fftIn;
-  fftw_complex *fftOut;
+  complex_vector fftIn, fftOut;
   int64_t numPts;
   int64_t numFft;
   int64_t maxFft;
