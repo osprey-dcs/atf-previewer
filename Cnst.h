@@ -20,6 +20,8 @@ If not, see <https://www.gnu.org/licenses/>.
 #ifndef VIEWER_CNST_H
 #define VIEWER_CNST_H
 
+#include <string>
+#include <stdint.h>
 
 class Cnst {
 
