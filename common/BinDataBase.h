@@ -66,6 +66,7 @@ class BinDataBase : public ErrHndlr {
     uint64_t recSize;
     uint64_t numBytes;
   } DataHdrType, DataHdrPtr;
+  #pragma pack(pop)
 
   DataHdrType dataHdr;
   
