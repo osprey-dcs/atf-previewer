@@ -1581,32 +1581,18 @@ void ViewerCtlr::sigAreaChanged(const QRectF& plotArea ) {
 }
 
 void ViewerCtlr::fileSelected1(const QString& file ) {
+  // strip extension
+  auto baseName(file.left(file.lastIndexOf('.')));
+  if(baseName.isEmpty())
+    return;
 
-  int l, count;
+  hdrFileName = file;
+  fileName = baseName;
+  haveFile = true;
 
-  l = count = file.length();
-  
-  QString::const_reverse_iterator it = file.rbegin();
-  while ( it != file.rend() ) {
-    if ( *it == '.' ) {
-      count--;
-      break;
-    }
-    if ( *it != '.' ) count--;
-    (it)++;
+  for ( ViewerGraphAreaBase *w : this->mainWindow->getVgaList() ) {
+    w->clear();
   }
-
-  if ( count > 1 ) {
-    
-    this->fileName = this->hdrFileName = file;
-    this->fileName.replace( count, l-count+1, "" );
-    this->haveFile = true;
-    for ( ViewerGraphAreaBase *w : this->mainWindow->getVgaList() ) {
-      w->clear();
-    }
-
-  }
-  
 }
 
 static void closeAll ( std::filebuf *fb, int n ) {
