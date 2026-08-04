@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
 
   // argv[1] can be a file to open
   if ( argc == 2 ) {
-    fileToOpen = argv[1];
+    fileToOpen = QDir::cleanPath(argv[1]);
     testFile.setFileName( fileToOpen );
     if ( testFile.exists() ) {
       if ( testFile.open( QIODevice::ReadOnly ) ) {
@@ -71,7 +71,10 @@ int main(int argc, char *argv[]) {
   mainWin->config();
   mainWin->show();
 
-  QSharedPointer<ViewerCtlr> mainCtlr = QSharedPointer<ViewerCtlr>( new ViewerCtlr( mainWin, fileToOpen ) );
+  QSharedPointer<ViewerCtlr> mainCtlr = QSharedPointer<ViewerCtlr>( new ViewerCtlr( mainWin ) );
+
+  if (doOpenFile)
+      mainCtlr->fileSelected1(fileToOpen);
 
   int count = 0, maxMs = 250;
   int delay = 1000000 * Cnst::EventProcessPeriod;

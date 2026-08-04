@@ -62,7 +62,7 @@ static bool isFFT( ViewerGraphAreaBase *vga ) {
 
 }
 
-ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw, const QString& file ) :
+ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw ) :
   ErrHndlr( NumErrs, errMsgs ) {
 
   this->up = upfac.createUserPrefs();
@@ -184,11 +184,6 @@ ViewerCtlr::ViewerCtlr( QSharedPointer<ViewerMainWin> mainw, const QString& file
     //               this, SLOT( sigAreaChanged( const QRectF & ) ) );
 
   }
-
-  if ( !file.isEmpty() ) {
-    fileToOpen = file;
-  }
-
 }
 
 ViewerCtlr::~ViewerCtlr() {
@@ -241,7 +236,6 @@ static int count250ms = 0;
 static double value = 0;
 static bool plotAreasAllNonZero = false;
 static bool doNothing = false;
-static bool once = true;
 
 int ViewerCtlr::processHeaderFile (void ) {
 
@@ -335,13 +329,6 @@ void ViewerCtlr::process(void ) {
   // process all handled events here
 
   if ( doNothing ) return;
-
-  if ( once ) {
-    once = false;
-    if ( !fileToOpen.isEmpty() ) {
-      fileSelected1( fileToOpen );
-    }
-  }
 
   // wait until plot area dimension are all non-zero (or max 10 seconds)
   if ( !plotAreasAllNonZero ) {
