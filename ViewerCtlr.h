@@ -76,7 +76,7 @@ public:
     { "File open failure: " },
     { "File read failure: " },
     { "No header file is open" },
-    { "Unknown signal" },
+    { "Unknown channel(s)" },
     { "File write failure" }
   };
   

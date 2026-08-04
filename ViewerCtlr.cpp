@@ -1631,7 +1631,10 @@ int ViewerCtlr::csvExport ( void ) {
 
   // get list of channels/signals to export
   std::unique_ptr<ChanSelector> chans{new ChanSelector()};
-  chans->setText( mainWindow->exportDialog->chanSelect );
+  if(chans->setText( mainWindow->exportDialog->chanSelect )) {
+      chans->dspErrMsg();
+      return ERRINFO(ESignal, "Error parsing channel list");
+  }
   std::list<int> sigNumList = chans->getList();
 
   // make sure we have at least one valid signal number in the list
@@ -1951,7 +1954,10 @@ int ViewerCtlr::uff58bExport ( void ) {
 
   // get list of channels/signals to export
   std::unique_ptr<ChanSelector> chans{new ChanSelector()};
-  chans->setText( mainWindow->exportDialog->chanSelect );
+  if(chans->setText( mainWindow->exportDialog->chanSelect )) {
+      chans->dspErrMsg();
+      return ERRINFO(ESignal, "Error parsing channel list");
+  }
   const auto& sigNumList = chans->getList();
 
   // make sure we have at least one valid signal number in the list
