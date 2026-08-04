@@ -1608,7 +1608,7 @@ int ViewerCtlr::csvExport ( void ) {
   }
 
   const int BufSize = 2000000;
-  char *buf = new char[BufSize+1];
+  std::vector<char> buf(BufSize+1);
   
   int st, i, numSignals;
   QString str;
@@ -1680,7 +1680,7 @@ int ViewerCtlr::csvExport ( void ) {
     f = fopen( exportFileName.toStdString().c_str(), "w" );
     if ( !f ) {
       fbExport.open( exportFileName.toStdString() );
-      fbExport.rdbuf()->pubsetbuf( buf, BufSize );
+      fbExport.rdbuf()->pubsetbuf( buf.data(), buf.size()-1 );
     }
   }
   catch ( const std::exception& e ) {
