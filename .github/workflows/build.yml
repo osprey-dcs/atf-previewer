@@ -4,14 +4,38 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
     native:
+        name: "${{ matrix.image }}"
         runs-on: "ubuntu-latest"
+        strategy:
+            fail-fast: false
+            matrix:
+                image: ["debian:12", "debian:13"]
+
         steps:
-        - uses: actions/checkout@v4
-        - name: "apt-get install"
+        - uses: actions/checkout@v6
+
+        - name: Build
           run: |
-            sudo apt-get update
-            sudo apt-get -y install cmake libqt5charts5-dev libfftw3-dev
-        - name: cmake
-          run: cmake -S . -B build
-        - name: build
-          run: cmake --build build -j2 -v
+            # emit script to be executed in container.
+            cat <<EOF > runit.sh
+            #!/bin/sh
+            set -e -x
+
+            apt-get update
+            apt-get -y --no-install-recommends install \
+              build-essential cmake pkg-config libqt5charts5-dev libfftw3-dev
+
+            cd /io
+
+            cmake -S . -B build
+            cmake --build build -j2 -v
+
+            EOF
+            # end of script.  Now execute in container
+
+            chmod +x runit.sh
+            mkdir output
+            podman run --rm \
+                -v `pwd`:/io \
+                docker.io/library/${{ matrix.image }} \
+                /io/runit.sh
