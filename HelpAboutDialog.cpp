@@ -8,11 +8,17 @@
 
 // version.h declares static ints: g_major, g_minor, g_release
 #include "version.h"
+#if __has_include("git_revision.h")
+#  include "git_revision.h"
+#endif
 
 HelpAboutDialog::HelpAboutDialog( QWidget *w, QWidget *parent ) : QDialog( parent ) {
 
   std::stringstream strm;
   strm << "Version " << g_major << "." << g_minor << "." << g_release;
+#ifdef GIT_REVISION
+  strm << "\nRevision " << GIT_REVISION;
+#endif
 
   refWidget = w;
   vlayout = new QVBoxLayout();

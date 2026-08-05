@@ -20,6 +20,8 @@ find_package(Qt5 COMPONENTS
 if(Qt5Gui_FOUND AND Qt5Widgets_FOUND AND Qt5Charts_FOUND)
 message(STATUS "Build Viewer")
 
+find_package(Git)
+
 add_executable(viewer main.cpp
         ViewerMainWin.cpp
         ViewerMainWin.h
@@ -99,9 +101,24 @@ add_executable(viewer main.cpp
         DataMediator.h
         DataMediatorFac.cpp
         DataMediatorFac.h
+        ${CMAKE_CURRENT_BINARY_DIR}/git_revision.h
         )
 
+add_custom_target(GitDescribeH
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/git_revision.h.in
+                ${CMAKE_CURRENT_SOURCE_DIR}/git_describe.cmake
+        BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/git_revision.h
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMAND ${CMAKE_COMMAND}
+                -D GIT_EXECUTABLE=${GIT_EXECUTABLE}
+                -D INPUT_FILE=${CMAKE_CURRENT_SOURCE_DIR}/git_revision.h.in
+                -D OUTPUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/git_revision.h
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/git_describe.cmake
+)
+
+
 include_directories(common)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 pkg_check_modules(FFTW REQUIRED IMPORTED_TARGET fftw3)
 
